@@ -1,15 +1,15 @@
 /* Settings Overlay */
 .settings-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   background: rgba(0, 0, 0, 0.90);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999999;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 2147483647 !important; /* Maximum possible z-index */
   backdrop-filter: blur(12px);
   animation: fadeIn 0.2s ease-out;
   padding: 40px;
@@ -36,6 +36,8 @@
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8);
   border: 1px solid #2a2a2a;
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 2147483647 !important;
 }
 
 @keyframes slideUp {

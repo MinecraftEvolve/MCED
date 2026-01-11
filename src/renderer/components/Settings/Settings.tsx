@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAppStore } from '@/store';
 import './Settings.css';
 
@@ -18,9 +19,9 @@ export function Settings({ onClose }: { onClose: () => void }) {
     }
   };
 
-  return (
-    <div className="settings-overlay">
-      <div className="settings-modal">
+  return createPortal(
+    <div className="settings-overlay" onClick={onClose}>
+      <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
         <div className="settings-header">
           <h2>⚙️ Settings</h2>
           <button onClick={onClose} className="close-btn">✕</button>
@@ -239,6 +240,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
           <button onClick={handleSave} className="btn-primary">💾 Save Settings</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

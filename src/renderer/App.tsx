@@ -203,7 +203,7 @@ function App() {
       </div>
       
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
-    </div>
+    </>
   );
 }
 
