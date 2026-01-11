@@ -91,7 +91,15 @@
     },
     "files": [
       "dist/**/*",
+      "assets/**/*",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "assets",
+        "to": "assets",
+        "filter": ["**/*"]
+      }
     ],
     "win": {
       "icon": "assets/icon.ico",

@@ -30,7 +30,8 @@ const createWindow = () => {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    const indexPath = path.join(__dirname, '../../renderer/index.html');
+    mainWindow.loadFile(indexPath);
   }
 
   mainWindow.once('ready-to-show', () => {
@@ -122,7 +123,9 @@ ipcMain.handle('instance:detect', async (_event, instancePath: string) => {
   try {
     const detector = new InstanceDetector();
     const instance = await detector.detectInstance(instancePath);
-    return { success: true, instance };
+    // Ensure data is serializable
+    const serializedInstance = JSON.parse(JSON.stringify(instance));
+    return { success: true, instance: serializedInstance };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
@@ -132,7 +135,9 @@ ipcMain.handle('mods:scan', async (_event, modsFolder: string) => {
   try {
     const scanner = new JarScanner();
     const mods = await scanner.scanModsFolder(modsFolder);
-    return { success: true, mods };
+    // Ensure data is serializable
+    const serializedMods = JSON.parse(JSON.stringify(mods));
+    return { success: true, mods: serializedMods };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

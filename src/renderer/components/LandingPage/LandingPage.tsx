@@ -3,7 +3,7 @@ import { FolderOpen, Clock, Star, Book, Github } from 'lucide-react';
 import './LandingPage.css';
 
 interface LandingPageProps {
-  onSelectInstance: () => void;
+  onSelectInstance: (path?: string) => void;
   recentInstances?: string[];
 }
 
@@ -11,7 +11,7 @@ export function LandingPage({ onSelectInstance, recentInstances = [] }: LandingP
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   const handleRecentInstance = (path: string) => {
-    window.electron.openInstance(path);
+    onSelectInstance(path);
   };
 
   return (
