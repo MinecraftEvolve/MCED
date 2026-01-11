@@ -89,7 +89,7 @@ export class JarScanner {
             description: mod.description,
             authors: mod.authors ? (typeof mod.authors === 'string' ? [mod.authors] : mod.authors) : undefined,
             homepage: mod.displayURL,
-            logoFile: mod.logoFile,
+            logoFile: mod.logoFile || 'logo.png',
             credits: mod.credits,
             license: parsed.license,
           };

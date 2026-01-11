@@ -155,3 +155,33 @@ ipcMain.handle('app:getPath', async (_event, name: string) => {
     return { success: false, error: error.message };
   }
 });
+
+ipcMain.handle('launch:minecraft', async (_event, instancePath: string, launcherType: string) => {
+  try {
+    const { exec } = require('child_process');
+    const path = require('path');
+    
+    const instanceName = path.basename(instancePath);
+    
+    let command = '';
+    if (launcherType === 'multimc' || launcherType === 'prism') {
+      const exe = launcherType === 'prism' ? 'prismlauncher' : 'MultiMC';
+      command = `"${exe}" -l "${instanceName}"`;
+    } else if (launcherType === 'curseforge') {
+      command = `start curseforge://launch/${instanceName}`;
+    }
+    
+    if (command) {
+      exec(command, (error: any) => {
+        if (error) {
+          console.error('Launch error:', error);
+        }
+      });
+      return { success: true };
+    }
+    
+    return { success: false, error: 'Unsupported launcher type' };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});

@@ -35,24 +35,8 @@ export class LauncherService {
    */
   async launch(instancePath: string, launcherType: string): Promise<boolean> {
     try {
-      const instanceName = this.extractInstanceName(instancePath);
-      
-      let command = '';
-      switch (launcherType) {
-        case 'multimc':
-        case 'prism':
-          command = `${launcherType === 'prism' ? 'prismlauncher' : 'MultiMC'} -l "${instanceName}"`;
-          break;
-        case 'curseforge':
-          // CurseForge uses protocol handler
-          command = `start curseforge://launch/${instanceName}`;
-          break;
-        default:
-          return false;
-      }
-
-      console.log('Launching with command:', command);
-      return true;
+      const result = await window.electronAPI.launchMinecraft(instancePath, launcherType);
+      return result.success;
     } catch (error) {
       console.error('Launch error:', error);
       return false;
