@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '@/store';
+import { Settings } from '../Settings/Settings';
 
 interface HeaderProps {
   onSearchClick: () => void;
@@ -7,6 +8,7 @@ interface HeaderProps {
 
 export function Header({ onSearchClick }: HeaderProps) {
   const { currentInstance } = useAppStore();
+  const [showSettings, setShowSettings] = useState(false);
 
   if (!currentInstance) return null;
 
@@ -56,8 +58,21 @@ export function Header({ onSearchClick }: HeaderProps) {
             Search
             <kbd className="text-xs text-muted-foreground ml-1 px-1.5 py-0.5 bg-background rounded border border-border">Ctrl+F</kbd>
           </button>
+          
+          <button
+            onClick={() => setShowSettings(true)}
+            className="px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-sm"
+            title="Settings"
+          >
+            <svg className="w-4 h-4 group-hover:rotate-45 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
         </div>
       </div>
+      
+      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
     </header>
   );
 }
