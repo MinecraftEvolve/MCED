@@ -30,8 +30,7 @@ const createWindow = () => {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    const indexPath = path.join(__dirname, '../../renderer/index.html');
-    mainWindow.loadFile(indexPath);
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 
   mainWindow.once('ready-to-show', () => {
