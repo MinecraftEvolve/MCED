@@ -160,7 +160,6 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
           {isRawMode ? '📋 Form View' : '📝 Raw Edit'}
         </button>
       </div>
-      )}
 
       {/* Raw Editor or Settings */}
       {selectedConfig && isRawMode ? (
