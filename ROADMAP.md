@@ -138,6 +138,36 @@
 │  Priority: ⭐ MEDIUM                                                       │
 │                                                                            │
 │  ├─ [✓] Animations & Transitions                                          │
+│  │   ├─ [✓] Smooth sidebar transitions                                  │
+│  │   ├─ [✓] Button hover effects                                        │
+│  │   ├─ [✓] Modal animations                                            │
+│  │   └─ [✓] Loading states                                              │
+│  │                                                                         │
+│  ├─ [✓] Dark Mode Polish                                                 │
+│  │   ├─ [✓] Dark color scheme                                           │
+│  │   ├─ [✓] Accent color customization                                  │
+│  │   ├─ [✓] High contrast text                                          │
+│  │   └─ [ ] Light mode toggle (optional)                                │
+│  │                                                                         │
+│  ├─ [ ] Keyboard Shortcuts                                               │
+│  │   ├─ [ ] Ctrl+S: Save all configs                                    │
+│  │   ├─ [ ] Ctrl+F: Focus search                                        │
+│  │   ├─ [✓] ESC: Clear search/unfocus                                   │
+│  │   ├─ [ ] Ctrl+Z: Undo                                                │
+│  │   └─ [ ] Ctrl+Shift+Z: Redo                                          │
+│  │                                                                         │
+│  ├─ [✓] Error Handling                                                   │
+│  │   ├─ [✓] Graceful error messages                                     │
+│  │   ├─ [✓] Validation feedback                                         │
+│  │   ├─ [✓] Loading states                                              │
+│  │   └─ [✓] Fallback UI                                                 │
+│  │                                                                         │
+│  └─ [ ] Config Improvements                                              │
+│      ├─ [✓] Fixed duplicate key warnings                                │
+│      ├─ [✓] Removed duplicate save buttons                              │
+│      ├─ [✓] Fixed slider reset on discard                               │
+│      ├─ [✓] Fixed ${file.jarVersion} placeholder display                │
+│      └─ [ ] Recently edited highlights                                  │
 │  │   ├─ [✓] TailwindCSS animations                                        │
 │  │   ├─ [✓] Fade in animations                                            │
 │  │   ├─ [✓] Slide transitions                                             │

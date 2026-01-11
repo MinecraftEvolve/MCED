@@ -153,24 +153,13 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
       {/* Settings */}
       {selectedConfig && (
         <div className="space-y-1">
-          {selectedConfig.settings.map(setting => (
-            <div key={setting.key}>
+          {selectedConfig.settings.map((setting, index) => (
+            <div key={`${setting.key}-${index}`}>
               {renderSettingInput(setting, handleSettingChange)}
             </div>
           ))}
         </div>
       )}
-
-      {/* Save button */}
-      <div className="flex justify-end pt-4 border-t border-border">
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
-        >
-          {isSaving ? 'Saving...' : 'Save Changes'}
-        </button>
-      </div>
     </div>
   );
 }

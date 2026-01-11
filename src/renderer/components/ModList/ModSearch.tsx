@@ -4,6 +4,17 @@ import { useAppStore } from '@/store';
 export function ModSearch() {
   const { searchQuery, setSearchQuery } = useAppStore();
 
+  const handleClear = () => {
+    setSearchQuery('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setSearchQuery('');
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
   return (
     <div className="p-3 border-b border-border">
       <div className="relative">
@@ -11,7 +22,8 @@ export function ModSearch() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search mods..."
+          onKeyDown={handleKeyDown}
+          placeholder="Search mods... (ESC to clear)"
           className="w-full px-3 py-2 pl-9 bg-secondary text-foreground rounded-md border border-border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
         />
         <svg
@@ -29,7 +41,7 @@ export function ModSearch() {
         </svg>
         {searchQuery && (
           <button
-            onClick={() => setSearchQuery('')}
+            onClick={handleClear}
             className="absolute right-2 top-2 p-1 hover:bg-accent rounded"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
