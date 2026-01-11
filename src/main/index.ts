@@ -276,6 +276,29 @@ ipcMain.handle('backup:restore', async (_event, instancePath: string, backupId: 
   }
 });
 
+ipcMain.handle('load-config-profile', async (_event, profileId: string) => {
+  try {
+    const profilesPath = path.join(app.getPath('userData'), 'profiles.json');
+    const profilesData = await fs.readFile(profilesPath, 'utf-8');
+    const profiles = JSON.parse(profilesData);
+    const profile = profiles.find((p: any) => p.id === profileId);
+    
+    if (!profile) {
+      throw new Error('Profile not found');
+    }
+    
+    // Apply profile configs
+    for (const [configPath, configData] of Object.entries(profile.configs)) {
+      await fs.writeFile(configPath, JSON.stringify(configData, null, 2));
+    }
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to load profile:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle('backup:delete', async (_event, instancePath: string, backupId: string) => {
   try {
     const backupFile = path.join(instancePath, '.mced-backups', backupId);

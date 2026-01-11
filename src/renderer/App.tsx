@@ -121,12 +121,16 @@ function App() {
   // Index configs when mods are loaded
   useEffect(() => {
     if (mods.length > 0 && currentInstance) {
-      // Index all configs for search
       const configsByMod = new Map();
-      // TODO: Load configs for all mods
+      mods.forEach(mod => {
+        const modConfigs = configs.filter(c => c.modId === mod.id);
+        if (modConfigs.length > 0) {
+          configsByMod.set(mod.id, modConfigs);
+        }
+      });
       smartSearchService.indexConfigs(mods, configsByMod);
     }
-  }, [mods, currentInstance]);
+  }, [mods, currentInstance, configs]);
 
   if (!currentInstance) {
     return (

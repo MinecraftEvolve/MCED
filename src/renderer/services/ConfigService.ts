@@ -84,6 +84,7 @@ export class ConfigService {
         path: filePath,
         format,
         content,
+        rawContent: content, // Store raw content for editor
         settings,
       };
     } catch (error) {

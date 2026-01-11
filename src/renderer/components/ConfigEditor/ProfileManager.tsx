@@ -48,12 +48,18 @@ export function ProfileManager() {
     setShowDialog(false);
   };
 
-  const handleLoadProfile = (profileId: string) => {
+  const handleLoadProfile = async (profileId: string) => {
     const profile = profiles.find(p => p.id === profileId);
     if (profile) {
-      // TODO: Implement config loading through IPC
-      console.log('Loading profile:', profile);
-      setSelectedProfile(profileId);
+      try {
+        await window.electron.loadConfigProfile(profileId);
+        setSelectedProfile(profileId);
+        onClose();
+        window.location.reload();
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+        alert('Failed to load profile. Please try again.');
+      }
     }
   };
 
