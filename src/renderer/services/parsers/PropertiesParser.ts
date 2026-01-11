@@ -29,14 +29,19 @@ export class PropertiesParser {
       const valueStr = line.substring(separatorIndex + 1).trim();
       
       const value = this.parseValue(valueStr);
-      const type = this.detectType(value);
+      const metadata = this.extractMetadata(currentComment);
+      const type = this.detectType(value, metadata);
 
       settings.push({
         key,
         value,
         type,
-        description: currentComment,
-        comment: currentComment
+        description: metadata.description || currentComment,
+        comment: currentComment,
+        range: metadata.range,
+        allowedValues: metadata.allowedValues,
+        unit: metadata.unit,
+        default: metadata.default,
       });
 
       currentComment = '';
@@ -46,6 +51,37 @@ export class PropertiesParser {
       name: 'General',
       settings
     }];
+  }
+
+  private extractMetadata(comment: string): any {
+    const metadata: any = { description: comment };
+
+    // Range: X ~ Y or Range: X to Y
+    const rangeMatch = comment.match(/Range:\s*(-?\d+(?:\.\d+)?)\s*(?:~|to)\s*(-?\d+(?:\.\d+)?)/i);
+    if (rangeMatch) {
+      metadata.range = [parseFloat(rangeMatch[1]), parseFloat(rangeMatch[2])];
+    }
+
+    // Allowed Values
+    const allowedMatch = comment.match(/Allowed Values?:\s*(.+?)(?:\.|$)/i);
+    if (allowedMatch) {
+      const values = allowedMatch[1].split(',').map(v => v.trim());
+      metadata.allowedValues = values;
+    }
+
+    // Default
+    const defaultMatch = comment.match(/Default:\s*(.+?)(?:\.|$)/i);
+    if (defaultMatch) {
+      metadata.default = defaultMatch[1].trim();
+    }
+
+    // Unit
+    const unitMatch = comment.match(/\(([^)]+)\)$/);
+    if (unitMatch) {
+      metadata.unit = unitMatch[1];
+    }
+
+    return metadata;
   }
 
   private parseValue(str: string): any {
@@ -67,9 +103,11 @@ export class PropertiesParser {
     return str;
   }
 
-  private detectType(value: any): ConfigSetting['type'] {
+  private detectType(value: any, metadata: any = {}): ConfigSetting['type'] {
+    if (metadata.allowedValues) return 'enum';
     if (typeof value === 'boolean') return 'boolean';
     if (typeof value === 'number') {
+      if (metadata.range) return 'range';
       return Number.isInteger(value) ? 'integer' : 'float';
     }
     return 'string';
