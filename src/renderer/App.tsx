@@ -9,6 +9,7 @@ import { SmartSearch } from './components/SmartSearch/SmartSearch';
 import { smartSearchService } from './services/SmartSearchService';
 import modrinthAPI from './services/api/ModrinthAPI';
 import { ModInfo } from '../shared/types/mod.types';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 // Helper to fetch icons from Modrinth for mods that don't have icons
 async function enrichModsWithModrinthIcons(mods: ModInfo[]): Promise<ModInfo[]> {
@@ -54,6 +55,9 @@ function App() {
   const { currentInstance, setCurrentInstance, setMods, setIsLoading, isLoading, mods } = useAppStore();
   const [error, setError] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
+  
+  // Enable keyboard shortcuts
+  useKeyboardShortcuts();
 
   const handleOpenInstance = async () => {
     try {

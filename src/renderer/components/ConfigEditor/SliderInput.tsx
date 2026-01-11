@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ConfigSetting } from '@shared/types/config.types';
 
 interface SliderInputProps {
@@ -9,6 +9,11 @@ interface SliderInputProps {
 export function SliderInput({ setting, onChange }: SliderInputProps) {
   const value = setting.value as number;
   const [inputValue, setInputValue] = useState(String(value));
+  
+  // Sync input value when setting.value changes (e.g., on discard)
+  useEffect(() => {
+    setInputValue(String(value));
+  }, [value]);
   
   const min = setting.min ?? 0;
   const max = setting.max ?? 100;

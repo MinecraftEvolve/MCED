@@ -35,6 +35,8 @@ interface AppState {
   // Save state
   hasUnsavedChanges: boolean;
   setHasUnsavedChanges: (hasChanges: boolean) => void;
+  saveConfigs: () => Promise<void>;
+  discardChanges: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -69,4 +71,23 @@ export const useAppStore = create<AppState>((set) => ({
   // Save state
   hasUnsavedChanges: false,
   setHasUnsavedChanges: (hasChanges) => set({ hasUnsavedChanges: hasChanges }),
+  
+  saveConfigs: async () => {
+    const state = useAppStore.getState();
+    if (!state.hasUnsavedChanges || !state.selectedMod) return;
+    
+    try {
+      // Save via IPC will be handled by StatusBar component
+      // This is just a placeholder for the hook
+      console.log('Saving configs...');
+    } catch (error) {
+      console.error('Failed to save configs:', error);
+    }
+  },
+  
+  discardChanges: () => {
+    // Discard will be handled by StatusBar component
+    // This is just a placeholder for the hook
+    console.log('Discarding changes...');
+  },
 }));
