@@ -149,11 +149,11 @@
 │  │   ├─ [✓] High contrast text                                          │
 │  │   └─ [ ] Light mode toggle (optional)                                │
 │  │                                                                         │
-│  ├─ [ ] Keyboard Shortcuts                                               │
-│  │   ├─ [ ] Ctrl+S: Save all configs                                    │
-│  │   ├─ [ ] Ctrl+F: Focus search                                        │
+│  ├─ [✓] Keyboard Shortcuts                                               │
+│  │   ├─ [✓] Ctrl+S: Save all configs                                    │
+│  │   ├─ [✓] Ctrl+F: Focus search                                        │
 │  │   ├─ [✓] ESC: Clear search/unfocus                                   │
-│  │   ├─ [ ] Ctrl+Z: Undo                                                │
+│  │   ├─ [✓] Ctrl+Z: Undo                                                │
 │  │   └─ [ ] Ctrl+Shift+Z: Redo                                          │
 │  │                                                                         │
 │  ├─ [✓] Error Handling                                                   │
