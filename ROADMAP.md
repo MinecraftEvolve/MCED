@@ -162,6 +162,16 @@
 │      ├─ [✓] Removed duplicate save buttons                              │
 │      ├─ [✓] Fixed slider reset on discard                               │
 │      ├─ [✓] Fixed ${file.jarVersion} placeholder display                │
+│      ├─ [✓] Enhanced TOML comment parsing                               │
+│      ├─ [✓] Extract descriptions from comments                          │
+│      ├─ [✓] Extract range constraints (min/max)                         │
+│      ├─ [✓] Extract units (Blocks, %, Hex, etc.)                        │
+│      ├─ [✓] Extract allowed values/enums                                │
+│      ├─ [✓] Display metadata in UI                                      │
+│      ├─ [✓] Show units next to settings                                 │
+│      ├─ [✓] Display range info for sliders                              │
+│      ├─ [✓] Show allowed values for dropdowns                           │
+│      ├─ [✓] Reset to default buttons                                    │
 │      └─ [ ] Recently edited highlights                                  │
 │  │   ├─ [✓] TailwindCSS animations                                        │
 │  │   ├─ [✓] Fade in animations                                            │
