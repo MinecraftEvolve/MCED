@@ -67,11 +67,6 @@ function App() {
       setIsLoading(true);
       setError(null);
 
-      // Check if electronAPI is available
-      if (!window.electronAPI) {
-        throw new Error('Electron API not available. Please restart the application.');
-      }
-
       // Open directory dialog or use provided path
       const path = providedPath || await window.electronAPI.openDirectory();
       if (!path) {
