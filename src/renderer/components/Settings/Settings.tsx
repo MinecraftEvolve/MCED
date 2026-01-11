@@ -168,7 +168,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
               />
             </div>
 
-            {localSettings.recentInstances.length > 0 && (
+            {localSettings.recentInstances && localSettings.recentInstances.length > 0 && (
               <div className="recent-instances-list">
                 <span className="setting-label">Recent Instances:</span>
                 {localSettings.recentInstances.map((path, index) => (
