@@ -171,7 +171,13 @@ export class ConfigService {
         this.extractSettingsFromToml(value, settings, fullKey, metadata);
       } else {
         // Leaf value - create setting with metadata
-        const meta = metadata.get(fullKey) || {};
+        const meta = metadata.get(fullKey) || metadata.get(key) || {};
+        
+        // Debug logging
+        if (!meta.description) {
+          console.log(`[ConfigService] No metadata for key "${fullKey}" (also tried "${key}")`);
+        }
+        
         const setting: ConfigSetting = {
           key: fullKey,
           value,
