@@ -20,9 +20,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // App
   getAppPath: (name: string) => ipcRenderer.invoke('app:getPath', name),
   
-  // Launch
-  launchMinecraft: (instancePath: string, launcherType: string) => ipcRenderer.invoke('launch:minecraft', instancePath, launcherType),
-  
   // Modrinth API
   modrinthSearch: (query: string) => ipcRenderer.invoke('modrinth:search', query),
   modrinthGetProject: (idOrSlug: string) => ipcRenderer.invoke('modrinth:getProject', idOrSlug),
@@ -40,7 +37,6 @@ declare global {
       scanMods: (modsFolder: string) => Promise<{ success: boolean; mods?: any[]; error?: string }>;
       extractIcon: (jarPath: string, iconPath: string) => Promise<{ success: boolean; iconData?: string; error?: string }>;
       getAppPath: (name: string) => Promise<{ success: boolean; path?: string; error?: string }>;
-      launchMinecraft: (instancePath: string, launcherType: string) => Promise<{ success: boolean; error?: string }>;
       modrinthSearch: (query: string) => Promise<{ success: boolean; mod?: any; error?: string }>;
       modrinthGetProject: (idOrSlug: string) => Promise<{ success: boolean; project?: any; error?: string }>;
     };
