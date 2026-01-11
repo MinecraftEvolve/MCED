@@ -1,9 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-contextBridge.exposeInMainWorld('electronAPI', {
-  // Dialog
+contextBridge.exposeInMainWorld('electron', {
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
+});
 
+contextBridge.exposeInMainWorld('api', {
   // File System
   readFile: (path: string) => ipcRenderer.invoke('fs:readFile', path),
   writeFile: (path: string, content: string) => ipcRenderer.invoke('fs:writeFile', path, content),
@@ -33,8 +34,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 declare global {
   interface Window {
-    electronAPI: {
+    electron: {
       openDirectory: () => Promise<string | null>;
+    };
+    api: {
       readFile: (path: string) => Promise<{ success: boolean; content?: string; error?: string }>;
       writeFile: (path: string, content: string) => Promise<{ success: boolean; error?: string }>;
       readdir: (path: string) => Promise<{ success: boolean; files?: string[]; error?: string }>;

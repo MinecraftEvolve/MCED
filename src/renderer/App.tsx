@@ -68,35 +68,54 @@ function App() {
       setError(null);
 
       // Open directory dialog or use provided path
-      const path = providedPath || await window.electronAPI.openDirectory();
-      if (!path) {
+      let instancePath: string | undefined;
+      
+      if (providedPath) {
+        instancePath = providedPath;
+      } else {
+        instancePath = await window.electronAPI.openDirectory();
+      }
+      
+      if (!instancePath) {
         setIsLoading(false);
         return;
       }
-
-      // Detect instance
-      const result = await window.electronAPI.detectInstance(path);
-      if (!result.success || !result.instance) {
-        throw new Error(result.error || 'Failed to detect instance');
-      }
-
-      setCurrentInstance(result.instance);
       
+      // Detect instance
+      const result = await window.api.detectInstance(instancePath);
+      if (!result.success || !result.instance) {
+        setError('Could not detect a valid Minecraft instance in this folder.');
+        setIsLoading(false);
+        return;
+      }
+      
+      const instanceInfo = result.instance;
+      setCurrentInstance(instanceInfo);
+
       // Add to recent instances
-      addRecentInstance(path);
+      addRecentInstance({
+        path: instanceInfo.path,
+        name: instanceInfo.name,
+        lastOpened: Date.now()
+      });
 
       // Scan mods
-      const modsResult = await window.electronAPI.scanMods(result.instance.modsFolder);
-      if (!modsResult.success || !modsResult.mods) {
-        throw new Error(modsResult.error || 'Failed to scan mods');
-      }
-
-      const modsWithIcons = await enrichModsWithModrinthIcons(modsResult.mods);
-      setMods(modsWithIcons);
+      const modsResult = await window.api.scanMods(instancePath);
+      const modsList = modsResult.success ? modsResult.mods : [];
+      setMods(modsList);
       setIsLoading(false);
-    } catch (err: any) {
-      console.error('Error opening instance:', err);
-      setError(err.message || 'An error occurred');
+      
+      // Enrich with icons in background
+      if (modsList && modsList.length > 0) {
+        enrichModsWithModrinthIcons(modsList).then(modsWithIcons => {
+          setMods(modsWithIcons);
+        }).catch(err => {
+          console.error('Error enriching mods:', err);
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to open instance:', error);
+      setError(error?.message || 'Failed to open instance. Please select a valid Minecraft instance folder.');
       setIsLoading(false);
     }
   };
