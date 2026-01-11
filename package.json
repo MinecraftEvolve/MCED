@@ -107,14 +107,13 @@
       "verifyUpdateCodeSignature": false
     },
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
       "perMachine": false,
       "allowElevation": true,
-      "allowToChangeInstallationDirectory": false,
+      "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "Minecraft Config Editor",
-      "include": "build/installer.nsh",
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "deleteAppDataOnUninstall": false,
       "menuCategory": true,
