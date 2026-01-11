@@ -130,7 +130,7 @@ function App() {
       });
       smartSearchService.indexConfigs(mods, configsByMod);
     }
-  }, [mods, currentInstance, configs]);
+  }, [mods, currentInstance]);
 
   if (!currentInstance) {
     return (
