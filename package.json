@@ -14,6 +14,7 @@
     "package:win": "electron-builder --win",
     "package:mac": "electron-builder --mac",
     "package:linux": "electron-builder --linux",
+    "release": "node scripts/create-release.js",
     "lint": "eslint src --ext .ts,.tsx",
     "test": "jest"
   },
