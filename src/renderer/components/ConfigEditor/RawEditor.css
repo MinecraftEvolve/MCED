@@ -79,23 +79,9 @@
   color: #fff;
 }
 
-.raw-editor-textarea {
+.raw-editor-container {
   flex: 1;
-  padding: 20px;
-  background: #1a1a1a;
-  color: #e0e0e0;
-  border: none;
-  outline: none;
-  font-family: 'Courier New', Consolas, monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  resize: none;
-  tab-size: 2;
-}
-
-.raw-editor-textarea::selection {
-  background: #667eea;
-  color: white;
+  overflow: hidden;
 }
 
 .raw-editor-footer {

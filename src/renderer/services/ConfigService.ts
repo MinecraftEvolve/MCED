@@ -50,31 +50,19 @@ export class ConfigService {
     const fileNameLower = fileName.toLowerCase().replace(/\.(toml|json|json5)$/, '');
     const modIdLower = modId.toLowerCase();
     
-    // Exact match (e.g., "create-common.toml" matches "create")
+    // Exact match (e.g., "create.toml" matches "create")
     if (fileNameLower === modIdLower) {
       return true;
     }
     
-    // Exact match with suffix (e.g., "create-common.toml" matches "create")
+    // Match with hyphen or underscore separator ONLY at start
+    // e.g., "create-common.toml" matches "create"
+    // but "create_jetpack-common.toml" does NOT match "create"
     if (fileNameLower.startsWith(modIdLower + '-') || fileNameLower.startsWith(modIdLower + '_')) {
-      return true;
-    }
-    
-    // Exact match with word boundaries (e.g., "create_jetpack-common.toml" matches "create_jetpack")
-    // But NOT "create-common.toml" for "create_jetpack"
-    const parts = fileNameLower.split(/[-_]/);
-    const modIdParts = modIdLower.split(/[-_]/);
-    
-    // Check if all parts of modId appear consecutively in filename
-    for (let i = 0; i <= parts.length - modIdParts.length; i++) {
-      let match = true;
-      for (let j = 0; j < modIdParts.length; j++) {
-        if (parts[i + j] !== modIdParts[j]) {
-          match = false;
-          break;
-        }
-      }
-      if (match) {
+      // Additional check: make sure the modId is complete
+      // "create_jetpack" should not match "create-common"
+      const afterModId = fileNameLower.substring(modIdLower.length);
+      if (afterModId[0] === '-' || afterModId[0] === '_') {
         return true;
       }
     }
