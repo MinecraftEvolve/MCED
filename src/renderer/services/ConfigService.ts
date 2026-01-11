@@ -182,11 +182,14 @@ export class ConfigService {
           key: fullKey,
           value,
           defaultValue: meta.defaultValue !== undefined ? meta.defaultValue : value,
-          type: this.inferType(value),
+          type: meta.allowedValues && meta.allowedValues.length > 0 ? 'enum' : this.inferType(value),
           description: meta.description,
           section: path || undefined,
           range: meta.range,
-          allowedValues: meta.allowedValues,
+          min: meta.range ? meta.range[0] : undefined,
+          max: meta.range ? meta.range[1] : undefined,
+          options: meta.allowedValues,
+          enumValues: meta.allowedValues,
           unit: meta.unit,
         };
         settings.push(setting);

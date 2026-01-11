@@ -13,7 +13,11 @@ export interface ConfigSetting {
   type: 'string' | 'integer' | 'float' | 'boolean' | 'array' | 'enum';
   description?: string;
   section?: string;
-  range?: { min: number; max: number };
+  range?: [number, number];
+  min?: number;
+  max?: number;
+  options?: string[];
+  enumValues?: string[];
   allowedValues?: string[];
   unit?: string;
 }

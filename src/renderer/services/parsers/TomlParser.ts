@@ -84,7 +84,9 @@ export class TomlParser {
         
         // Only parse if we have comments
         if (currentComments.length > 0) {
-          comments.set(fullKey, this.parseCommentMetadata(currentComments));
+          const parsed = this.parseCommentMetadata(currentComments);
+          comments.set(fullKey, parsed);
+          console.log(`[TomlParser] Parsed "${fullKey}":`, parsed);
         }
         currentComments = []; // Reset for next setting
         continue;
