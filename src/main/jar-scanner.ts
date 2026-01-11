@@ -82,10 +82,29 @@ export class JarScanner {
         
         if (parsed.mods && Array.isArray(parsed.mods) && parsed.mods.length > 0) {
           const mod = parsed.mods[0];
+          
+          // Resolve version placeholders
+          let version = mod.version || '0.0.0';
+          if (typeof version === 'string' && version.includes('${')) {
+            // Try to get version from manifest
+            const manifestEntry = entries.find(e => e.entryName === 'META-INF/MANIFEST.MF');
+            if (manifestEntry) {
+              const manifestContent = manifestEntry.getData().toString('utf-8');
+              const versionMatch = manifestContent.match(/Implementation-Version:\s*(.+)/);
+              if (versionMatch) {
+                version = versionMatch[1].trim();
+              }
+            }
+            // If still a placeholder, try jar filename
+            if (version.includes('${')) {
+              version = 'Unknown';
+            }
+          }
+          
           return {
             modId: mod.modId || 'unknown',
             name: mod.displayName || mod.modId || 'Unknown Mod',
-            version: mod.version || '0.0.0',
+            version: version,
             description: mod.description,
             authors: mod.authors ? (typeof mod.authors === 'string' ? [mod.authors] : mod.authors) : undefined,
             homepage: mod.displayURL,
@@ -167,10 +186,29 @@ export class JarScanner {
 
       if (parsed.mods && Array.isArray(parsed.mods) && parsed.mods.length > 0) {
         const mod = parsed.mods[0];
+        
+        // Resolve version placeholders
+        let version = mod.version || '0.0.0';
+        if (typeof version === 'string' && version.includes('${')) {
+          // Try to get version from manifest
+          const manifestEntry = entries.find(e => e.entryName === 'META-INF/MANIFEST.MF');
+          if (manifestEntry) {
+            const manifestContent = manifestEntry.getData().toString('utf-8');
+            const versionMatch = manifestContent.match(/Implementation-Version:\s*(.+)/);
+            if (versionMatch) {
+              version = versionMatch[1].trim();
+            }
+          }
+          // If still a placeholder, set to Unknown
+          if (version.includes('${')) {
+            version = 'Unknown';
+          }
+        }
+        
         return {
           modId: mod.modId || 'unknown',
           name: mod.displayName || mod.modId || 'Unknown Mod',
-          version: mod.version || '0.0.0',
+          version: version,
           description: mod.description,
           authors: mod.authors ? (typeof mod.authors === 'string' ? [mod.authors] : mod.authors) : undefined,
           homepage: mod.displayURL,
