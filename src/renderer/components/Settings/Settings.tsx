@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useAppStore } from '@/store';
+import { useSettingsStore } from '@/store/settingsStore';
 import './Settings.css';
 
 export function Settings({ onClose }: { onClose: () => void }) {
-  const { settings, updateSettings } = useAppStore();
+  const { settings, updateSettings, clearRecentInstances, resetSettings } = useSettingsStore();
   const [localSettings, setLocalSettings] = useState(settings);
 
   const handleSave = () => {
@@ -14,8 +14,26 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
   const handleClearCache = async () => {
     if (confirm('Are you sure you want to clear the API cache?')) {
-      // Clear cache logic here
-      alert('Cache cleared successfully!');
+      try {
+        await window.electron.invoke('clear-api-cache');
+        alert('Cache cleared successfully!');
+      } catch (error) {
+        alert('Failed to clear cache: ' + error);
+      }
+    }
+  };
+
+  const handleClearRecentInstances = () => {
+    if (confirm('Are you sure you want to clear all recent instances?')) {
+      clearRecentInstances();
+      setLocalSettings({ ...localSettings, recentInstances: [] });
+    }
+  };
+
+  const handleResetSettings = () => {
+    if (confirm('Are you sure you want to reset all settings to default?')) {
+      resetSettings();
+      setLocalSettings(useSettingsStore.getState().settings);
     }
   };
 
@@ -174,22 +192,29 @@ export function Settings({ onClose }: { onClose: () => void }) {
             </div>
 
             {localSettings.recentInstances && localSettings.recentInstances.length > 0 && (
-              <div className="recent-instances-list">
-                {localSettings.recentInstances.map((path, index) => (
-                  <div key={index} className="recent-instance-item">
-                    <span className="instance-path" title={path}>{path}</span>
-                    <button
-                      onClick={() => {
-                        const updated = localSettings.recentInstances.filter((_, i) => i !== index);
-                        setLocalSettings({ ...localSettings, recentInstances: updated });
-                      }}
-                      className="remove-btn"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <>
+                <div className="recent-instances-list">
+                  {localSettings.recentInstances.map((path, index) => (
+                    <div key={index} className="recent-instance-item">
+                      <span className="instance-path" title={path}>{path}</span>
+                      <button
+                        onClick={() => {
+                          const updated = localSettings.recentInstances.filter((_, i) => i !== index);
+                          setLocalSettings({ ...localSettings, recentInstances: updated });
+                        }}
+                        className="remove-btn"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="setting-row">
+                  <button onClick={handleClearRecentInstances} className="btn-secondary">
+                    🗑️ Clear All Recent Instances
+                  </button>
+                </div>
+              </>
             )}
           </section>
 
@@ -236,8 +261,11 @@ export function Settings({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="settings-footer">
-          <button onClick={onClose} className="btn-secondary">Cancel</button>
-          <button onClick={handleSave} className="btn-primary">💾 Save Settings</button>
+          <button onClick={handleResetSettings} className="btn-danger">Reset to Defaults</button>
+          <div className="footer-right">
+            <button onClick={onClose} className="btn-secondary">Cancel</button>
+            <button onClick={handleSave} className="btn-primary">💾 Save Settings</button>
+          </div>
         </div>
       </div>
     </div>,

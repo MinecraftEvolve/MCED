@@ -468,3 +468,35 @@
 .btn-secondary:active {
   transform: translateY(0);
 }
+
+.settings-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-top: 1px solid #2a2a2a;
+  background: #0f0f0f;
+  gap: 12px;
+}
+
+.footer-right {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-danger {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}

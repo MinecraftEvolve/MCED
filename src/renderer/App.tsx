@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from './store';
+import { useSettingsStore } from './store/settingsStore';
 import { Loader2, Settings as SettingsIcon } from 'lucide-react';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
@@ -54,6 +55,7 @@ async function enrichModsWithModrinthIcons(mods: ModInfo[]): Promise<ModInfo[]> 
 
 function App() {
   const { currentInstance, setCurrentInstance, setMods, setIsLoading, isLoading, mods } = useAppStore();
+  const { addRecentInstance } = useSettingsStore();
   const [error, setError] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -80,6 +82,9 @@ function App() {
       }
 
       setCurrentInstance(result.instance);
+      
+      // Add to recent instances
+      addRecentInstance(path);
 
       // Scan mods
       const modsResult = await window.electronAPI.scanMods(result.instance.modsFolder);

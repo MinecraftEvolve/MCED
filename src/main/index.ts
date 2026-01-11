@@ -248,6 +248,18 @@ ipcMain.handle('backup:create', async (_event, instancePath: string) => {
   }
 });
 
+ipcMain.handle('clear-api-cache', async () => {
+  try {
+    const cacheDir = path.join(app.getPath('userData'), 'api-cache');
+    await fs.rm(cacheDir, { recursive: true, force: true });
+    await fs.mkdir(cacheDir, { recursive: true });
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to clear cache:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle('backup:restore', async (_event, instancePath: string, backupId: string) => {
   try {
     const AdmZip = require('adm-zip');

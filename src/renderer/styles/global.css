@@ -1,0 +1,40 @@
+
+/* Compact Mode Styles */
+body.compact-mode .mod-list-item {
+  padding: 8px 12px;
+  min-height: 48px;
+}
+
+body.compact-mode .mod-icon {
+  width: 32px;
+  height: 32px;
+}
+
+body.compact-mode .mod-list-item h4 {
+  font-size: 13px;
+}
+
+body.compact-mode .mod-badge {
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+body.compact-mode .setting-group {
+  margin-bottom: 16px;
+}
+
+body.compact-mode .setting-row {
+  padding: 8px 0;
+}
+
+body.compact-mode .config-editor {
+  gap: 16px;
+}
+
+body.compact-mode .mod-info-card {
+  padding: 16px;
+}
+
+body.compact-mode .search-input {
+  padding: 8px 12px;
+}
