@@ -203,15 +203,6 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
                 </div>
                 {settings.map((setting, index) => (
                   <div key={`${setting.key}-${index}`} className="config-setting">
-                    <div className="config-setting-header">
-                      <div className="config-setting-name">{setting.name || setting.key}</div>
-                      {setting.type && (
-                        <span className="config-setting-badge">{setting.type}</span>
-                      )}
-                    </div>
-                    {setting.description && (
-                      <div className="config-setting-description">{setting.description}</div>
-                    )}
                     <div className="config-setting-control">
                       {renderSettingInput(setting, handleSettingChange)}
                     </div>
