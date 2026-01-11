@@ -108,7 +108,7 @@ Use natural language to find configs:
 
 ## 🏗️ Project Structure
 
-```
+```txt
 minecraft-config-editor/
 ├── src/
 │   ├── main/                    # Electron main process
@@ -246,4 +246,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Made with ❤️ for the Minecraft modding community**
+### Made with ❤️ for the Minecraft modding community
