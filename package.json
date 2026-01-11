@@ -52,7 +52,7 @@
     "react-dom": "^18.2.0",
     "sharp": "^0.33.1",
     "tailwind-merge": "^2.2.0",
-    "zustand": "^4.4.7"
+    "zustand": "^4.5.7"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.5",
@@ -102,7 +102,6 @@
           ]
         }
       ],
-
       "publisherName": "MCED Team",
       "verifyUpdateCodeSignature": false
     },
@@ -132,7 +131,6 @@
         "dmg",
         "zip"
       ],
-
       "category": "public.app-category.utilities",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -164,7 +162,6 @@
         "AppImage",
         "deb"
       ],
-
       "category": "Utility",
       "maintainer": "MCED Team <support@mced.app>",
       "vendor": "MCED Team",
