@@ -1,5 +1,5 @@
 import TOML from '@iarna/toml';
-import { ConfigContent, ConfigSetting } from '../../types/config.types';
+import { ConfigContent, ConfigSetting } from '../types/config.types';
 
 interface ParsedComment {
   description?: string;

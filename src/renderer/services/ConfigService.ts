@@ -1,6 +1,8 @@
-import { ConfigFile, ConfigSetting } from '@shared/types/config.types';
+import { ConfigFile, ConfigSetting } from '../types/config.types';
+import { TomlParser } from './parsers/TomlParser';
 
 export class ConfigService {
+  private tomlParser = new TomlParser();
   /**
    * Load config files for a specific mod
    */
@@ -132,13 +134,68 @@ export class ConfigService {
   }
 
   /**
-   * Parse TOML config (simple implementation)
+   * Parse TOML config with full metadata extraction
    */
   private parseToml(content: string): ConfigSetting[] {
     const settings: ConfigSetting[] = [];
+    
+    try {
+      // Use enhanced parser to get metadata
+      const { data, metadata } = this.tomlParser.parseWithMetadata(content);
+      
+      // Flatten the TOML object into settings
+      this.extractSettingsFromToml(data, settings, '', metadata);
+    } catch (error) {
+      console.error('Error parsing TOML:', error);
+      // Fallback to simple parsing
+      return this.parseTomlFallback(content);
+    }
+
+    return settings;
+  }
+
+  /**
+   * Recursively extract settings from TOML data
+   */
+  private extractSettingsFromToml(
+    obj: any,
+    settings: ConfigSetting[],
+    path: string,
+    metadata: Map<string, any>
+  ) {
+    for (const [key, value] of Object.entries(obj)) {
+      const fullKey = path ? `${path}.${key}` : key;
+
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        // Nested object - recurse
+        this.extractSettingsFromToml(value, settings, fullKey, metadata);
+      } else {
+        // Leaf value - create setting with metadata
+        const meta = metadata.get(fullKey) || {};
+        const setting: ConfigSetting = {
+          key: fullKey,
+          value,
+          defaultValue: meta.defaultValue !== undefined ? meta.defaultValue : value,
+          type: this.inferType(value),
+          description: meta.description,
+          section: path || undefined,
+          range: meta.range,
+          allowedValues: meta.allowedValues,
+          unit: meta.unit,
+        };
+        settings.push(setting);
+      }
+    }
+  }
+
+  /**
+   * Fallback TOML parser (simple line-by-line)
+   */
+  private parseTomlFallback(content: string): ConfigSetting[] {
+    const settings: ConfigSetting[] = [];
     const lines = content.split('\n');
     let currentSection = '';
-    let currentComment = '';
+    let currentComments: string[] = [];
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -146,12 +203,16 @@ export class ConfigService {
       // Section header
       if (line.startsWith('[') && line.endsWith(']')) {
         currentSection = line.slice(1, -1);
+        currentComments = [];
         continue;
       }
 
       // Comment
       if (line.startsWith('#')) {
-        currentComment += line.slice(1).trim() + ' ';
+        const comment = line.slice(1).trim();
+        if (comment && comment !== '.') {
+          currentComments.push(comment);
+        }
         continue;
       }
 
@@ -160,15 +221,23 @@ export class ConfigService {
         const [key, ...valueParts] = line.split('=');
         const value = valueParts.join('=').trim();
         
-        const setting = this.createSetting(
-          key.trim(),
-          this.parseValue(value),
-          currentComment.trim(),
-          currentSection
-        );
+        const fullKey = currentSection ? `${currentSection}.${key.trim()}` : key.trim();
+        const description = currentComments.join(' ');
+        
+        const setting: ConfigSetting = {
+          key: fullKey,
+          value: this.parseValue(value),
+          defaultValue: this.parseValue(value),
+          type: this.inferType(this.parseValue(value)),
+          description: description || undefined,
+          section: currentSection || undefined,
+        };
         
         settings.push(setting);
-        currentComment = '';
+        currentComments = [];
+      } else if (line !== '') {
+        // Reset comments on non-empty non-setting lines
+        currentComments = [];
       }
     }
 
