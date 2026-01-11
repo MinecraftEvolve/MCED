@@ -180,7 +180,8 @@ ipcMain.handle('modrinth:getProject', async (_event, idOrSlug: string) => {
       return { success: false, error: 'Project not found' };
     }
     const data = await response.json();
-    return { success: true, project: data };
+    // Return only serializable data
+    return { success: true, project: JSON.parse(JSON.stringify(data)) };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

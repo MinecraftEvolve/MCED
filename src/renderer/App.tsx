@@ -139,7 +139,7 @@ function App() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground">
-        <img src="/assets/logo.png" alt="Minecraft Config Editor" className="w-24 h-24 mb-6 drop-shadow-2xl animate-pulse" />
+        <img src="/logo.png" alt="Minecraft Config Editor" className="w-24 h-24 mb-6 drop-shadow-2xl animate-pulse" />
         <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent mb-4"></div>
         <p className="text-xl font-semibold text-muted-foreground">Loading instance...</p>
       </div>
@@ -152,7 +152,7 @@ function App() {
         <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground">
           {/* Logo */}
           <div className="mb-8">
-            <img src="./assets/logo.png" alt="Minecraft Config Editor" className="w-32 h-32 drop-shadow-2xl" />
+            <img src="/logo.png" alt="Minecraft Config Editor" className="w-32 h-32 drop-shadow-2xl" />
           </div>
 
           {/* Title */}
