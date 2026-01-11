@@ -93,6 +93,7 @@
       "package.json"
     ],
     "win": {
+      "icon": "assets/icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -122,9 +123,8 @@
       "deleteAppDataOnUninstall": false,
       "menuCategory": true,
       "runAfterFinish": true,
-      "installerHeader": "build/installerHeader.bmp",
-      "installerSidebar": "build/installerSidebar.bmp",
-      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
       "license": "LICENSE",
       "warningsAsErrors": false
     },
@@ -132,6 +132,7 @@
       "artifactName": "${productName}-Portable-${version}.${ext}"
     },
     "mac": {
+      "icon": "assets/icon.icns",
       "target": [
         "dmg",
         "zip"
@@ -163,6 +164,7 @@
       }
     },
     "linux": {
+      "icon": "assets/icons",
       "target": [
         "AppImage",
         "deb"
