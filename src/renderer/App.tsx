@@ -73,7 +73,7 @@ function App() {
       if (providedPath) {
         instancePath = providedPath;
       } else {
-        instancePath = await window.electronAPI.openDirectory();
+        instancePath = await window.electron.openDirectory();
       }
       
       if (!instancePath) {

@@ -42,6 +42,96 @@ const createWindow = () => {
   });
 };
 
+// IPC Handlers
+ipcMain.handle('open-directory', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openDirectory']
+  });
+  
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+  
+  return result.filePaths[0];
+});
+
+ipcMain.handle('detect-instance', async (_event, instancePath: string) => {
+  try {
+    const detector = new InstanceDetector();
+    const instance = await detector.detectInstance(instancePath);
+    
+    // Return plain serializable object
+    return {
+      success: true,
+      instance: instance ? {
+        path: instance.path,
+        name: instance.name,
+        minecraftVersion: instance.minecraftVersion,
+        loader: instance.loader,
+        loaderVersion: instance.loaderVersion || 'Unknown',
+        source: instance.source || 'Unknown',
+        modpackName: instance.modpackName || instance.name,
+        modpackVersion: instance.modpackVersion || 'Unknown'
+      } : null
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+ipcMain.handle('scan-mods', async (_event, instancePath: string) => {
+  try {
+    const scanner = new JarScanner();
+    const modsPath = path.join(instancePath, 'mods');
+    const mods = await scanner.scan(modsPath);
+    
+    // Return plain serializable objects
+    return {
+      success: true,
+      mods: mods.map((mod: any) => ({
+        id: mod.id,
+        name: mod.name,
+        version: mod.version,
+        description: mod.description,
+        authors: mod.authors,
+        homepage: mod.homepage,
+        sources: mod.sources,
+        license: mod.license,
+        iconPath: mod.iconPath,
+        dependencies: mod.dependencies,
+        jarPath: mod.jarPath
+      }))
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message,
+      mods: []
+    };
+  }
+});
+
+ipcMain.handle('read-config', async (_event, configPath: string) => {
+  try {
+    const content = await fs.readFile(configPath, 'utf-8');
+    return { success: true, content };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('write-config', async (_event, configPath: string, content: string) => {
+  try {
+    await fs.writeFile(configPath, content, 'utf-8');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
 app.whenReady().then(() => {
   createWindow();
 
