@@ -167,7 +167,11 @@ function App() {
                     return (
                       <button
                         key={idx}
-                        onClick={() => handleOpenInstance()}
+                        onClick={async () => {
+                          setIsLoading(true);
+                          await window.electron.openInstance(instancePath);
+                          setIsLoading(false);
+                        }}
                         className="w-full px-4 py-3 bg-card hover:bg-card/80 rounded-lg text-left
                                  transition-all duration-200 border border-border hover:border-purple-500/50 group"
                       >
