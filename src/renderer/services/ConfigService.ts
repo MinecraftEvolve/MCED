@@ -13,11 +13,11 @@ export class ConfigService {
 
       // Find config files that match the mod
       const configFiles = result.files.filter((file: string) => {
-        const lower = file.toLowerCase();
-        return (
-          lower.includes(modId.toLowerCase()) &&
-          (lower.endsWith('.toml') || lower.endsWith('.json') || lower.endsWith('.json5'))
-        );
+        if (!(file.endsWith('.toml') || file.endsWith('.json') || file.endsWith('.json5'))) {
+          return false;
+        }
+        
+        return this.matchesModId(file, modId);
       });
 
       const configs: ConfigFile[] = [];
@@ -39,6 +39,45 @@ export class ConfigService {
       console.error('Error loading configs:', error);
       return [];
     }
+  }
+
+  /**
+   * Match config file to mod ID with smart matching
+   */
+  private matchesModId(fileName: string, modId: string): boolean {
+    const fileNameLower = fileName.toLowerCase().replace(/\.(toml|json|json5)$/, '');
+    const modIdLower = modId.toLowerCase();
+    
+    // Exact match (e.g., "create-common.toml" matches "create")
+    if (fileNameLower === modIdLower) {
+      return true;
+    }
+    
+    // Exact match with suffix (e.g., "create-common.toml" matches "create")
+    if (fileNameLower.startsWith(modIdLower + '-') || fileNameLower.startsWith(modIdLower + '_')) {
+      return true;
+    }
+    
+    // Exact match with word boundaries (e.g., "create_jetpack-common.toml" matches "create_jetpack")
+    // But NOT "create-common.toml" for "create_jetpack"
+    const parts = fileNameLower.split(/[-_]/);
+    const modIdParts = modIdLower.split(/[-_]/);
+    
+    // Check if all parts of modId appear consecutively in filename
+    for (let i = 0; i <= parts.length - modIdParts.length; i++) {
+      let match = true;
+      for (let j = 0; j < modIdParts.length; j++) {
+        if (parts[i + j] !== modIdParts[j]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 
   /**
