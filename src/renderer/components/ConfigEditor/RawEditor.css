@@ -1,0 +1,115 @@
+.raw-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1a1a1a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.raw-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #242424;
+  border-bottom: 1px solid #333;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-left h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.file-path {
+  font-size: 12px;
+  color: #888;
+  font-family: 'Courier New', monospace;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.header-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-discard {
+  background: #333;
+  color: #fff;
+}
+
+.btn-discard:hover {
+  background: #444;
+}
+
+.btn-save {
+  background: #667eea;
+  color: white;
+}
+
+.btn-save:hover {
+  background: #5568d3;
+}
+
+.btn-close {
+  background: transparent;
+  color: #888;
+  border: 1px solid #444;
+}
+
+.btn-close:hover {
+  background: #333;
+  color: #fff;
+}
+
+.raw-editor-textarea {
+  flex: 1;
+  padding: 20px;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  border: none;
+  outline: none;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: none;
+  tab-size: 2;
+}
+
+.raw-editor-textarea::selection {
+  background: #667eea;
+  color: white;
+}
+
+.raw-editor-footer {
+  display: flex;
+  gap: 20px;
+  padding: 12px 20px;
+  background: #242424;
+  border-top: 1px solid #333;
+  font-size: 12px;
+  color: #888;
+}
+
+.unsaved-indicator {
+  margin-left: auto;
+  color: #f59e0b;
+  font-weight: 500;
+}

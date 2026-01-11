@@ -6,6 +6,7 @@ import { SliderInput } from './SliderInput';
 import { TextInput } from './TextInput';
 import { DropdownInput } from './DropdownInput';
 import { ListInput } from './ListInput';
+import { RawEditor } from './RawEditor';
 import { useAppStore } from '@/store';
 
 interface ConfigEditorProps {
@@ -19,6 +20,7 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
   const [selectedConfig, setSelectedConfig] = useState<ConfigFile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRawMode, setIsRawMode] = useState(false);
   const { setHasUnsavedChanges } = useAppStore();
 
   useEffect(() => {
@@ -129,36 +131,59 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
 
   return (
     <div className="space-y-4">
-      {/* Config file tabs */}
-      {configs.length > 1 && (
-        <div className="flex gap-2 border-b border-border">
-          {configs.map(config => (
-            <button
-              key={config.path}
-              onClick={() => setSelectedConfig(config)}
-              className={`
-                px-4 py-2 text-sm font-medium border-b-2 transition-colors
-                ${selectedConfig?.path === config.path
-                  ? 'border-primary text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-                }
-              `}
-            >
-              {config.name}
-            </button>
-          ))}
-        </div>
+      {/* Config file tabs and controls */}
+      <div className="flex items-center justify-between border-b border-border">
+        {configs.length > 1 && (
+          <div className="flex gap-2">
+            {configs.map(config => (
+              <button
+                key={config.path}
+                onClick={() => setSelectedConfig(config)}
+                className={`
+                  px-4 py-2 text-sm font-medium border-b-2 transition-colors
+                  ${selectedConfig?.path === config.path
+                    ? 'border-primary text-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }
+                `}
+              >
+                {config.name}
+              </button>
+            ))}
+          </div>
+        )}
+        <button
+          onClick={() => setIsRawMode(!isRawMode)}
+          className="px-3 py-1 text-sm bg-[#2a2a2a] hover:bg-[#333] rounded-md transition-colors"
+          title={isRawMode ? 'Switch to Form View' : 'Switch to Raw Edit Mode'}
+        >
+          {isRawMode ? '📋 Form View' : '📝 Raw Edit'}
+        </button>
+      </div>
       )}
 
-      {/* Settings */}
-      {selectedConfig && (
-        <div className="space-y-1">
-          {selectedConfig.settings.map((setting, index) => (
-            <div key={`${setting.key}-${index}`}>
-              {renderSettingInput(setting, handleSettingChange)}
-            </div>
-          ))}
-        </div>
+      {/* Raw Editor or Settings */}
+      {selectedConfig && isRawMode ? (
+        <RawEditor
+          filePath={selectedConfig.path}
+          content={selectedConfig.rawContent || ''}
+          onSave={(content) => {
+            // Save raw content
+            setSelectedConfig({ ...selectedConfig, rawContent: content });
+            handleSave();
+          }}
+          onCancel={() => setIsRawMode(false)}
+        />
+      ) : (
+        selectedConfig && (
+          <div className="space-y-1">
+            {selectedConfig.settings.map((setting, index) => (
+              <div key={`${setting.key}-${index}`}>
+                {renderSettingInput(setting, handleSettingChange)}
+              </div>
+            ))}
+          </div>
+        )
       )}
     </div>
   );
