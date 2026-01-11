@@ -33,6 +33,7 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
     // Listen for discard event from StatusBar
     const handleDiscard = () => {
       loadConfigs();
+      setHasUnsavedChanges(false);
     };
 
     window.addEventListener('save-all-configs', handleSaveAll);
@@ -41,7 +42,7 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
       window.removeEventListener('save-all-configs', handleSaveAll);
       window.removeEventListener('discard-all-changes', handleDiscard);
     };
-  }, [selectedConfig]);
+  }, []);
 
   const loadConfigs = async () => {
     setIsLoading(true);
