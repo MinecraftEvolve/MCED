@@ -169,9 +169,26 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
         <RawEditor
           filePath={selectedConfig.path}
           content={selectedConfig.rawContent || ''}
-          onSave={(content) => {
-            setSelectedConfig({ ...selectedConfig, rawContent: content });
-            handleSave();
+          onSave={async (content) => {
+            // Update the raw content and save
+            const updatedConfig = { ...selectedConfig, rawContent: content };
+            setSelectedConfig(updatedConfig);
+            setConfigs(configs.map(c => c.path === updatedConfig.path ? updatedConfig : c));
+            
+            // Save to disk
+            setIsSaving(true);
+            try {
+              const success = await configService.saveConfig(updatedConfig);
+              if (success) {
+                setOriginalConfigs(JSON.parse(JSON.stringify(configs)));
+                setHasUnsavedChanges(false);
+                console.log('Config saved successfully');
+              }
+            } catch (error) {
+              console.error('Error saving config:', error);
+            } finally {
+              setIsSaving(false);
+            }
           }}
           onCancel={() => setIsRawMode(false)}
         />
@@ -186,13 +203,11 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
                 </div>
                 {settings.map((setting, index) => (
                   <div key={`${setting.key}-${index}`} className="config-setting">
-                    <div className="config-setting-label">
-                      <div className="config-setting-name">
-                        {setting.name || setting.key}
-                        {setting.type && (
-                          <span className="config-setting-badge">{setting.type}</span>
-                        )}
-                      </div>
+                    <div className="config-setting-header">
+                      <div className="config-setting-name">{setting.name || setting.key}</div>
+                      {setting.type && (
+                        <span className="config-setting-badge">{setting.type}</span>
+                      )}
                     </div>
                     {setting.description && (
                       <div className="config-setting-description">{setting.description}</div>
@@ -200,19 +215,20 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
                     <div className="config-setting-control">
                       {renderSettingInput(setting, handleSettingChange)}
                     </div>
-                    {(setting.defaultValue !== undefined || setting.min !== undefined) && (
+                    {(setting.defaultValue !== undefined || setting.range) && (
                       <div className="config-setting-meta">
                         {setting.defaultValue !== undefined && (
-                          <div className="config-setting-default">
-                            <span>Default:</span>
-                            <code>{String(setting.defaultValue)}</code>
-                          </div>
+                          <span className="config-meta-item">
+                            Default: <code>{String(setting.defaultValue)}</code>
+                          </span>
                         )}
-                        {(setting.min !== undefined && setting.max !== undefined) && (
-                          <div className="config-setting-range">
-                            <span>Range:</span>
-                            <code>{setting.min} - {setting.max}</code>
-                          </div>
+                        {setting.range && (
+                          <span className="config-meta-item">
+                            Range: <code>{setting.range.min} - {setting.range.max}</code>
+                          </span>
+                        )}
+                        {setting.unit && (
+                          <span className="config-meta-item">Unit: {setting.unit}</span>
                         )}
                       </div>
                     )}
