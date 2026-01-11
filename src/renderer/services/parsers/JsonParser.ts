@@ -115,23 +115,52 @@ export class JsonParser {
         settings.push(...this.flattenObject(value, fullKey, commentMap));
       } else {
         const comment = commentMap.get(key) || '';
-        const metadata = comment ? this.extractMetadata(comment) : {};
+        const metadata = comment ? this.extractMetadata(comment) : this.inferMetadataFromValue(key, value);
         
         settings.push({
           key: fullKey,
           value,
           type: this.detectType(value, metadata),
-          description: metadata.description,
+          description: metadata.description || `${key} setting`,
           comment,
           range: metadata.range,
           allowedValues: metadata.allowedValues,
           unit: metadata.unit,
           default: metadata.default,
+          step: metadata.step,
         });
       }
     }
 
     return settings;
+  }
+
+  private inferMetadataFromValue(key: string, value: any): any {
+    const metadata: any = {};
+
+    // Infer from key name
+    if (key.toLowerCase().includes('volume') || key.toLowerCase().includes('overall')) {
+      metadata.range = [0, 1];
+      metadata.step = 0.01;
+      metadata.description = 'Volume level (0 = muted, 1 = full volume)';
+    } else if (key.toLowerCase().includes('enable') || key.toLowerCase().includes('use')) {
+      metadata.description = `Enable or disable this feature`;
+    } else if (typeof value === 'number') {
+      // Smart range detection based on value
+      if (value >= 0 && value <= 1) {
+        metadata.range = [0, 1];
+        metadata.step = 0.01;
+      } else if (value >= 0 && value <= 100) {
+        metadata.range = [0, 100];
+      } else if (value >= 0 && value <= 1000) {
+        metadata.range = [0, 1000];
+      } else {
+        // Use value as guide for range
+        metadata.range = [0, Math.max(value * 2, 10000)];
+      }
+    }
+
+    return metadata;
   }
 
   private detectType(value: any, metadata: any = {}): ConfigSetting['type'] {
