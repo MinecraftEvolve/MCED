@@ -15,6 +15,7 @@ interface ConfigEditorProps {
 
 export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
   const [configs, setConfigs] = useState<ConfigFile[]>([]);
+  const [originalConfigs, setOriginalConfigs] = useState<ConfigFile[]>([]);
   const [selectedConfig, setSelectedConfig] = useState<ConfigFile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -32,7 +33,16 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
 
     // Listen for discard event from StatusBar
     const handleDiscard = () => {
-      loadConfigs();
+      // Restore from original configs
+      if (originalConfigs.length > 0) {
+        setConfigs(JSON.parse(JSON.stringify(originalConfigs)));
+        if (selectedConfig) {
+          const restoredConfig = originalConfigs.find(c => c.path === selectedConfig.path);
+          if (restoredConfig) {
+            setSelectedConfig(JSON.parse(JSON.stringify(restoredConfig)));
+          }
+        }
+      }
       setHasUnsavedChanges(false);
     };
 
@@ -42,13 +52,14 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
       window.removeEventListener('save-all-configs', handleSaveAll);
       window.removeEventListener('discard-all-changes', handleDiscard);
     };
-  }, []);
+  }, [originalConfigs, selectedConfig]);
 
   const loadConfigs = async () => {
     setIsLoading(true);
     try {
       const loadedConfigs = await configService.loadModConfigs(instancePath, modId);
       setConfigs(loadedConfigs);
+      setOriginalConfigs(JSON.parse(JSON.stringify(loadedConfigs))); // Store deep clone
       if (loadedConfigs.length > 0) {
         setSelectedConfig(loadedConfigs[0]);
       }
@@ -85,6 +96,8 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
     try {
       const success = await configService.saveConfig(selectedConfig);
       if (success) {
+        // Update original configs to match saved state
+        setOriginalConfigs(JSON.parse(JSON.stringify(configs)));
         setHasUnsavedChanges(false);
         // Show success message
         console.log('Config saved successfully');

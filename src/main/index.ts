@@ -166,48 +166,55 @@ ipcMain.handle('launch:minecraft', async (_event, instancePath: string, launcher
     
     // Detect Modrinth launcher
     if (instancePath.includes('ModrinthApp')) {
-      // Modrinth App uses the profile folder name to identify profiles
-      // Launch using modrinth:// protocol
-      const profileName = path.basename(instancePath);
-      const url = `modrinth://run/${encodeURIComponent(profileName)}`;
+      // Open the Modrinth App directly - let user launch from there
+      // The Modrinth protocol doesn't support direct profile launching reliably
       
-      console.log('Launching Modrinth profile:', profileName);
-      console.log('Using URL:', url);
+      console.log('Opening Modrinth App...');
       
       try {
         return new Promise((resolve, reject) => {
+          const modrinthUrl = 'modrinth://';
+          
           if (process.platform === 'win32') {
-            exec(`start "" "${url}"`, (error: any) => {
+            // Try to launch the Modrinth App executable directly
+            const modrinthExe = path.join(process.env.LOCALAPPDATA || '', 'Programs', 'ModrinthApp', 'Modrinth App.exe');
+            
+            // First try to launch the executable
+            exec(`"${modrinthExe}"`, (error: any) => {
               if (error) {
-                console.error('Failed to launch:', error);
-                resolve({ success: false, error: 'Could not launch. Please open Modrinth App and launch manually.' });
+                // Fallback to protocol
+                exec(`start "" "${modrinthUrl}"`, (error2: any) => {
+                  if (error2) {
+                    resolve({ success: false, error: 'Could not open Modrinth App. Please launch manually.' });
+                  } else {
+                    resolve({ success: true, message: 'Modrinth App opened. Please launch your profile from there.' });
+                  }
+                });
               } else {
-                resolve({ success: true });
+                resolve({ success: true, message: 'Modrinth App opened. Please launch your profile from there.' });
               }
             });
           } else if (process.platform === 'darwin') {
-            exec(`open "${url}"`, (error: any) => {
+            exec(`open -a "Modrinth App"`, (error: any) => {
               if (error) {
-                console.error('Failed to launch:', error);
-                resolve({ success: false, error: 'Could not launch. Please open Modrinth App and launch manually.' });
+                resolve({ success: false, error: 'Could not open Modrinth App. Please launch manually.' });
               } else {
-                resolve({ success: true });
+                resolve({ success: true, message: 'Modrinth App opened. Please launch your profile from there.' });
               }
             });
           } else {
-            exec(`xdg-open "${url}"`, (error: any) => {
+            exec(`xdg-open "${modrinthUrl}"`, (error: any) => {
               if (error) {
-                console.error('Failed to launch:', error);
-                resolve({ success: false, error: 'Could not launch. Please open Modrinth App and launch manually.' });
+                resolve({ success: false, error: 'Could not open Modrinth App. Please launch manually.' });
               } else {
-                resolve({ success: true });
+                resolve({ success: true, message: 'Modrinth App opened. Please launch your profile from there.' });
               }
             });
           }
         });
       } catch (err) {
         console.error('Modrinth launch error:', err);
-        return { success: false, error: 'Could not launch Modrinth instance. Try launching from the Modrinth app.' };
+        return { success: false, error: 'Could not open Modrinth App. Please launch manually.' };
       }
     }
     
