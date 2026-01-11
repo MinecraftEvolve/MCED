@@ -110,13 +110,8 @@
 │  │   ├─ [✓] Search suggestions                                            │
 │  │   └─ [✓] Result highlighting                                           │
 │  │                                                                         │
-│  ├─ [✓] Quick Launch (Feature #10)                                        │
-│  │   ├─ [✓] LaunchButton.tsx component                                    │
-│  │   ├─ [✓] LauncherService.ts                                            │
-│  │   ├─ [✓] Detect launcher type                                          │
-│  │   ├─ [✓] Launch Minecraft via IPC                                      │
-│  │   ├─ [ ] Monitor game process                                          │
-│  │   └─ [ ] Show memory stats                                             │
+│  ├─ [✗] Quick Launch (Feature #10) - REMOVED                              │
+│  │   └─ Launcher integration proved unreliable across platforms          │
 │  │                                                                         │
 │  └─ [✓] Platform APIs                                                     │
 │      ├─ [ ] CurseForgeAPI.ts                                              │
