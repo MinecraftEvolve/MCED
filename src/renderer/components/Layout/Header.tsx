@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAppStore } from '@/store';
-import { LaunchButton } from './LaunchButton';
 
 interface HeaderProps {
   onSearchClick: () => void;
@@ -52,8 +51,6 @@ export function Header({ onSearchClick }: HeaderProps) {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <LaunchButton />
-          
           <button
             onClick={onSearchClick}
             className="px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-sm"

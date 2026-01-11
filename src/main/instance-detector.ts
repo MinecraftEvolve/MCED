@@ -161,6 +161,32 @@ export class InstanceDetector {
       }
     }
 
+    // Try modrinth.index.json (Modrinth launcher)
+    const modrinthIndex = path.join(instancePath, '..', path.basename(instancePath).replace(/\s+\d+\.\d+\.\d+$/, ''), 'profile.json');
+    if (await this.fileExists(modrinthIndex)) {
+      try {
+        const content = await fs.readFile(modrinthIndex, 'utf-8');
+        const json = JSON.parse(content);
+        if (json.loader) {
+          const loader = json.loader.toLowerCase();
+          if (loader.includes('forge')) {
+            return { type: 'forge', version: json.loader_version?.id || json.game_version || 'Unknown' };
+          }
+          if (loader.includes('fabric')) {
+            return { type: 'fabric', version: json.loader_version?.id || 'Unknown' };
+          }
+          if (loader.includes('neoforge')) {
+            return { type: 'neoforge', version: json.loader_version?.id || 'Unknown' };
+          }
+          if (loader.includes('quilt')) {
+            return { type: 'quilt', version: json.loader_version?.id || 'Unknown' };
+          }
+        }
+      } catch (error) {
+        console.error('Failed to read modrinth profile.json:', error);
+      }
+    }
+
     // Try minecraftinstance.json (CurseForge)
     const curseforgeInstance = path.join(instancePath, 'minecraftinstance.json');
     if (await this.fileExists(curseforgeInstance)) {
@@ -208,7 +234,7 @@ export class InstanceDetector {
       }
     }
 
-    // Fallback: Scan mods folder
+    // Fallback: Scan mods folder and extract version from JAR files
     const modsFolder = path.join(instancePath, 'mods');
     const altModsFolder = path.join(instancePath, '.minecraft', 'mods');
     const finalModsFolder = await this.folderExists(modsFolder) ? modsFolder : altModsFolder;
@@ -219,9 +245,28 @@ export class InstanceDetector {
         const jarFiles = files.filter(f => f.endsWith('.jar'));
         
         if (jarFiles.length > 0) {
-          // Check first mod file
-          const loaderFromMod = await this.detectLoaderFromMod(path.join(finalModsFolder, jarFiles[0]));
-          if (loaderFromMod) return loaderFromMod;
+          // Check first few mod files
+          for (const jarFile of jarFiles.slice(0, 5)) {
+            const loaderFromMod = await this.detectLoaderFromMod(path.join(finalModsFolder, jarFile));
+            if (loaderFromMod && loaderFromMod.version !== 'Unknown') return loaderFromMod;
+          }
+          
+          // If we still don't have version, try to extract from filename
+          const loaderType = await this.detectLoaderFromMod(path.join(finalModsFolder, jarFiles[0]));
+          if (loaderType) {
+            // Try to extract forge version from mod filename
+            for (const jar of jarFiles) {
+              const forgeMatch = jar.match(/forge[-_]?(\d+\.\d+\.\d+)/i);
+              if (forgeMatch) {
+                return { type: loaderType.type, version: forgeMatch[1] };
+              }
+              const mcMatch = jar.match(/mc[-_]?(\d+\.\d+\.\d+)/i);
+              if (mcMatch) {
+                return { type: loaderType.type, version: mcMatch[1] };
+              }
+            }
+            return loaderType;
+          }
         }
       } catch (error) {
         console.error('Failed to detect loader from mods:', error);
@@ -243,10 +288,19 @@ export class InstanceDetector {
         return { type: 'fabric', version: 'Unknown' };
       }
 
-      // Check for Forge
+      // Check for Forge and extract version
       const forgeEntry = entries.find((e: any) => e.entryName === 'META-INF/mods.toml');
       if (forgeEntry) {
         const content = forgeEntry.getData().toString('utf8');
+        // Try to extract loaderVersion
+        const loaderVersionMatch = content.match(/loaderVersion\s*=\s*"\[([0-9,.\s]+)\]"/);
+        if (loaderVersionMatch) {
+          const versionRange = loaderVersionMatch[1].trim();
+          const versionParts = versionRange.split(',')[0].trim(); // Get first version in range
+          return { type: 'forge', version: versionParts };
+        }
+        
+        // Check for modLoader field
         const match = content.match(/modLoader\s*=\s*"([^"]+)"/);
         if (match && match[1].includes('javafml')) {
           return { type: 'forge', version: 'Unknown' };
@@ -273,6 +327,23 @@ export class InstanceDetector {
   }
 
   private async detectModpack(instancePath: string): Promise<ModpackInfo | undefined> {
+    // Try Modrinth profile.json (Modrinth Launcher)
+    const instanceBaseName = path.basename(instancePath).replace(/\s+\d+\.\d+\.\d+$/, '');
+    const modrinthProfile = path.join(instancePath, '..', instanceBaseName, 'profile.json');
+    if (await this.fileExists(modrinthProfile)) {
+      try {
+        const content = await fs.readFile(modrinthProfile, 'utf-8');
+        const json = JSON.parse(content);
+        return {
+          source: 'modrinth',
+          name: json.name || instanceBaseName,
+          version: json.linked_data?.version_id || json.game_version || 'Unknown',
+        };
+      } catch (error) {
+        console.error('Failed to read modrinth profile.json:', error);
+      }
+    }
+
     // Try manifest.json (CurseForge)
     const manifest = path.join(instancePath, 'manifest.json');
     if (await this.fileExists(manifest)) {
@@ -291,7 +362,7 @@ export class InstanceDetector {
       }
     }
 
-    // Try modrinth.index.json (Modrinth)
+    // Try modrinth.index.json (Modrinth modpack format)
     const modrinthIndex = path.join(instancePath, 'modrinth.index.json');
     if (await this.fileExists(modrinthIndex)) {
       try {
@@ -314,6 +385,16 @@ export class InstanceDetector {
       return {
         source: instancePath.includes('PrismLauncher') ? 'prism' : 'multimc',
         name: instanceName,
+      };
+    }
+
+    // Check if it's in Modrinth launcher directory
+    if (instancePath.includes('ModrinthApp')) {
+      const instanceName = path.basename(instancePath);
+      return {
+        source: 'modrinth',
+        name: instanceName.replace(/\s+\d+\.\d+\.\d+$/, ''),
+        version: instanceName.match(/(\d+\.\d+\.\d+)$/)?.[1],
       };
     }
 
