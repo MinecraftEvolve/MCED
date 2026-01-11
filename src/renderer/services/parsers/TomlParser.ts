@@ -80,13 +80,18 @@ export class TomlParser {
 
   private parseCommentMetadata(comments: string[]): ParsedComment {
     const parsed: ParsedComment = {};
-    const fullText = comments.join(' ');
+    const fullText = comments.join('\n');
 
-    // Extract description (everything before range/allowed values)
+    // Extract description (everything before range/allowed values/default)
     const descLines: string[] = [];
     for (const comment of comments) {
-      if (comment.startsWith('Range:') || comment.startsWith('Allowed Values:') || comment.startsWith('[in ')) {
+      // Stop at metadata lines
+      if (comment.match(/^(Range|Allowed Values?|Default|Possible values?|Options?):/i)) {
         break;
+      }
+      // Skip lines that are just metadata markers
+      if (comment.match(/^(SETTING|WARNING|NOTE|IMPORTANT):/i)) {
+        continue;
       }
       descLines.push(comment);
     }
@@ -94,42 +99,89 @@ export class TomlParser {
       parsed.description = descLines.join(' ').trim();
     }
 
-    // Extract range
-    const rangeMatch = fullText.match(/Range:\s*([-\d.]+)\s*~\s*([-\d.E+]+)/i);
-    if (rangeMatch) {
-      const min = parseFloat(rangeMatch[1]);
-      const max = parseFloat(rangeMatch[2]);
-      // Handle scientific notation for very large numbers
-      parsed.range = {
-        min: isFinite(min) ? min : Number.MIN_SAFE_INTEGER,
-        max: isFinite(max) ? max : Number.MAX_SAFE_INTEGER
-      };
+    // Extract range - support multiple formats
+    const rangePatterns = [
+      /Range:\s*([<>]=?\s*)?(-?\d+(?:\.\d+)?(?:E[+-]?\d+)?)\s*~\s*([<>]=?\s*)?(-?\d+(?:\.\d+)?(?:E[+-]?\d+)?)/i,
+      /Range:\s*>\s*(-?\d+(?:\.\d+)?)/i, // Range: > 0
+      /Range:\s*(-?\d+(?:\.\d+)?)\s*~\s*(-?\d+(?:\.\d+)?)/i,
+    ];
+
+    for (const pattern of rangePatterns) {
+      const match = fullText.match(pattern);
+      if (match) {
+        if (match.length === 3) {
+          // Range: > X format
+          const min = parseFloat(match[1]);
+          parsed.range = {
+            min: isFinite(min) ? min : 0,
+            max: Number.MAX_SAFE_INTEGER
+          };
+        } else if (match.length >= 4) {
+          const min = parseFloat(match[2]);
+          const max = parseFloat(match[4]);
+          parsed.range = {
+            min: isFinite(min) ? min : Number.MIN_SAFE_INTEGER,
+            max: isFinite(max) ? max : Number.MAX_SAFE_INTEGER
+          };
+        }
+        break;
+      }
     }
 
-    // Extract allowed values
-    const allowedMatch = fullText.match(/Allowed Values:\s*(.+)/i);
-    if (allowedMatch) {
-      parsed.allowedValues = allowedMatch[1]
-        .split(',')
-        .map(v => v.trim().replace(/['"]/g, ''));
+    // Extract allowed values - support multiple formats
+    const allowedPatterns = [
+      /Allowed Values?:\s*(.+?)(?=\n|$)/i,
+      /Possible values?:\s*(.+?)(?=\n|$)/i,
+      /Options?:\s*(.+?)(?=\n|$)/i,
+    ];
+
+    for (const pattern of allowedPatterns) {
+      const match = fullText.match(pattern);
+      if (match) {
+        const valuesStr = match[1];
+        // Handle both comma-separated and space-separated
+        parsed.allowedValues = valuesStr
+          .split(/[,;\|]|\sand\s/)
+          .map(v => v.trim().replace(/^["']|["']$/g, ''))
+          .filter(v => v && v.length > 0);
+        break;
+      }
     }
 
-    // Extract unit
-    const unitMatch = fullText.match(/\[in ([^\]]+)\]/i);
-    if (unitMatch) {
-      parsed.unit = unitMatch[1];
+    // Extract unit - multiple patterns
+    const unitPatterns = [
+      /\[in ([^\]]+)\]/i,
+      /\(([^)]*(?:percent|%|blocks?|seconds?|ticks?|minutes?|hours?|pixels?|chunks?|mb|kb|gb)[^)]*)\)/i,
+    ];
+
+    for (const pattern of unitPatterns) {
+      const match = fullText.match(pattern);
+      if (match) {
+        parsed.unit = match[1].trim();
+        break;
+      }
     }
 
-    // Extract default value
-    const defaultMatch = fullText.match(/Default:\s*(.+)/i);
-    if (defaultMatch) {
-      const defaultStr = defaultMatch[1].trim();
-      if (defaultStr === 'true' || defaultStr === 'false') {
-        parsed.defaultValue = defaultStr === 'true';
-      } else if (!isNaN(Number(defaultStr))) {
-        parsed.defaultValue = Number(defaultStr);
-      } else {
-        parsed.defaultValue = defaultStr.replace(/['"]/g, '');
+    // Extract default value - multiple patterns
+    const defaultPatterns = [
+      /Default:\s*(.+?)(?=\n|$)/i,
+      /Defaults? to:\s*(.+?)(?=\n|$)/i,
+    ];
+
+    for (const pattern of defaultPatterns) {
+      const match = fullText.match(pattern);
+      if (match) {
+        const defaultStr = match[1].trim();
+        // Parse the value appropriately
+        if (defaultStr === 'true' || defaultStr === 'false') {
+          parsed.defaultValue = defaultStr === 'true';
+        } else if (defaultStr.match(/^-?\d+(\.\d+)?$/)) {
+          parsed.defaultValue = Number(defaultStr);
+        } else {
+          // Remove quotes if present
+          parsed.defaultValue = defaultStr.replace(/^["']|["']$/g, '');
+        }
+        break;
       }
     }
 
