@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from './store';
 import { useSettingsStore } from './store/settingsStore';
-import { Loader2, Settings as SettingsIcon } from 'lucide-react';
+import { Loader2, Settings as SettingsIcon, FolderOpen } from 'lucide-react';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import { MainPanel } from './components/Layout/MainPanel';
 import { StatusBar } from './components/Layout/StatusBar';
 import { SmartSearch } from './components/SmartSearch/SmartSearch';
 import { Settings } from './components/Settings/Settings';
-import { LandingPage } from './components/LandingPage/LandingPage';
 import { smartSearchService } from './services/SmartSearchService';
 import modrinthAPI from './services/api/ModrinthAPI';
 import { ModInfo } from '../shared/types/mod.types';
@@ -55,8 +54,7 @@ async function enrichModsWithModrinthIcons(mods: ModInfo[]): Promise<ModInfo[]> 
 }
 
 function App() {
-  const { currentInstance, setCurrentInstance, setMods, setIsLoading, isLoading, mods } = useAppStore();
-  const { addRecentInstance } = useSettingsStore();
+  const { currentInstance, setCurrentInstance, setMods, setIsLoading, isLoading, mods, recentInstances, addRecentInstance } = useAppStore();
   const [error, setError] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -135,17 +133,70 @@ function App() {
   if (!currentInstance) {
     return (
       <>
-        <LandingPage onSelectInstance={handleOpenInstance} recentInstances={recentInstances} />
-        {showSettings && <Settings onClose={() => setShowSettings(false)} />}
-        <div className="fixed top-4 right-4 z-50">
+        <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground">
+          {/* Logo */}
+          <div className="mb-8">
+            <img src="icon.png" alt="Minecraft Config Editor" className="w-32 h-32" />
+          </div>
+
+          {/* Title */}
+          <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+            Minecraft Config Editor
+          </h1>
+          <p className="text-muted-foreground mb-12 text-lg">
+            Modern config editing for your modpacks
+          </p>
+
+          {/* Main Actions */}
+          <div className="flex flex-col gap-4 w-80">
+            <button
+              onClick={handleOpenInstance}
+              className="w-full px-6 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold 
+                       transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-3"
+            >
+              <FolderOpen size={24} />
+              <span>Open Instance</span>
+            </button>
+
+            {recentInstances && recentInstances.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">Recent Instances</h3>
+                <div className="space-y-2">
+                  {recentInstances.slice(0, 3).map((instancePath, idx) => {
+                    const instanceName = instancePath.split(/[/\\]/).pop() || instancePath;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleOpenInstance()}
+                        className="w-full px-4 py-3 bg-card hover:bg-card/80 rounded-lg text-left
+                                 transition-all duration-200 border border-border hover:border-purple-500/50 group"
+                      >
+                        <div className="font-medium text-foreground group-hover:text-purple-400 transition-colors">
+                          {instanceName}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate mt-1">
+                          {instancePath}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Settings Button */}
           <button
             onClick={() => setShowSettings(true)}
-            className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+            className="absolute top-4 right-4 p-3 rounded-lg bg-card hover:bg-card/80 border border-border 
+                     hover:border-purple-500/50 transition-all duration-200"
             title="Settings (Ctrl+,)"
           >
             <SettingsIcon size={20} />
           </button>
         </div>
+
+        {showSettings && <Settings onClose={() => setShowSettings(false)} />}
       </>
     );
   }

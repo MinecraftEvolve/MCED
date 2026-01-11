@@ -39,6 +39,10 @@ interface AppState {
   settings: AppSettings;
   updateSettings: (settings: Partial<AppSettings>) => void;
 
+  // Recent Instances
+  recentInstances: string[];
+  addRecentInstance: (path: string) => void;
+
   // Filters
   showOnlyConfigured: boolean;
   setShowOnlyConfigured: (show: boolean) => void;
@@ -52,7 +56,7 @@ interface AppState {
   discardChanges: () => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   // Instance
   currentInstance: null,
   setCurrentInstance: (instance) => set({ currentInstance: instance }),
@@ -88,6 +92,14 @@ export const useAppStore = create<AppState>((set) => ({
     settings: { ...state.settings, ...newSettings }
   })),
 
+  // Recent Instances
+  recentInstances: JSON.parse(localStorage.getItem('recentInstances') || '[]'),
+  addRecentInstance: (path) => set((state) => {
+    const updated = [path, ...state.recentInstances.filter(p => p !== path)].slice(0, 5);
+    localStorage.setItem('recentInstances', JSON.stringify(updated));
+    return { recentInstances: updated };
+  }),
+
   // Filters
   showOnlyConfigured: false,
   setShowOnlyConfigured: (show) => set({ showOnlyConfigured: show }),
@@ -99,7 +111,7 @@ export const useAppStore = create<AppState>((set) => ({
   setHasUnsavedChanges: (hasChanges) => set({ hasUnsavedChanges: hasChanges }),
   
   saveConfigs: async () => {
-    const state = useAppStore.getState();
+    const state = get();
     if (!state.hasUnsavedChanges || !state.selectedMod) return;
     
     try {
