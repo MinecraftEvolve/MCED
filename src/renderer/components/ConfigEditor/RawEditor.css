@@ -82,8 +82,8 @@
 .raw-editor-container {
   flex: 1;
   overflow: hidden;
-  height: calc(100% - 120px);
-  min-height: 400px;
+  min-height: 500px;
+  position: relative;
 }
 
 .raw-editor-footer {
