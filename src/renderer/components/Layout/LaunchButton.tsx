@@ -5,7 +5,7 @@ import { useAppStore } from '@/store';
 export function LaunchButton() {
   const { currentInstance, hasUnsavedChanges } = useAppStore();
   const [isLaunching, setIsLaunching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
 
   const handleLaunch = async () => {
     if (!currentInstance) return;
@@ -17,13 +17,13 @@ export function LaunchButton() {
     }
 
     setIsLaunching(true);
-    setError(null);
+    setMessage(null);
 
     try {
       const launcher = await launcherService.detectLauncher(currentInstance.path);
       
       if (!launcher) {
-        setError('Could not detect launcher');
+        setMessage({ type: 'error', text: 'Could not detect launcher' });
         setIsLaunching(false);
         return;
       }
@@ -31,10 +31,17 @@ export function LaunchButton() {
       const success = await launcherService.launch(currentInstance.path, launcher.type);
       
       if (!success) {
-        setError('Failed to launch Minecraft');
+        setMessage({ type: 'error', text: 'Failed to launch Minecraft' });
+      } else {
+        // Show success message for Modrinth
+        if (launcher.type === 'modrinth') {
+          setMessage({ type: 'success', text: 'Modrinth App opened! Launch your profile from there.' });
+        } else {
+          setMessage({ type: 'success', text: 'Minecraft launching...' });
+        }
       }
     } catch (err: any) {
-      setError(err.message || 'Launch failed');
+      setMessage({ type: 'error', text: err.message || 'Launch failed' });
     } finally {
       setIsLaunching(false);
     }
@@ -65,13 +72,23 @@ export function LaunchButton() {
         )}
       </button>
 
-      {error && (
-        <div className="px-3 py-2 bg-destructive/10 border border-destructive/30 rounded-lg">
-          <p className="text-xs text-destructive font-medium flex items-center gap-2">
+      {message && (
+        <div className={`px-3 py-2 rounded-lg border ${
+          message.type === 'error' 
+            ? 'bg-destructive/10 border-destructive/30' 
+            : 'bg-green-500/10 border-green-500/30'
+        }`}>
+          <p className={`text-xs font-medium flex items-center gap-2 ${
+            message.type === 'error' ? 'text-destructive' : 'text-green-500'
+          }`}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              {message.type === 'error' ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              )}
             </svg>
-            {error}
+            {message.text}
           </p>
         </div>
       )}
