@@ -8,6 +8,7 @@ import { MainPanel } from './components/Layout/MainPanel';
 import { StatusBar } from './components/Layout/StatusBar';
 import { SmartSearch } from './components/SmartSearch/SmartSearch';
 import { Settings } from './components/Settings/Settings';
+import { LandingPage } from './components/LandingPage/LandingPage';
 import { smartSearchService } from './services/SmartSearchService';
 import modrinthAPI from './services/api/ModrinthAPI';
 import { ModInfo } from '../shared/types/mod.types';
@@ -132,6 +133,24 @@ function App() {
   }, [mods, currentInstance]);
 
   if (!currentInstance) {
+    return (
+      <>
+        <LandingPage onSelectInstance={handleOpenInstance} recentInstances={recentInstances} />
+        {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+        <div className="fixed top-4 right-4 z-50">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+            title="Settings (Ctrl+,)"
+          >
+            <SettingsIcon size={20} />
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  if (isLoading && mods.length === 0) {
     return (
       <>
         <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground">
