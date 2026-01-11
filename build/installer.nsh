@@ -1,5 +1,10 @@
 !macro customHeader
-  !system "echo '' > ${BUILD_RESOURCES_DIR}/customHeader"
+  ; Custom branding
+  BrandingText "Minecraft Config Editor v${VERSION}"
+  
+  ; Smoother appearance
+  XPStyle on
+  ShowInstDetails show
 !macroend
 
 !macro preInit
