@@ -31,6 +31,10 @@ interface AppState {
   setShowOnlyConfigured: (show: boolean) => void;
   showOnlyFavorites: boolean;
   setShowOnlyFavorites: (show: boolean) => void;
+
+  // Save state
+  hasUnsavedChanges: boolean;
+  setHasUnsavedChanges: (hasChanges: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -61,4 +65,8 @@ export const useAppStore = create<AppState>((set) => ({
   setShowOnlyConfigured: (show) => set({ showOnlyConfigured: show }),
   showOnlyFavorites: false,
   setShowOnlyFavorites: (show) => set({ showOnlyFavorites: show }),
+
+  // Save state
+  hasUnsavedChanges: false,
+  setHasUnsavedChanges: (hasChanges) => set({ hasUnsavedChanges: hasChanges }),
 }));

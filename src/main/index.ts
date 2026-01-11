@@ -158,30 +158,79 @@ ipcMain.handle('app:getPath', async (_event, name: string) => {
 
 ipcMain.handle('launch:minecraft', async (_event, instancePath: string, launcherType: string) => {
   try {
-    const { exec } = require('child_process');
+    const { exec, spawn } = require('child_process');
     const path = require('path');
+    const os = require('os');
     
     const instanceName = path.basename(instancePath);
     
-    let command = '';
-    if (launcherType === 'multimc' || launcherType === 'prism') {
-      const exe = launcherType === 'prism' ? 'prismlauncher' : 'MultiMC';
-      command = `"${exe}" -l "${instanceName}"`;
-    } else if (launcherType === 'curseforge') {
-      command = `start curseforge://launch/${instanceName}`;
+    // Detect Modrinth launcher
+    if (instancePath.includes('ModrinthApp')) {
+      // For Modrinth, we need to find the profile name and use the Modrinth app
+      const profileJsonPath = path.join(instancePath, 'profile.json');
+      try {
+        const profileData = await fs.readFile(profileJsonPath, 'utf-8');
+        const profile = JSON.parse(profileData);
+        const profileName = profile.name || instanceName;
+        
+        // Try to launch Modrinth app with the profile
+        if (process.platform === 'win32') {
+          // On Windows, Modrinth is usually in LocalAppData
+          const modrinthPath = path.join(process.env.LOCALAPPDATA || '', 'Programs', 'ModrinthApp', 'Modrinth App.exe');
+          spawn(`"${modrinthPath}"`, [`--launch`, profileName], {
+            shell: true,
+            detached: true,
+            stdio: 'ignore'
+          });
+        } else if (process.platform === 'darwin') {
+          exec(`open -a "Modrinth App" --args --launch "${profileName}"`);
+        } else {
+          exec(`modrinth-app --launch "${profileName}"`);
+        }
+        
+        return { success: true };
+      } catch (err) {
+        console.error('Modrinth launch error:', err);
+        return { success: false, error: 'Could not launch Modrinth instance. Try launching from the Modrinth app.' };
+      }
     }
     
-    if (command) {
-      exec(command, (error: any) => {
-        if (error) {
-          console.error('Launch error:', error);
-        }
+    // MultiMC/Prism Launcher
+    if (launcherType === 'multimc' || launcherType === 'prism') {
+      const basePath = instancePath.split('instances')[0];
+      let exe = '';
+      
+      if (process.platform === 'win32') {
+        exe = launcherType === 'prism' 
+          ? path.join(basePath, 'prismlauncher.exe')
+          : path.join(basePath, 'MultiMC.exe');
+      } else if (process.platform === 'darwin') {
+        exe = launcherType === 'prism'
+          ? '/Applications/Prism Launcher.app/Contents/MacOS/prismlauncher'
+          : '/Applications/MultiMC.app/Contents/MacOS/MultiMC';
+      } else {
+        exe = launcherType === 'prism' ? 'prismlauncher' : 'multimc';
+      }
+      
+      spawn(exe, ['-l', instanceName], {
+        detached: true,
+        stdio: 'ignore'
       });
+      
+      return { success: true };
+    }
+    
+    // CurseForge
+    if (launcherType === 'curseforge') {
+      if (process.platform === 'win32') {
+        exec(`start curseforge://launch/${instanceName}`);
+      }
       return { success: true };
     }
     
     return { success: false, error: 'Unsupported launcher type' };
   } catch (error: any) {
+    console.error('Launch error:', error);
     return { success: false, error: error.message };
   }
 });

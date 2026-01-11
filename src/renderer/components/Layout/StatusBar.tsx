@@ -11,9 +11,11 @@ export function StatusBar() {
   };
 
   const handleDiscardChanges = () => {
-    // Reload the page to discard changes
+    // Trigger discard event - components will reload their configs
     if (confirm('Are you sure you want to discard all changes?')) {
-      window.location.reload();
+      const event = new CustomEvent('discard-all-changes');
+      window.dispatchEvent(event);
+      setHasUnsavedChanges(false);
     }
   };
 

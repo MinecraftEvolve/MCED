@@ -8,6 +8,10 @@ export class LauncherService {
   } | null> {
     const path = instancePath.toLowerCase();
 
+    if (path.includes('modrinthapp')) {
+      return { type: 'modrinth', executable: 'modrinth-app' };
+    }
+
     if (path.includes('multimc') || path.includes('prism')) {
       return this.detectMultiMCPrism(instancePath);
     }
