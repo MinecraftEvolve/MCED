@@ -185,3 +185,93 @@ ipcMain.handle('modrinth:getProject', async (_event, idOrSlug: string) => {
   }
 });
 
+// Backup management
+ipcMain.handle('backup:list', async (_event, instancePath: string) => {
+  try {
+    const backupDir = path.join(instancePath, '.mced-backups');
+    
+    try {
+      await fs.access(backupDir);
+    } catch {
+      return [];
+    }
+
+    const files = await fs.readdir(backupDir);
+    const backups = [];
+
+    for (const file of files) {
+      if (file.endsWith('.zip')) {
+        const filePath = path.join(backupDir, file);
+        const stats = await fs.stat(filePath);
+        const match = file.match(/backup-(\d+)-(.+)\.zip/);
+        
+        if (match) {
+          backups.push({
+            id: file,
+            timestamp: parseInt(match[1]),
+            name: match[2].replace(/-/g, ' '),
+            size: stats.size,
+            configCount: 0 // Will be calculated if needed
+          });
+        }
+      }
+    }
+
+    return backups.sort((a, b) => b.timestamp - a.timestamp);
+  } catch (error: any) {
+    console.error('Failed to list backups:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('backup:create', async (_event, instancePath: string) => {
+  try {
+    const AdmZip = require('adm-zip');
+    const zip = new AdmZip();
+    
+    const configDir = path.join(instancePath, 'config');
+    const backupDir = path.join(instancePath, '.mced-backups');
+    
+    await fs.mkdir(backupDir, { recursive: true });
+    
+    const timestamp = Date.now();
+    const name = `Backup-${new Date(timestamp).toISOString().split('T')[0]}`;
+    const backupFile = path.join(backupDir, `backup-${timestamp}-${name.replace(/ /g, '-')}.zip`);
+    
+    zip.addLocalFolder(configDir);
+    zip.writeZip(backupFile);
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to create backup:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('backup:restore', async (_event, instancePath: string, backupId: string) => {
+  try {
+    const AdmZip = require('adm-zip');
+    const backupFile = path.join(instancePath, '.mced-backups', backupId);
+    const configDir = path.join(instancePath, 'config');
+    
+    const zip = new AdmZip(backupFile);
+    zip.extractAllTo(configDir, true);
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to restore backup:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('backup:delete', async (_event, instancePath: string, backupId: string) => {
+  try {
+    const backupFile = path.join(instancePath, '.mced-backups', backupId);
+    await fs.unlink(backupFile);
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to delete backup:', error);
+    return { success: false, error: error.message };
+  }
+});
+

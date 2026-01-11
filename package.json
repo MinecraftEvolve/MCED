@@ -25,10 +25,7 @@
     "modpack",
     "desktop"
   ],
-  "author": {
-    "name": "MCED Team",
-    "email": "support@mced.app"
-  },
+  "author": "MCED Team <support@mced.app>",
   "license": "MIT",
   "dependencies": {
     "@iarna/toml": "^2.2.5",

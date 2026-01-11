@@ -23,6 +23,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Modrinth API
   modrinthSearch: (query: string) => ipcRenderer.invoke('modrinth:search', query),
   modrinthGetProject: (idOrSlug: string) => ipcRenderer.invoke('modrinth:getProject', idOrSlug),
+  
+  // Backups
+  listBackups: (instancePath: string) => ipcRenderer.invoke('backup:list', instancePath),
+  createBackup: (instancePath: string) => ipcRenderer.invoke('backup:create', instancePath),
+  restoreBackup: (instancePath: string, backupId: string) => ipcRenderer.invoke('backup:restore', instancePath, backupId),
+  deleteBackup: (instancePath: string, backupId: string) => ipcRenderer.invoke('backup:delete', instancePath, backupId),
 });
 
 declare global {
@@ -39,6 +45,10 @@ declare global {
       getAppPath: (name: string) => Promise<{ success: boolean; path?: string; error?: string }>;
       modrinthSearch: (query: string) => Promise<{ success: boolean; mod?: any; error?: string }>;
       modrinthGetProject: (idOrSlug: string) => Promise<{ success: boolean; project?: any; error?: string }>;
+      listBackups: (instancePath: string) => Promise<any[]>;
+      createBackup: (instancePath: string) => Promise<{ success: boolean; error?: string }>;
+      restoreBackup: (instancePath: string, backupId: string) => Promise<{ success: boolean; error?: string }>;
+      deleteBackup: (instancePath: string, backupId: string) => Promise<{ success: boolean; error?: string }>;
     };
   }
 }
