@@ -8,7 +8,7 @@ interface DropdownInputProps {
 
 export function DropdownInput({ setting, onChange }: DropdownInputProps) {
   const value = setting.value as string;
-  const options = setting.enumValues || [];
+  const options = setting.options || setting.enumValues || [];
 
   return (
     <div className="py-3 border-b border-border">
@@ -29,6 +29,12 @@ export function DropdownInput({ setting, onChange }: DropdownInputProps) {
           </option>
         ))}
       </select>
+      
+      {options.length > 0 && (
+        <p className="text-xs text-muted-foreground mt-1">
+          Allowed values: {options.join(', ')}
+        </p>
+      )}
       
       {setting.defaultValue !== undefined && value !== setting.defaultValue && (
         <button

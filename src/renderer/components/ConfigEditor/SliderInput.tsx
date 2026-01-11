@@ -43,7 +43,14 @@ export function SliderInput({ setting, onChange }: SliderInputProps) {
   return (
     <div className="py-3 border-b border-border">
       <div className="flex items-center justify-between mb-2">
-        <label className="font-medium text-sm">{setting.key}</label>
+        <div className="flex items-center gap-2">
+          <label className="font-medium text-sm">{setting.key}</label>
+          {setting.unit && (
+            <span className="text-xs text-muted-foreground px-2 py-0.5 bg-secondary rounded">
+              {setting.unit}
+            </span>
+          )}
+        </div>
         <input
           type="number"
           value={inputValue}
@@ -61,7 +68,7 @@ export function SliderInput({ setting, onChange }: SliderInputProps) {
       )}
       
       <div className="flex items-center gap-3">
-        <span className="text-xs text-muted-foreground">{min}</span>
+        <span className="text-xs text-muted-foreground font-mono">{min}</span>
         <input
           type="range"
           value={value}
@@ -69,22 +76,29 @@ export function SliderInput({ setting, onChange }: SliderInputProps) {
           min={min}
           max={max}
           step={step}
-          className="flex-1 h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
+          className="flex-1 h-2 bg-secondary rounded-lg appearance-none cursor-pointer slider-thumb"
         />
-        <span className="text-xs text-muted-foreground">{max}</span>
+        <span className="text-xs text-muted-foreground font-mono">{max}</span>
       </div>
       
-      {setting.defaultValue !== undefined && value !== setting.defaultValue && (
-        <button
-          onClick={() => {
-            onChange(setting.defaultValue as number);
-            setInputValue(String(setting.defaultValue));
-          }}
-          className="text-xs text-primary hover:underline mt-2"
-        >
-          Reset to default ({setting.defaultValue})
-        </button>
-      )}
+      <div className="flex items-center justify-between mt-2">
+        {setting.defaultValue !== undefined && value !== setting.defaultValue && (
+          <button
+            onClick={() => {
+              onChange(setting.defaultValue as number);
+              setInputValue(String(setting.defaultValue));
+            }}
+            className="text-xs text-primary hover:underline"
+          >
+            Reset to default ({setting.defaultValue})
+          </button>
+        )}
+        {setting.range && (
+          <span className="text-xs text-muted-foreground ml-auto">
+            Range: {min} ~ {max}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
