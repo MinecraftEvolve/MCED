@@ -123,9 +123,8 @@ function App() {
     if (mods.length > 0 && currentInstance) {
       const configsByMod = new Map();
       mods.forEach(mod => {
-        const modConfigs = configs.filter(c => c.modId === mod.id);
-        if (modConfigs.length > 0) {
-          configsByMod.set(mod.id, modConfigs);
+        if (mod.configs && mod.configs.length > 0) {
+          configsByMod.set(mod.id, mod.configs);
         }
       });
       smartSearchService.indexConfigs(mods, configsByMod);
