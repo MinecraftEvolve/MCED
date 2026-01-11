@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from './store';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Settings as SettingsIcon } from 'lucide-react';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import { MainPanel } from './components/Layout/MainPanel';
 import { StatusBar } from './components/Layout/StatusBar';
 import { SmartSearch } from './components/SmartSearch/SmartSearch';
+import { Settings } from './components/Settings/Settings';
 import { smartSearchService } from './services/SmartSearchService';
 import modrinthAPI from './services/api/ModrinthAPI';
 import { ModInfo } from '../shared/types/mod.types';
@@ -55,6 +56,7 @@ function App() {
   const { currentInstance, setCurrentInstance, setMods, setIsLoading, isLoading, mods } = useAppStore();
   const [error, setError] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   
   // Enable keyboard shortcuts
   useKeyboardShortcuts();
@@ -158,6 +160,16 @@ function App() {
             )}
           </button>
 
+          <button
+            onClick={() => setShowSettings(true)}
+            className="mt-4 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold 
+                     hover:bg-secondary/90 transition-all duration-200 transform hover:scale-105
+                     flex items-center gap-2 mx-auto"
+          >
+            <SettingsIcon className="w-5 h-5" />
+            Settings
+          </button>
+
           <div className="mt-12 text-left">
             <p className="text-sm text-muted-foreground mb-2">✨ Features:</p>
             <ul className="text-sm text-muted-foreground space-y-1">
@@ -169,6 +181,8 @@ function App() {
             </ul>
           </div>
         </div>
+        
+        {showSettings && <Settings onClose={() => setShowSettings(false)} />}
       </div>
     );
   }
@@ -183,6 +197,7 @@ function App() {
       <StatusBar />
       
       {showSearch && <SmartSearch onClose={() => setShowSearch(false)} />}
+      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
     </div>
   );
 }
