@@ -1,0 +1,316 @@
+import { ConfigFile, ConfigSetting } from '@shared/types/config.types';
+
+export class ConfigService {
+  /**
+   * Load config files for a specific mod
+   */
+  async loadModConfigs(instancePath: string, modId: string): Promise<ConfigFile[]> {
+    try {
+      const result = await window.electronAPI.readdir(`${instancePath}/config`);
+      if (!result.success || !result.files) {
+        return [];
+      }
+
+      // Find config files that match the mod
+      const configFiles = result.files.filter((file: string) => {
+        const lower = file.toLowerCase();
+        return (
+          lower.includes(modId.toLowerCase()) &&
+          (lower.endsWith('.toml') || lower.endsWith('.json') || lower.endsWith('.json5'))
+        );
+      });
+
+      const configs: ConfigFile[] = [];
+      
+      for (const fileName of configFiles) {
+        const filePath = `${instancePath}/config/${fileName}`;
+        const fileResult = await window.electronAPI.readFile(filePath);
+        
+        if (fileResult.success && fileResult.content) {
+          const config = await this.parseConfig(fileName, fileResult.content, filePath);
+          if (config) {
+            configs.push(config);
+          }
+        }
+      }
+
+      return configs;
+    } catch (error) {
+      console.error('Error loading configs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Parse config file content
+   */
+  private async parseConfig(fileName: string, content: string, filePath: string): Promise<ConfigFile | null> {
+    const format = this.detectFormat(fileName);
+    
+    try {
+      const settings = await this.parseSettings(content, format);
+      
+      return {
+        name: fileName,
+        path: filePath,
+        format,
+        content,
+        settings,
+      };
+    } catch (error) {
+      console.error(`Error parsing ${fileName}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Detect config file format
+   */
+  private detectFormat(fileName: string): ConfigFile['format'] {
+    const lower = fileName.toLowerCase();
+    if (lower.endsWith('.toml')) return 'toml';
+    if (lower.endsWith('.json5')) return 'json5';
+    if (lower.endsWith('.json')) return 'json';
+    if (lower.endsWith('.yml') || lower.endsWith('.yaml')) return 'yaml';
+    if (lower.endsWith('.cfg')) return 'cfg';
+    if (lower.endsWith('.properties')) return 'properties';
+    return 'toml';
+  }
+
+  /**
+   * Parse settings from config content
+   */
+  private async parseSettings(content: string, format: ConfigFile['format']): Promise<ConfigSetting[]> {
+    const settings: ConfigSetting[] = [];
+
+    if (format === 'toml') {
+      return this.parseToml(content);
+    } else if (format === 'json' || format === 'json5') {
+      return this.parseJson(content);
+    }
+
+    return settings;
+  }
+
+  /**
+   * Parse TOML config (simple implementation)
+   */
+  private parseToml(content: string): ConfigSetting[] {
+    const settings: ConfigSetting[] = [];
+    const lines = content.split('\n');
+    let currentSection = '';
+    let currentComment = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      // Section header
+      if (line.startsWith('[') && line.endsWith(']')) {
+        currentSection = line.slice(1, -1);
+        continue;
+      }
+
+      // Comment
+      if (line.startsWith('#')) {
+        currentComment += line.slice(1).trim() + ' ';
+        continue;
+      }
+
+      // Key-value pair
+      if (line.includes('=')) {
+        const [key, ...valueParts] = line.split('=');
+        const value = valueParts.join('=').trim();
+        
+        const setting = this.createSetting(
+          key.trim(),
+          this.parseValue(value),
+          currentComment.trim(),
+          currentSection
+        );
+        
+        settings.push(setting);
+        currentComment = '';
+      }
+    }
+
+    return settings;
+  }
+
+  /**
+   * Parse JSON config
+   */
+  private parseJson(content: string): ConfigSetting[] {
+    const settings: ConfigSetting[] = [];
+    
+    try {
+      const obj = JSON.parse(content);
+      this.extractSettings(obj, settings, '');
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+    }
+
+    return settings;
+  }
+
+  /**
+   * Recursively extract settings from object
+   */
+  private extractSettings(obj: any, settings: ConfigSetting[], path: string) {
+    for (const [key, value] of Object.entries(obj)) {
+      const fullKey = path ? `${path}.${key}` : key;
+
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        // Nested object - recurse
+        this.extractSettings(value, settings, fullKey);
+      } else {
+        // Leaf value - create setting
+        settings.push(this.createSetting(fullKey, value, '', ''));
+      }
+    }
+  }
+
+  /**
+   * Parse value string to appropriate type
+   */
+  private parseValue(value: string): any {
+    // Remove quotes
+    if ((value.startsWith('"') && value.endsWith('"')) || 
+        (value.startsWith("'") && value.endsWith("'"))) {
+      return value.slice(1, -1);
+    }
+
+    // Boolean
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+
+    // Number
+    if (!isNaN(Number(value))) {
+      return Number(value);
+    }
+
+    // Array
+    if (value.startsWith('[') && value.endsWith(']')) {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+
+    return value;
+  }
+
+  /**
+   * Create a config setting object
+   */
+  private createSetting(
+    key: string,
+    value: any,
+    comment: string,
+    section: string
+  ): ConfigSetting {
+    return {
+      key,
+      value,
+      defaultValue: value,
+      type: this.inferType(value),
+      description: comment || undefined,
+      section: section || undefined,
+    };
+  }
+
+  /**
+   * Infer setting type from value
+   */
+  private inferType(value: any): ConfigSetting['type'] {
+    if (typeof value === 'boolean') return 'boolean';
+    if (typeof value === 'number') {
+      return Number.isInteger(value) ? 'integer' : 'float';
+    }
+    if (Array.isArray(value)) return 'array';
+    return 'string';
+  }
+
+  /**
+   * Save config file
+   */
+  async saveConfig(config: ConfigFile): Promise<boolean> {
+    try {
+      // Update content with new values
+      const updatedContent = this.updateConfigContent(config);
+      
+      // Write file
+      const result = await window.electronAPI.writeFile(config.path, updatedContent);
+      
+      return result.success;
+    } catch (error) {
+      console.error('Error saving config:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Update config content while preserving comments
+   */
+  private updateConfigContent(config: ConfigFile): string {
+    let content = config.content;
+
+    // Simple replacement for now - preserves structure
+    for (const setting of config.settings) {
+      const oldValue = this.formatValue(setting.defaultValue ?? setting.value);
+      const newValue = this.formatValue(setting.value);
+      
+      if (oldValue !== newValue) {
+        // Replace the value in the content
+        const regex = new RegExp(
+          `(${this.escapeRegex(setting.key)}\\s*=\\s*)${this.escapeRegex(oldValue)}`,
+          'g'
+        );
+        content = content.replace(regex, `$1${newValue}`);
+      }
+    }
+
+    return content;
+  }
+
+  /**
+   * Format value for config file
+   */
+  private formatValue(value: any): string {
+    if (typeof value === 'string') {
+      return `"${value}"`;
+    }
+    if (Array.isArray(value)) {
+      return JSON.stringify(value);
+    }
+    return String(value);
+  }
+
+  /**
+   * Escape regex special characters
+   */
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /**
+   * Match configs to mod
+   */
+  matchConfigsToMod(configs: ConfigFile[], modId: string): ConfigFile[] {
+    return configs.filter(config => {
+      const fileName = config.name.toLowerCase();
+      const modIdLower = modId.toLowerCase();
+      
+      // Direct match
+      if (fileName.includes(modIdLower)) return true;
+      
+      // Match without version/numbers
+      const cleanModId = modIdLower.replace(/[-_]\d+/g, '');
+      if (fileName.includes(cleanModId)) return true;
+      
+      return false;
+    });
+  }
+}
+
+export const configService = new ConfigService();

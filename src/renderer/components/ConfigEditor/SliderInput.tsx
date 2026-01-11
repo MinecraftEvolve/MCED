@@ -1,0 +1,85 @@
+import React, { useState } from 'react';
+import { ConfigSetting } from '@shared/types/config.types';
+
+interface SliderInputProps {
+  setting: ConfigSetting;
+  onChange: (value: number) => void;
+}
+
+export function SliderInput({ setting, onChange }: SliderInputProps) {
+  const value = setting.value as number;
+  const [inputValue, setInputValue] = useState(String(value));
+  
+  const min = setting.min ?? 0;
+  const max = setting.max ?? 100;
+  const step = setting.type === 'integer' ? 1 : 0.1;
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = Number(e.target.value);
+    setInputValue(String(newValue));
+    onChange(newValue);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleInputBlur = () => {
+    let newValue = Number(inputValue);
+    if (isNaN(newValue)) {
+      newValue = value;
+    } else {
+      newValue = Math.max(min, Math.min(max, newValue));
+    }
+    setInputValue(String(newValue));
+    onChange(newValue);
+  };
+
+  return (
+    <div className="py-3 border-b border-border">
+      <div className="flex items-center justify-between mb-2">
+        <label className="font-medium text-sm">{setting.key}</label>
+        <input
+          type="number"
+          value={inputValue}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+          className="w-20 px-2 py-1 text-sm bg-secondary border border-border rounded text-right"
+          step={step}
+          min={min}
+          max={max}
+        />
+      </div>
+      
+      {setting.description && (
+        <p className="text-xs text-muted-foreground mb-2">{setting.description}</p>
+      )}
+      
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-muted-foreground">{min}</span>
+        <input
+          type="range"
+          value={value}
+          onChange={handleSliderChange}
+          min={min}
+          max={max}
+          step={step}
+          className="flex-1 h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
+        />
+        <span className="text-xs text-muted-foreground">{max}</span>
+      </div>
+      
+      {setting.defaultValue !== undefined && value !== setting.defaultValue && (
+        <button
+          onClick={() => {
+            onChange(setting.defaultValue as number);
+            setInputValue(String(setting.defaultValue));
+          }}
+          className="text-xs text-primary hover:underline mt-2"
+        >
+          Reset to default ({setting.defaultValue})
+        </button>
+      )}
+    </div>
+  );
+}

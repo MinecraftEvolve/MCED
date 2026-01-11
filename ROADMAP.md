@@ -1,0 +1,306 @@
+# Visual Project Roadmap
+
+```
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   MINECRAFT CONFIG EDITOR - PROJECT ROADMAP                 ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  ✅ PHASE 0: FOUNDATION (COMPLETE)                                        │
+│                                                                            │
+│  ├─ [✓] Project structure                                                 │
+│  ├─ [✓] TypeScript configuration                                          │
+│  ├─ [✓] Electron + React + Vite setup                                     │
+│  ├─ [✓] TailwindCSS styling                                               │
+│  ├─ [✓] State management (Zustand)                                        │
+│  ├─ [✓] Type definitions                                                  │
+│  ├─ [✓] JAR scanner service                                               │
+│  ├─ [✓] Instance detector service                                         │
+│  ├─ [✓] Config parsers (TOML, JSON, YAML)                                 │
+│  ├─ [✓] Basic UI (welcome screen)                                         │
+│  └─ [✓] Comprehensive documentation                                       │
+│                                                                            │
+│  Duration: ✅ Complete                                                     │
+│  Status: Ready for feature development                                    │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  🔨 PHASE 1: CORE UI (WEEK 1-2)                                           │
+│                                                                            │
+│  Priority: ⭐⭐⭐ CRITICAL                                                  │
+│                                                                            │
+│  ├─ [ ] Layout Components                                                 │
+│  │   ├─ [ ] Header.tsx - Instance info display                            │
+│  │   ├─ [ ] Sidebar.tsx - Left panel container                            │
+│  │   ├─ [ ] MainPanel.tsx - Center content area                           │
+│  │   └─ [ ] StatusBar.tsx - Bottom bar with actions                       │
+│  │                                                                         │
+│  ├─ [ ] Mod List Components                                               │
+│  │   ├─ [ ] ModList.tsx - Container with scroll                           │
+│  │   ├─ [ ] ModListItem.tsx - Individual mod entry                        │
+│  │   │   ├─ Show 48x48 icon                                               │
+│  │   │   ├─ Show mod name                                                 │
+│  │   │   ├─ Show config badge                                             │
+│  │   │   └─ Click to select                                               │
+│  │   └─ [ ] ModSearch.tsx - Search/filter input                           │
+│  │                                                                         │
+│  └─ [ ] Mod Info Components                                               │
+│      ├─ [ ] ModCard.tsx - Main info display                               │
+│      ├─ [ ] ModStats.tsx - Download count, etc.                           │
+│      └─ [ ] ModLinks.tsx - External links                                 │
+│                                                                            │
+│  Deliverables:                                                            │
+│  • User can see list of mods                                              │
+│  • User can select a mod                                                  │
+│  • User can view mod information                                          │
+│  • User can search/filter mods                                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  ⚙️  PHASE 2: CONFIG EDITING (WEEK 3)                                     │
+│                                                                            │
+│  Priority: ⭐⭐⭐ CRITICAL                                                  │
+│                                                                            │
+│  ├─ [ ] Config Service                                                    │
+│  │   ├─ [ ] Load config files                                             │
+│  │   ├─ [ ] Parse configs by format                                       │
+│  │   ├─ [ ] Save configs with comments                                    │
+│  │   └─ [ ] Match configs to mods                                         │
+│  │                                                                         │
+│  ├─ [ ] Config Editor Components                                          │
+│  │   ├─ [ ] ConfigEditor.tsx - Main container                             │
+│  │   ├─ [ ] BooleanInput.tsx - iOS toggle switch                          │
+│  │   ├─ [ ] SliderInput.tsx - Numeric slider + input                      │
+│  │   ├─ [ ] DropdownInput.tsx - Select menu                               │
+│  │   ├─ [ ] TextInput.tsx - Text field                                    │
+│  │   └─ [ ] ListInput.tsx - Array editor                                  │
+│  │                                                                         │
+│  ├─ [ ] Validation System                                                 │
+│  │   ├─ [ ] Range validation                                              │
+│  │   ├─ [ ] Type validation                                               │
+│  │   ├─ [ ] Enum validation                                               │
+│  │   └─ [ ] Error messages                                                │
+│  │                                                                         │
+│  └─ [ ] Save System                                                       │
+│      ├─ [ ] Track changes                                                 │
+│      ├─ [ ] Auto-backup before save                                       │
+│      ├─ [ ] Save button state                                             │
+│      └─ [ ] Success/error feedback                                        │
+│                                                                            │
+│  Deliverables:                                                            │
+│  • User can view config settings                                          │
+│  • User can edit boolean, numeric, string, list values                    │
+│  • User can save changes                                                  │
+│  • Invalid values are prevented                                           │
+│  • Changes preserve comments                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  ✨ PHASE 3: ENHANCED FEATURES (WEEK 4)                                   │
+│                                                                            │
+│  Priority: ⭐⭐ HIGH                                                        │
+│                                                                            │
+│  ├─ [ ] Smart Search (Feature #36)                                        │
+│  │   ├─ [ ] SmartSearch.tsx component                                     │
+│  │   ├─ [ ] SmartSearchService.ts                                         │
+│  │   ├─ [ ] Fuzzy search with Fuse.js                                     │
+│  │   ├─ [ ] Natural language queries                                      │
+│  │   ├─ [ ] Search suggestions                                            │
+│  │   └─ [ ] Result highlighting                                           │
+│  │                                                                         │
+│  ├─ [ ] Quick Launch (Feature #10)                                        │
+│  │   ├─ [ ] LaunchButton.tsx component                                    │
+│  │   ├─ [ ] LauncherService.ts                                            │
+│  │   ├─ [ ] Detect launcher type                                          │
+│  │   ├─ [ ] Launch Minecraft                                              │
+│  │   ├─ [ ] Monitor game process                                          │
+│  │   └─ [ ] Show memory stats                                             │
+│  │                                                                         │
+│  └─ [ ] Platform APIs                                                     │
+│      ├─ [ ] CurseForgeAPI.ts                                              │
+│      ├─ [ ] ModrinthAPI.ts                                                │
+│      ├─ [ ] Fetch mod metadata                                            │
+│      ├─ [ ] Fetch high-res icons                                          │
+│      └─ [ ] Cache responses                                               │
+│                                                                            │
+│  Deliverables:                                                            │
+│  • User can search configs with natural language                          │
+│  • User can launch Minecraft from app                                     │
+│  • User sees enhanced mod metadata from APIs                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  🎨 PHASE 4: POLISH & UX (WEEK 5)                                         │
+│                                                                            │
+│  Priority: ⭐ MEDIUM                                                       │
+│                                                                            │
+│  ├─ [ ] Animations & Transitions                                          │
+│  │   ├─ [ ] Framer Motion setup                                           │
+│  │   ├─ [ ] Fade in animations                                            │
+│  │   ├─ [ ] Slide transitions                                             │
+│  │   └─ [ ] Loading spinners                                              │
+│  │                                                                         │
+│  ├─ [ ] Keyboard Shortcuts                                                │
+│  │   ├─ [ ] Ctrl+S - Save                                                 │
+│  │   ├─ [ ] Ctrl+F - Search                                               │
+│  │   ├─ [ ] Ctrl+Z - Undo                                                 │
+│  │   └─ [ ] Esc - Close modal                                             │
+│  │                                                                         │
+│  ├─ [ ] Backup System                                                     │
+│  │   ├─ [ ] BackupManager.ts                                              │
+│  │   ├─ [ ] Auto-backup on first edit                                     │
+│  │   ├─ [ ] Restore from backup                                           │
+│  │   └─ [ ] Backup management UI                                          │
+│  │                                                                         │
+│  └─ [ ] Config Profiles                                                   │
+│      ├─ [ ] ProfileManager.tsx                                            │
+│      ├─ [ ] Save config preset                                            │
+│      ├─ [ ] Load config preset                                            │
+│      └─ [ ] Share/export profiles                                         │
+│                                                                            │
+│  Deliverables:                                                            │
+│  • Smooth, polished UI experience                                         │
+│  • Keyboard power user features                                           │
+│  • Safety with backups                                                    │
+│  • Config sharing capability                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  🧪 PHASE 5: TESTING & OPTIMIZATION (WEEK 6)                              │
+│                                                                            │
+│  Priority: ⭐⭐ HIGH                                                        │
+│                                                                            │
+│  ├─ [ ] Unit Tests                                                        │
+│  │   ├─ [ ] Test parsers                                                  │
+│  │   ├─ [ ] Test config matching                                          │
+│  │   └─ [ ] Test validation                                               │
+│  │                                                                         │
+│  ├─ [ ] Integration Tests                                                 │
+│  │   ├─ [ ] Test full workflow                                            │
+│  │   ├─ [ ] Test with real modpacks                                       │
+│  │   └─ [ ] Test error handling                                           │
+│  │                                                                         │
+│  ├─ [ ] Performance Optimization                                          │
+│  │   ├─ [ ] Implement virtualized lists                                   │
+│  │   ├─ [ ] Optimize JAR parsing                                          │
+│  │   ├─ [ ] Add caching layer                                             │
+│  │   └─ [ ] Profile and optimize                                          │
+│  │                                                                         │
+│  └─ [ ] Cross-Platform Testing                                            │
+│      ├─ [ ] Test on Windows                                               │
+│      ├─ [ ] Test on macOS                                                 │
+│      └─ [ ] Test on Linux                                                 │
+│                                                                            │
+│  Deliverables:                                                            │
+│  • All features tested and working                                        │
+│  • Performance good with 250+ mods                                        │
+│  • Works on all platforms                                                 │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  📦 PHASE 6: BUILD & RELEASE (WEEK 7)                                     │
+│                                                                            │
+│  Priority: ⭐ MEDIUM                                                       │
+│                                                                            │
+│  ├─ [ ] Build Configuration                                               │
+│  │   ├─ [ ] electron-builder setup                                        │
+│  │   ├─ [ ] App icons (all platforms)                                     │
+│  │   └─ [ ] Code signing (optional)                                       │
+│  │                                                                         │
+│  ├─ [ ] Platform Builds                                                   │
+│  │   ├─ [ ] Windows (.exe, installer)                                     │
+│  │   ├─ [ ] macOS (.dmg, .app)                                            │
+│  │   └─ [ ] Linux (.AppImage, .deb)                                       │
+│  │                                                                         │
+│  ├─ [ ] Documentation                                                     │
+│  │   ├─ [ ] User guide with screenshots                                   │
+│  │   ├─ [ ] Video tutorial                                                │
+│  │   └─ [ ] FAQ page                                                      │
+│  │                                                                         │
+│  └─ [ ] Release                                                           │
+│      ├─ [ ] GitHub release                                                │
+│      ├─ [ ] Release notes                                                 │
+│      └─ [ ] Community announcement                                        │
+│                                                                            │
+│  Deliverables:                                                            │
+│  • Packaged applications for all platforms                                │
+│  • Complete user documentation                                            │
+│  • Public release ready                                                   │
+└──────────────────────────────────────────────────────────────────────────┘
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                            PROGRESS TRACKER                                 ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║                                                                             ║
+║  Overall Progress:  [████░░░░░░░░░░░░░░░░] 20%                            ║
+║                                                                             ║
+║  Phase 0: Foundation        [████████████████████] 100% ✅                 ║
+║  Phase 1: Core UI           [░░░░░░░░░░░░░░░░░░░░]   0% 🔨                ║
+║  Phase 2: Config Editing    [░░░░░░░░░░░░░░░░░░░░]   0% ⏳                ║
+║  Phase 3: Enhanced Features [░░░░░░░░░░░░░░░░░░░░]   0% ⏳                ║
+║  Phase 4: Polish & UX       [░░░░░░░░░░░░░░░░░░░░]   0% ⏳                ║
+║  Phase 5: Testing           [░░░░░░░░░░░░░░░░░░░░]   0% ⏳                ║
+║  Phase 6: Build & Release   [░░░░░░░░░░░░░░░░░░░░]   0% ⏳                ║
+║                                                                             ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  📊 ESTIMATED TIMELINE                                                     │
+│                                                                            │
+│  Week 1-2:  Core UI Development                                           │
+│  Week 3:    Config Editing Implementation                                 │
+│  Week 4:    Enhanced Features (Search, Launch, APIs)                      │
+│  Week 5:    Polish & User Experience                                      │
+│  Week 6:    Testing & Optimization                                        │
+│  Week 7:    Build & Release                                               │
+│                                                                            │
+│  Total: ~7 weeks for full MVP                                             │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  🎯 MVP SUCCESS CRITERIA                                                   │
+│                                                                            │
+│  The MVP is complete when:                                                │
+│                                                                            │
+│  ✓ User can open any Minecraft instance                                   │
+│  ✓ App auto-detects mods and metadata                                     │
+│  • User can view list of mods with icons                                  │
+│  • User can view mod information                                          │
+│  • User can view config files                                             │
+│  • User can edit config values                                            │
+│  • User can save changes                                                  │
+│  • Changes preserve comments                                              │
+│  • Invalid values are prevented                                           │
+│  • User can search configs                                                │
+│  • User can launch Minecraft                                              │
+│  • App works on Windows, macOS, Linux                                     │
+│  • Performance is good with 250+ mods                                     │
+│                                                                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  📚 DOCUMENTATION GUIDE                                                    │
+│                                                                            │
+│  README.md            → Project overview & features                        │
+│  PROJECT_SUMMARY.md   → Complete setup summary (READ THIS FIRST!)         │
+│  GETTING_STARTED.md   → Installation & setup guide                        │
+│  IMPLEMENTATION.md    → Feature implementation guide                       │
+│  TROUBLESHOOTING.md   → Common issues & solutions                         │
+│  PROJECT_STATUS.md    → Current progress & roadmap                        │
+│  CHECKLIST.md         → Development task tracker                          │
+│  QUICK_REFERENCE.md   → Fast reference for common tasks                   │
+│  ROADMAP.md (this)    → Visual project roadmap                            │
+│                                                                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                          🚀 READY TO START!                                 ║
+║                                                                             ║
+║  1. Run: npm install                                                        ║
+║  2. Run: npm run dev                                                        ║
+║  3. Read: PROJECT_SUMMARY.md                                                ║
+║  4. Start: Phase 1 - Core UI Development                                    ║
+║                                                                             ║
+║  You've got this! 🎮⚙️                                                      ║
+╚════════════════════════════════════════════════════════════════════════════╝
+```
