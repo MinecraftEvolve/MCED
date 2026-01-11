@@ -105,18 +105,8 @@ export class TomlParser {
     const parsed: ParsedComment = {};
     const fullText = comments.join(' '); // Join with spaces for easier matching
 
-    // Extract description (everything before metadata lines)
-    const descLines: string[] = [];
-    for (const comment of comments) {
-      // Stop at metadata lines
-      if (comment.match(/^(Range|Allowed Values?|Default|Possible values?|Options?):/i)) {
-        break;
-      }
-      descLines.push(comment);
-    }
-    if (descLines.length > 0) {
-      parsed.description = descLines.join(' ').trim();
-    }
+    // Keep the FULL comment as description - don't remove metadata
+    parsed.description = fullText;
 
     // Extract range - improved patterns
     const rangePatterns = [
