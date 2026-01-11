@@ -39,13 +39,8 @@ export function Header({ onSearchClick }: HeaderProps) {
               MC {currentInstance.minecraftVersion}
             </span>
             <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded font-medium">
-              {currentInstance.loader.type} {currentInstance.loader.version}
+              {currentInstance.loader.type.charAt(0).toUpperCase() + currentInstance.loader.type.slice(1)} {currentInstance.loader.version}
             </span>
-            {currentInstance.modpack && (
-              <span className="px-2 py-0.5 bg-secondary rounded font-medium">
-                {currentInstance.modpack.name}
-              </span>
-            )}
           </div>
         </div>
 

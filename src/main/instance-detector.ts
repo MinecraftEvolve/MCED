@@ -169,17 +169,19 @@ export class InstanceDetector {
         const json = JSON.parse(content);
         if (json.loader) {
           const loader = json.loader.toLowerCase();
+          // Get the actual loader version, not the Minecraft version
+          const loaderVersion = json.loader_version || 'Unknown';
           if (loader.includes('forge')) {
-            return { type: 'forge', version: json.loader_version?.id || json.game_version || 'Unknown' };
+            return { type: 'forge', version: loaderVersion };
           }
           if (loader.includes('fabric')) {
-            return { type: 'fabric', version: json.loader_version?.id || 'Unknown' };
+            return { type: 'fabric', version: loaderVersion };
           }
           if (loader.includes('neoforge')) {
-            return { type: 'neoforge', version: json.loader_version?.id || 'Unknown' };
+            return { type: 'neoforge', version: loaderVersion };
           }
           if (loader.includes('quilt')) {
-            return { type: 'quilt', version: json.loader_version?.id || 'Unknown' };
+            return { type: 'quilt', version: loaderVersion };
           }
         }
       } catch (error) {
