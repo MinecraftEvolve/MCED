@@ -27,14 +27,15 @@ export function Settings({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="settings-content">
+          {/* Appearance Section */}
           <section className="settings-section">
-            <h3>Appearance</h3>
+            <h3>🎨 Appearance</h3>
             
-            <div className="setting-item">
-              <label>
+            <div className="setting-row">
+              <div className="setting-info">
                 <span className="setting-label">Theme</span>
                 <span className="setting-description">Choose your preferred color scheme</span>
-              </label>
+              </div>
               <select
                 value={localSettings.theme}
                 onChange={(e) => setLocalSettings({ ...localSettings, theme: e.target.value as any })}
@@ -46,11 +47,11 @@ export function Settings({ onClose }: { onClose: () => void }) {
               </select>
             </div>
 
-            <div className="setting-item">
-              <label>
+            <div className="setting-row">
+              <div className="setting-info">
                 <span className="setting-label">Compact Mode</span>
                 <span className="setting-description">Show more items with smaller spacing</span>
-              </label>
+              </div>
               <label className="toggle">
                 <input
                   type="checkbox"
@@ -62,14 +63,15 @@ export function Settings({ onClose }: { onClose: () => void }) {
             </div>
           </section>
 
+          {/* Behavior Section */}
           <section className="settings-section">
-            <h3>Behavior</h3>
+            <h3>⚡ Behavior</h3>
             
-            <div className="setting-item">
-              <label>
+            <div className="setting-row">
+              <div className="setting-info">
                 <span className="setting-label">Auto-save</span>
                 <span className="setting-description">Automatically save changes after editing</span>
-              </label>
+              </div>
               <label className="toggle">
                 <input
                   type="checkbox"
@@ -80,11 +82,11 @@ export function Settings({ onClose }: { onClose: () => void }) {
               </label>
             </div>
 
-            <div className="setting-item">
-              <label>
+            <div className="setting-row">
+              <div className="setting-info">
                 <span className="setting-label">Create Backup Before Save</span>
                 <span className="setting-description">Automatically backup configs before saving changes</span>
-              </label>
+              </div>
               <label className="toggle">
                 <input
                   type="checkbox"
@@ -95,11 +97,11 @@ export function Settings({ onClose }: { onClose: () => void }) {
               </label>
             </div>
 
-            <div className="setting-item">
-              <label>
+            <div className="setting-row">
+              <div className="setting-info">
                 <span className="setting-label">Show Advanced Options</span>
                 <span className="setting-description">Display advanced configuration options</span>
-              </label>
+              </div>
               <label className="toggle">
                 <input
                   type="checkbox"
@@ -111,14 +113,15 @@ export function Settings({ onClose }: { onClose: () => void }) {
             </div>
           </section>
 
+          {/* API Integration Section */}
           <section className="settings-section">
-            <h3>API Integration</h3>
+            <h3>🔌 API Integration</h3>
             
-            <div className="setting-item">
-              <label>
+            <div className="setting-row">
+              <div className="setting-info">
                 <span className="setting-label">CurseForge API Key</span>
                 <span className="setting-description">Optional: Add your CurseForge API key for better rate limits</span>
-              </label>
+              </div>
               <input
                 type="password"
                 value={localSettings.curseforgeApiKey || ''}
@@ -128,49 +131,49 @@ export function Settings({ onClose }: { onClose: () => void }) {
               />
             </div>
 
-            <div className="setting-item">
-              <label>
-                <span className="setting-label">Cache Duration (hours)</span>
-                <span className="setting-description">How long to cache API responses</span>
-              </label>
+            <div className="setting-row">
+              <div className="setting-info">
+                <span className="setting-label">Cache Duration</span>
+                <span className="setting-description">How long to cache API responses (hours)</span>
+              </div>
               <input
                 type="number"
                 min="1"
                 max="168"
                 value={localSettings.cacheDuration}
                 onChange={(e) => setLocalSettings({ ...localSettings, cacheDuration: parseInt(e.target.value) })}
-                className="setting-input"
+                className="setting-input-small"
               />
             </div>
 
-            <div className="setting-item">
+            <div className="setting-row">
               <button onClick={handleClearCache} className="btn-secondary">
-                Clear API Cache
+                🗑️ Clear API Cache
               </button>
             </div>
           </section>
 
+          {/* Recent Instances Section */}
           <section className="settings-section">
-            <h3>Recent Instances</h3>
+            <h3>📂 Recent Instances</h3>
             
-            <div className="setting-item">
-              <label>
+            <div className="setting-row">
+              <div className="setting-info">
                 <span className="setting-label">Max Recent Instances</span>
                 <span className="setting-description">Number of recent instances to remember</span>
-              </label>
+              </div>
               <input
                 type="number"
                 min="3"
                 max="20"
                 value={localSettings.maxRecentInstances}
                 onChange={(e) => setLocalSettings({ ...localSettings, maxRecentInstances: parseInt(e.target.value) })}
-                className="setting-input"
+                className="setting-input-small"
               />
             </div>
 
             {localSettings.recentInstances && localSettings.recentInstances.length > 0 && (
               <div className="recent-instances-list">
-                <span className="setting-label">Recent Instances:</span>
                 {localSettings.recentInstances.map((path, index) => (
                   <div key={index} className="recent-instance-item">
                     <span className="instance-path" title={path}>{path}</span>
@@ -189,9 +192,10 @@ export function Settings({ onClose }: { onClose: () => void }) {
             )}
           </section>
 
+          {/* Keyboard Shortcuts Section */}
           <section className="settings-section">
-            <h3>Keyboard Shortcuts</h3>
-            <div className="shortcuts-list">
+            <h3>⌨️ Keyboard Shortcuts</h3>
+            <div className="shortcuts-grid">
               <div className="shortcut-item">
                 <span>Save changes</span>
                 <kbd>Ctrl+S</kbd>
@@ -211,18 +215,28 @@ export function Settings({ onClose }: { onClose: () => void }) {
             </div>
           </section>
 
+          {/* About Section */}
           <section className="settings-section">
-            <h3>About</h3>
-            <p className="about-text">
-              <strong>Minecraft Config Editor</strong> v1.0.0<br/>
-              A modern desktop application for editing Minecraft modpack configurations.
-            </p>
+            <h3>ℹ️ About</h3>
+            <div className="about-box">
+              <strong>Minecraft Config Editor</strong>
+              <span className="version-badge">v1.0.0</span>
+              <p>A modern desktop application for editing Minecraft modpack configurations.</p>
+              <div className="about-links">
+                <a href="https://github.com/yourusername/minecraft-config-editor" target="_blank" rel="noopener noreferrer">
+                  GitHub
+                </a>
+                <a href="https://github.com/yourusername/minecraft-config-editor/issues" target="_blank" rel="noopener noreferrer">
+                  Report Issue
+                </a>
+              </div>
+            </div>
           </section>
         </div>
 
         <div className="settings-footer">
           <button onClick={onClose} className="btn-secondary">Cancel</button>
-          <button onClick={handleSave} className="btn-primary">Save Settings</button>
+          <button onClick={handleSave} className="btn-primary">💾 Save Settings</button>
         </div>
       </div>
     </div>
