@@ -1,11 +1,14 @@
 import React from 'react';
 import { ModInfo } from '@shared/types/mod.types';
+import { useAppStore } from '@/store';
 
 interface ModCardProps {
   mod: ModInfo;
 }
 
 export function ModCard({ mod }: ModCardProps) {
+  const compactView = useAppStore(state => state.settings.compactView);
+  const showTooltips = useAppStore(state => state.settings.showTooltips);
 
   // Generate platform URLs
   const curseforgeUrl = mod.platformData?.platform === 'curseforge' 
@@ -16,16 +19,20 @@ export function ModCard({ mod }: ModCardProps) {
     ? `https://modrinth.com/mod/${mod.platformData.slug || mod.platformData.projectId}`
     : `https://modrinth.com/mods?q=${encodeURIComponent(mod.name)}`;
 
+  const iconSize = compactView ? 'w-16 h-16' : 'w-20 h-20';
+  const padding = compactView ? 'p-4' : 'p-6';
+
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className={`space-y-${compactView ? '4' : '6'} animate-fadeIn`}>
       {/* Mod Header */}
-      <div className="border border-border rounded-xl p-6 bg-gradient-to-br from-card to-card/50 shadow-lg backdrop-blur-sm">
+      <div className={`border border-border rounded-xl ${padding} bg-gradient-to-br from-card to-card/50 shadow-lg backdrop-blur-sm`}>
         <div className="flex items-start gap-4">
           {mod.icon ? (
             <img
               src={mod.icon}
               alt={mod.name}
-              className="w-20 h-20 rounded-xl object-cover shadow-lg ring-2 ring-primary/20"
+              className={`${iconSize} rounded-xl object-cover shadow-lg ring-2 ring-primary/20`}
+              title={showTooltips ? mod.name : undefined}
               onError={(e) => {
                 // Fallback if icon fails to load
                 e.currentTarget.style.display = 'none';

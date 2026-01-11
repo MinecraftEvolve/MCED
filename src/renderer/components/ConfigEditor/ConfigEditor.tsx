@@ -90,6 +90,12 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
     setSelectedConfig(updatedConfig);
     setConfigs(configs.map(c => c.path === updatedConfig.path ? updatedConfig : c));
     setHasUnsavedChanges(true);
+    
+    // Auto-save if enabled
+    const autoSave = useAppStore.getState().settings.autoSave;
+    if (autoSave) {
+      setTimeout(() => handleSave(), 500); // Debounce auto-save
+    }
   };
 
   const handleSave = async () => {

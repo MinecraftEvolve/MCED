@@ -9,6 +9,19 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
   const handleSave = () => {
     updateSettings(localSettings);
+    
+    // Apply theme immediately
+    if (localSettings.theme === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+    
+    // Apply accent color
+    if (localSettings.accentColor) {
+      document.documentElement.style.setProperty('--color-primary', localSettings.accentColor);
+    }
+    
     onClose();
   };
 
