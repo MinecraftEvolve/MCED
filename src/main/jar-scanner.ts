@@ -11,17 +11,19 @@ export class JarScanner {
       const files = await fs.readdir(modsFolder);
       const jarFiles = files.filter(f => f.endsWith('.jar'));
 
-      for (const jarFile of jarFiles) {
+      // Parallel processing with Promise.all for faster loading
+      const modPromises = jarFiles.map(async (jarFile) => {
         const jarPath = path.join(modsFolder, jarFile);
         try {
-          const modInfo = await this.extractModMetadata(jarPath);
-          if (modInfo) {
-            mods.push(modInfo);
-          }
+          return await this.extractModMetadata(jarPath);
         } catch (error) {
           console.error(`Failed to parse ${jarFile}:`, error);
+          return null;
         }
-      }
+      });
+
+      const results = await Promise.all(modPromises);
+      mods.push(...results.filter((mod): mod is ModInfo => mod !== null));
     } catch (error) {
       console.error('Failed to scan mods folder:', error);
     }

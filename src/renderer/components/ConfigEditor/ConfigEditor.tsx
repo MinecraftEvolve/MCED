@@ -8,6 +8,7 @@ import { DropdownInput } from './DropdownInput';
 import { ListInput } from './ListInput';
 import { RawEditor } from './RawEditor';
 import { useAppStore } from '@/store';
+import './ConfigEditor.css';
 
 interface ConfigEditorProps {
   modId: string;
@@ -115,7 +116,8 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="config-loading">
+        <div className="config-spinner"></div>
         <p className="text-muted-foreground">Loading configs...</p>
       </div>
     );
@@ -123,51 +125,51 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
 
   if (configs.length === 0) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <p className="text-muted-foreground">No config files found for this mod</p>
+      <div className="config-empty">
+        <div className="config-empty-icon">📋</div>
+        <p>No config files found for this mod</p>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-4">
-      {/* Config file tabs and controls */}
-      <div className="flex items-center justify-between border-b border-border">
-        {configs.length > 1 && (
-          <div className="flex gap-2">
-            {configs.map(config => (
-              <button
-                key={config.path}
-                onClick={() => setSelectedConfig(config)}
-                className={`
-                  px-4 py-2 text-sm font-medium border-b-2 transition-colors
-                  ${selectedConfig?.path === config.path
-                    ? 'border-primary text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }
-                `}
-              >
-                {config.name}
-              </button>
-            ))}
-          </div>
-        )}
-        <button
-          onClick={() => setIsRawMode(!isRawMode)}
-          className="px-3 py-1 text-sm bg-[#2a2a2a] hover:bg-[#333] rounded-md transition-colors"
-          title={isRawMode ? 'Switch to Form View' : 'Switch to Raw Edit Mode'}
-        >
-          {isRawMode ? '📋 Form View' : '📝 Raw Edit'}
-        </button>
-      </div>
+  // Group settings by category
+  const groupSettingsByCategory = (settings: ConfigSetting[]) => {
+    const grouped: Record<string, ConfigSetting[]> = {};
+    settings.forEach(setting => {
+      const category = setting.category || 'General';
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      grouped[category].push(setting);
+    });
+    return grouped;
+  };
 
-      {/* Raw Editor or Settings */}
+  const groupedSettings = selectedConfig ? groupSettingsByCategory(selectedConfig.settings) : {};
+
+  return (
+    <div className="config-editor">
+      {/* Config file tabs */}
+      {configs.length > 1 && (
+        <div className="config-tabs">
+          {configs.map(config => (
+            <button
+              key={config.path}
+              onClick={() => setSelectedConfig(config)}
+              className={`config-tab ${selectedConfig?.path === config.path ? 'active' : ''}`}
+            >
+              {config.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Config content */}
       {selectedConfig && isRawMode ? (
         <RawEditor
           filePath={selectedConfig.path}
           content={selectedConfig.rawContent || ''}
           onSave={(content) => {
-            // Save raw content
             setSelectedConfig({ ...selectedConfig, rawContent: content });
             handleSave();
           }}
@@ -175,15 +177,63 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
         />
       ) : (
         selectedConfig && (
-          <div className="space-y-1">
-            {selectedConfig.settings.map((setting, index) => (
-              <div key={`${setting.key}-${index}`}>
-                {renderSettingInput(setting, handleSettingChange)}
+          <div className="config-content">
+            {Object.entries(groupedSettings).map(([category, settings]) => (
+              <div key={category} className="config-section">
+                <div className="config-section-header">
+                  <span className="config-section-icon">⚙️</span>
+                  {category}
+                </div>
+                {settings.map((setting, index) => (
+                  <div key={`${setting.key}-${index}`} className="config-setting">
+                    <div className="config-setting-label">
+                      <div className="config-setting-name">
+                        {setting.name || setting.key}
+                        {setting.type && (
+                          <span className="config-setting-badge">{setting.type}</span>
+                        )}
+                      </div>
+                    </div>
+                    {setting.description && (
+                      <div className="config-setting-description">{setting.description}</div>
+                    )}
+                    <div className="config-setting-control">
+                      {renderSettingInput(setting, handleSettingChange)}
+                    </div>
+                    {(setting.defaultValue !== undefined || setting.min !== undefined) && (
+                      <div className="config-setting-meta">
+                        {setting.defaultValue !== undefined && (
+                          <div className="config-setting-default">
+                            <span>Default:</span>
+                            <code>{String(setting.defaultValue)}</code>
+                          </div>
+                        )}
+                        {(setting.min !== undefined && setting.max !== undefined) && (
+                          <div className="config-setting-range">
+                            <span>Range:</span>
+                            <code>{setting.min} - {setting.max}</code>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
         )
       )}
+
+      {/* Actions */}
+      <div className="config-actions">
+        <button
+          onClick={() => setIsRawMode(!isRawMode)}
+          className="config-action-btn secondary"
+          title={isRawMode ? 'Switch to Form View' : 'Switch to Raw Edit Mode'}
+        >
+          {isRawMode ? '📋 Form View' : '📝 Raw Edit'}
+        </button>
+      </div>
     </div>
   );
 }
