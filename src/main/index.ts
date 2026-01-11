@@ -185,3 +185,33 @@ ipcMain.handle('launch:minecraft', async (_event, instancePath: string, launcher
     return { success: false, error: error.message };
   }
 });
+
+ipcMain.handle('modrinth:search', async (_event, query: string) => {
+  try {
+    const response = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&limit=1`);
+    if (!response.ok) {
+      return { success: false, error: 'Search failed' };
+    }
+    const data = await response.json();
+    if (data.hits && data.hits.length > 0) {
+      return { success: true, mod: data.hits[0] };
+    }
+    return { success: false, error: 'No results' };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('modrinth:getProject', async (_event, idOrSlug: string) => {
+  try {
+    const response = await fetch(`https://api.modrinth.com/v2/project/${idOrSlug}`);
+    if (!response.ok) {
+      return { success: false, error: 'Project not found' };
+    }
+    const data = await response.json();
+    return { success: true, project: data };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+

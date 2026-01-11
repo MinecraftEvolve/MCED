@@ -7,6 +7,48 @@ import { MainPanel } from './components/Layout/MainPanel';
 import { StatusBar } from './components/Layout/StatusBar';
 import { SmartSearch } from './components/SmartSearch/SmartSearch';
 import { smartSearchService } from './services/SmartSearchService';
+import modrinthAPI from './services/api/ModrinthAPI';
+import { ModInfo } from '../shared/types/mod.types';
+
+// Helper to fetch icons from Modrinth for mods that don't have icons
+async function enrichModsWithModrinthIcons(mods: ModInfo[]): Promise<ModInfo[]> {
+  const enrichedMods = await Promise.all(
+    mods.map(async (mod) => {
+      // If mod already has an icon, skip
+      if (mod.icon) {
+        return mod;
+      }
+
+      try {
+        // Try to fetch from Modrinth using mod ID or name
+        const modrinthMod = await modrinthAPI.searchMod(mod.modId);
+        if (modrinthMod && modrinthMod.icon_url) {
+          return {
+            ...mod,
+            icon: modrinthMod.icon_url,
+          };
+        }
+
+        // Try with mod name if modId didn't work
+        if (mod.name && mod.name !== mod.modId) {
+          const modrinthMod2 = await modrinthAPI.searchMod(mod.name);
+          if (modrinthMod2 && modrinthMod2.icon_url) {
+            return {
+              ...mod,
+              icon: modrinthMod2.icon_url,
+            };
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to fetch Modrinth icon for ${mod.name}:`, error);
+      }
+
+      return mod;
+    })
+  );
+
+  return enrichedMods;
+}
 
 function App() {
   const { currentInstance, setCurrentInstance, setMods, setIsLoading, isLoading, mods } = useAppStore();
@@ -39,7 +81,8 @@ function App() {
         throw new Error(modsResult.error || 'Failed to scan mods');
       }
 
-      setMods(modsResult.mods);
+      const modsWithIcons = await enrichModsWithModrinthIcons(modsResult.mods);
+      setMods(modsWithIcons);
       setIsLoading(false);
     } catch (err: any) {
       console.error('Error opening instance:', err);

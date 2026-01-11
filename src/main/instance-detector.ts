@@ -107,6 +107,28 @@ export class InstanceDetector {
       }
     }
 
+    // Fallback: Detect from mod filenames
+    const modsFolder = path.join(instancePath, 'mods');
+    const altModsFolder = path.join(instancePath, '.minecraft', 'mods');
+    const finalModsFolder = await this.folderExists(modsFolder) ? modsFolder : altModsFolder;
+    
+    if (await this.folderExists(finalModsFolder)) {
+      try {
+        const files = await fs.readdir(finalModsFolder);
+        const jarFiles = files.filter(f => f.endsWith('.jar'));
+        
+        // Try to extract version from filenames
+        for (const jar of jarFiles) {
+          const match = jar.match(/[-_](?:mc|minecraft)?[-_]?([0-9]+\.[0-9]+(?:\.[0-9]+)?)/i);
+          if (match) {
+            return match[1];
+          }
+        }
+      } catch (error) {
+        console.error('Failed to detect MC version from mods:', error);
+      }
+    }
+
     return 'Unknown';
   }
 
@@ -186,7 +208,68 @@ export class InstanceDetector {
       }
     }
 
+    // Fallback: Scan mods folder
+    const modsFolder = path.join(instancePath, 'mods');
+    const altModsFolder = path.join(instancePath, '.minecraft', 'mods');
+    const finalModsFolder = await this.folderExists(modsFolder) ? modsFolder : altModsFolder;
+    
+    if (await this.folderExists(finalModsFolder)) {
+      try {
+        const files = await fs.readdir(finalModsFolder);
+        const jarFiles = files.filter(f => f.endsWith('.jar'));
+        
+        if (jarFiles.length > 0) {
+          // Check first mod file
+          const loaderFromMod = await this.detectLoaderFromMod(path.join(finalModsFolder, jarFiles[0]));
+          if (loaderFromMod) return loaderFromMod;
+        }
+      } catch (error) {
+        console.error('Failed to detect loader from mods:', error);
+      }
+    }
+
     return { type: 'vanilla', version: 'Unknown' };
+  }
+
+  private async detectLoaderFromMod(jarPath: string): Promise<LoaderInfo | null> {
+    try {
+      const AdmZip = require('adm-zip');
+      const zip = new AdmZip(jarPath);
+      const entries = zip.getEntries();
+
+      // Check for Fabric
+      const fabricEntry = entries.find((e: any) => e.entryName === 'fabric.mod.json');
+      if (fabricEntry) {
+        return { type: 'fabric', version: 'Unknown' };
+      }
+
+      // Check for Forge
+      const forgeEntry = entries.find((e: any) => e.entryName === 'META-INF/mods.toml');
+      if (forgeEntry) {
+        const content = forgeEntry.getData().toString('utf8');
+        const match = content.match(/modLoader\s*=\s*"([^"]+)"/);
+        if (match && match[1].includes('javafml')) {
+          return { type: 'forge', version: 'Unknown' };
+        }
+      }
+
+      // Check for NeoForge
+      const neoforgeEntry = entries.find((e: any) => e.entryName === 'META-INF/neoforge.mods.toml');
+      if (neoforgeEntry) {
+        return { type: 'neoforge', version: 'Unknown' };
+      }
+
+      // Check for Quilt
+      const quiltEntry = entries.find((e: any) => e.entryName === 'quilt.mod.json');
+      if (quiltEntry) {
+        return { type: 'quilt', version: 'Unknown' };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Failed to scan mod JAR:', error);
+      return null;
+    }
   }
 
   private async detectModpack(instancePath: string): Promise<ModpackInfo | undefined> {

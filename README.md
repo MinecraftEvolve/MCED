@@ -8,6 +8,7 @@ A modern, cross-platform desktop application for editing Minecraft modpack confi
 ## ✨ Features
 
 ### Core Capabilities
+
 - **🎯 Instance Detection**: Automatically detects Minecraft version, mod loader, and modpack source
 - **🔍 Smart Mod Detection**: Extracts metadata from JAR files (Forge, Fabric, NeoForge, Quilt)
 - **📝 Config Parsing**: Supports TOML, JSON, JSON5, YAML, CFG, and properties files
@@ -17,6 +18,7 @@ A modern, cross-platform desktop application for editing Minecraft modpack confi
 - **🔎 Smart Search**: Natural language search across all configs
 
 ### Supported Launchers
+
 - MultiMC
 - Prism Launcher
 - CurseForge
@@ -24,6 +26,7 @@ A modern, cross-platform desktop application for editing Minecraft modpack confi
 - Vanilla Minecraft
 
 ### Supported Mod Loaders
+
 - Forge
 - Fabric
 - NeoForge
@@ -32,6 +35,7 @@ A modern, cross-platform desktop application for editing Minecraft modpack confi
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+ and npm
 - Git
 
@@ -89,6 +93,7 @@ npm run package:linux  # Linux
 ### Smart Search
 
 Use natural language to find configs:
+
 - `"settings about performance"` - finds FPS, render distance, etc.
 - `"mod:create"` - shows all Create mod settings
 - `"type:boolean"` - filters boolean settings
@@ -137,6 +142,7 @@ minecraft-config-editor/
 - **Framer Motion**: Smooth animations
 
 ### Config Parsers
+
 - `@iarna/toml` - TOML parsing
 - `json5` - JSON5 with comments
 - `js-yaml` - YAML parsing
@@ -159,6 +165,7 @@ npm run lint
 ### Development Mode
 
 The app runs in development mode with:
+
 - Hot reload for React components
 - DevTools enabled
 - Detailed error messages
@@ -166,6 +173,7 @@ The app runs in development mode with:
 ## 🎯 Roadmap
 
 ### MVP Features (Completed)
+
 - ✅ Instance detection and analysis
 - ✅ JAR metadata extraction
 - ✅ Config file parsing (TOML, JSON)
@@ -173,11 +181,13 @@ The app runs in development mode with:
 - ✅ Basic config editing
 
 ### In Progress
+
 - 🔨 Smart Search implementation
 - 🔨 Quick Launch integration
 - 🔨 Platform API integration (CurseForge/Modrinth)
 
 ### Future Features
+
 - Config profiles (save/load/share)
 - Diff viewer for config changes
 - Backup and restore system
@@ -197,6 +207,7 @@ Contributions are welcome! Please follow these steps:
 5. Open a Pull Request
 
 ### Code Style
+
 - Use TypeScript for all new files
 - Follow the existing code structure
 - Add comments for complex logic
