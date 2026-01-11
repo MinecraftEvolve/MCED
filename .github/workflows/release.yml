@@ -30,6 +30,11 @@ jobs:
       - name: Build application
         run: npm run build
 
+      - name: Debug package.json
+        run: |
+          echo "Checking package.json author field:"
+          cat package.json | grep -A 3 '"author"'
+
       - name: Build Electron app (Windows)
         if: matrix.os == 'windows-latest'
         run: npm run package:win
