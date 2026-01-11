@@ -61,6 +61,7 @@
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
+    "@types/sharp": "^0.31.1",
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "@typescript-eslint/parser": "^6.17.0",
     "@vitejs/plugin-react": "^4.2.1",
@@ -82,9 +83,10 @@
   "build": {
     "appId": "com.mced.app",
     "productName": "Minecraft Config Editor",
+    "icon": "assets/icon.png",
     "directories": {
       "output": "release",
-      "buildResources": "build"
+      "buildResources": "assets"
     },
     "files": [
       "dist/**/*",
