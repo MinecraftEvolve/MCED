@@ -1,11 +1,15 @@
 import React from 'react';
 import { ModInfo } from '@shared/types/mod.types';
+import { ConfigEditor } from '../ConfigEditor/ConfigEditor';
+import { useAppStore } from '@/store';
 
 interface ModCardProps {
   mod: ModInfo;
 }
 
 export function ModCard({ mod }: ModCardProps) {
+  const { currentInstance } = useAppStore();
+
   return (
     <div className="space-y-6">
       {/* Mod Header */}
@@ -98,13 +102,16 @@ export function ModCard({ mod }: ModCardProps) {
         </dl>
       </div>
 
-      {/* Config Placeholder */}
-      <div className="border border-border rounded-lg p-6 bg-card">
-        <h3 className="font-semibold mb-3">Configuration</h3>
-        <p className="text-sm text-muted-foreground">
-          Config editor coming soon...
-        </p>
-      </div>
+      {/* Config Editor */}
+      {currentInstance && (
+        <div className="border border-border rounded-lg p-6 bg-card">
+          <h3 className="font-semibold mb-4">Configuration</h3>
+          <ConfigEditor 
+            modId={mod.modId} 
+            instancePath={currentInstance.path} 
+          />
+        </div>
+      )}
     </div>
   );
 }
