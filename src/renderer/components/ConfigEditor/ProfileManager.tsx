@@ -11,7 +11,7 @@ interface Profile {
 }
 
 export function ProfileManager() {
-  const { configData, setConfigData } = useAppStore();
+  const { configFiles } = useAppStore();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [showDialog, setShowDialog] = useState(false);
   const [profileName, setProfileName] = useState('');
@@ -21,11 +21,19 @@ export function ProfileManager() {
   const handleSaveProfile = () => {
     if (!profileName.trim()) return;
 
+    // Create a snapshot of current configs
+    const configSnapshot: Record<string, any> = {};
+    configFiles.forEach(file => {
+      if (file.parsed) {
+        configSnapshot[file.path] = file.parsed;
+      }
+    });
+
     const newProfile: Profile = {
       id: Date.now().toString(),
       name: profileName,
       description: profileDescription,
-      configs: { ...configData },
+      configs: configSnapshot,
       createdAt: new Date().toISOString(),
     };
 
@@ -43,7 +51,8 @@ export function ProfileManager() {
   const handleLoadProfile = (profileId: string) => {
     const profile = profiles.find(p => p.id === profileId);
     if (profile) {
-      setConfigData(profile.configs);
+      // TODO: Implement config loading through IPC
+      console.log('Loading profile:', profile);
       setSelectedProfile(profileId);
     }
   };
