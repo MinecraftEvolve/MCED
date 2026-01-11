@@ -3,6 +3,15 @@ import { MinecraftInstance } from '../shared/types/instance.types';
 import { ModInfo } from '../shared/types/mod.types';
 import { ConfigFile } from '../shared/types/config.types';
 
+interface AppSettings {
+  theme: 'dark' | 'light';
+  accentColor: string;
+  autoSave: boolean;
+  backupBeforeSave: boolean;
+  showTooltips: boolean;
+  compactView: boolean;
+}
+
 interface AppState {
   // Instance
   currentInstance: MinecraftInstance | null;
@@ -25,6 +34,10 @@ interface AppState {
   setSearchQuery: (query: string) => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+
+  // Settings
+  settings: AppSettings;
+  updateSettings: (settings: Partial<AppSettings>) => void;
 
   // Filters
   showOnlyConfigured: boolean;
@@ -61,6 +74,19 @@ export const useAppStore = create<AppState>((set) => ({
   setSearchQuery: (query) => set({ searchQuery: query }),
   isDarkMode: true,
   toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
+
+  // Settings
+  settings: {
+    theme: 'dark',
+    accentColor: '#3b82f6',
+    autoSave: false,
+    backupBeforeSave: true,
+    showTooltips: true,
+    compactView: false,
+  },
+  updateSettings: (newSettings) => set((state) => ({
+    settings: { ...state.settings, ...newSettings }
+  })),
 
   // Filters
   showOnlyConfigured: false,
