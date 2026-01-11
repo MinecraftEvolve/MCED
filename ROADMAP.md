@@ -169,6 +169,21 @@
 │  │   ├─ [✓] Hover effects                                                 │
 │  │   └─ [✓] Loading spinners                                              │
 │  │                                                                         │
+│  ├─ [✓] Settings System                                                 │
+│  │   ├─ [✓] Settings.tsx modal component                                │
+│  │   ├─ [✓] Settings.css with dark theme styling                        │
+│  │   ├─ [✓] Theme selection (Dark/Light/Auto)                           │
+│  │   ├─ [✓] Compact mode toggle                                         │
+│  │   ├─ [✓] Auto-save preference                                        │
+│  │   ├─ [✓] Backup preferences                                          │
+│  │   ├─ [✓] Advanced options toggle                                     │
+│  │   ├─ [✓] CurseForge API key configuration                            │
+│  │   ├─ [✓] Cache duration settings                                     │
+│  │   ├─ [✓] Recent instances management                                 │
+│  │   ├─ [✓] Keyboard shortcuts reference                                │
+│  │   ├─ [✓] About section                                               │
+│  │   └─ [✓] Settings button in Header with animated icon               │
+│  │                                                                         │
 │  ├─ [✓] UI Polish                                                         │
 │  │   ├─ [✓] Enhanced Header with gradient logo                            │
 │  │   ├─ [✓] Improved ModListItem styling                                  │
