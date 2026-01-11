@@ -192,7 +192,7 @@ ipcMain.handle('modrinth:search', async (_event, query: string) => {
     if (!response.ok) {
       return { success: false, error: 'Search failed' };
     }
-    const data = await response.json();
+    const data: any = await response.json();
     if (data.hits && data.hits.length > 0) {
       return { success: true, mod: data.hits[0] };
     }
