@@ -62,13 +62,13 @@ function App() {
   // Enable keyboard shortcuts
   useKeyboardShortcuts();
 
-  const handleOpenInstance = async () => {
+  const handleOpenInstance = async (providedPath?: string) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Open directory dialog
-      const path = await window.electronAPI.openDirectory();
+      // Open directory dialog or use provided path
+      const path = providedPath || await window.electronAPI.openDirectory();
       if (!path) {
         setIsLoading(false);
         return;
@@ -130,6 +130,17 @@ function App() {
     }
   }, [mods, currentInstance]);
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground">
+        <img src="/assets/logo.png" alt="Minecraft Config Editor" className="w-24 h-24 mb-6 drop-shadow-2xl animate-pulse" />
+        <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent mb-4"></div>
+        <p className="text-xl font-semibold text-muted-foreground">Loading instance...</p>
+      </div>
+    );
+  }
+
   if (!currentInstance) {
     return (
       <>
@@ -167,11 +178,7 @@ function App() {
                     return (
                       <button
                         key={idx}
-                        onClick={async () => {
-                          setIsLoading(true);
-                          await window.electron.openInstance(instancePath);
-                          setIsLoading(false);
-                        }}
+                        onClick={() => handleOpenInstance(instancePath)}
                         className="w-full px-4 py-3 bg-card hover:bg-card/80 rounded-lg text-left
                                  transition-all duration-200 border border-border hover:border-purple-500/50 group"
                       >
