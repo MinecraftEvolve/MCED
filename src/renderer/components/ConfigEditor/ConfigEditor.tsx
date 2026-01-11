@@ -203,26 +203,7 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
                 </div>
                 {settings.map((setting, index) => (
                   <div key={`${setting.key}-${index}`} className="config-setting">
-                    <div className="config-setting-control">
-                      {renderSettingInput(setting, handleSettingChange)}
-                    </div>
-                    {(setting.defaultValue !== undefined || setting.range) && (
-                      <div className="config-setting-meta">
-                        {setting.defaultValue !== undefined && (
-                          <span className="config-meta-item">
-                            Default: <code>{String(setting.defaultValue)}</code>
-                          </span>
-                        )}
-                        {setting.range && (
-                          <span className="config-meta-item">
-                            Range: <code>{setting.range.min} - {setting.range.max}</code>
-                          </span>
-                        )}
-                        {setting.unit && (
-                          <span className="config-meta-item">Unit: {setting.unit}</span>
-                        )}
-                      </div>
-                    )}
+                    {renderSettingInput(setting, handleSettingChange)}
                   </div>
                 ))}
               </div>
