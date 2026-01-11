@@ -39,7 +39,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "framer-motion": "^10.18.0",
-    "fuse.js": "^7.0.0",
+    "fuse.js": "^7.1.0",
     "js-yaml": "^4.1.0",
     "json5": "^2.2.3",
     "lucide-react": "^0.303.0",

@@ -5,10 +5,13 @@ import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import { MainPanel } from './components/Layout/MainPanel';
 import { StatusBar } from './components/Layout/StatusBar';
+import { SmartSearch } from './components/SmartSearch/SmartSearch';
+import { smartSearchService } from './services/SmartSearchService';
 
 function App() {
-  const { currentInstance, setCurrentInstance, setMods, setIsLoading, isLoading } = useAppStore();
+  const { currentInstance, setCurrentInstance, setMods, setIsLoading, isLoading, mods } = useAppStore();
   const [error, setError] = useState<string | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
 
   const handleOpenInstance = async () => {
     try {
@@ -48,7 +51,28 @@ function App() {
   useEffect(() => {
     // Add dark mode class to html element
     document.documentElement.classList.add('dark');
+
+    // Keyboard shortcut for search
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Index configs when mods are loaded
+  useEffect(() => {
+    if (mods.length > 0 && currentInstance) {
+      // Index all configs for search
+      const configsByMod = new Map();
+      // TODO: Load configs for all mods
+      smartSearchService.indexConfigs(mods, configsByMod);
+    }
+  }, [mods, currentInstance]);
 
   if (!currentInstance) {
     return (
@@ -104,12 +128,14 @@ function App() {
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
-      <Header />
+      <Header onSearchClick={() => setShowSearch(true)} />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
         <MainPanel />
       </div>
       <StatusBar />
+      
+      {showSearch && <SmartSearch onClose={() => setShowSearch(false)} />}
     </div>
   );
 }
