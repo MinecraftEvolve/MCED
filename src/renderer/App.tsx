@@ -67,6 +67,11 @@ function App() {
       setIsLoading(true);
       setError(null);
 
+      // Check if electronAPI is available
+      if (!window.electronAPI) {
+        throw new Error('Electron API not available. Please restart the application.');
+      }
+
       // Open directory dialog or use provided path
       const path = providedPath || await window.electronAPI.openDirectory();
       if (!path) {
@@ -147,7 +152,7 @@ function App() {
         <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground">
           {/* Logo */}
           <div className="mb-8">
-            <img src="/assets/logo.png" alt="Minecraft Config Editor" className="w-32 h-32 drop-shadow-2xl" />
+            <img src="./assets/logo.png" alt="Minecraft Config Editor" className="w-32 h-32 drop-shadow-2xl" />
           </div>
 
           {/* Title */}
