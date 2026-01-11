@@ -136,7 +136,7 @@ function App() {
         <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground">
           {/* Logo */}
           <div className="mb-8">
-            <img src="icon.png" alt="Minecraft Config Editor" className="w-32 h-32" />
+            <img src="/assets/logo.png" alt="Minecraft Config Editor" className="w-32 h-32 drop-shadow-2xl" />
           </div>
 
           {/* Title */}
