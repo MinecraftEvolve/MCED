@@ -32,17 +32,31 @@ export class JsonParser {
       if (line.startsWith('//')) {
         lastComment = line.substring(2).trim();
       }
-      // Multi-line comment start
+      // Multi-line comment
       else if (line.includes('/*')) {
-        const start = i;
         let comment = '';
-        while (i < lines.length && !lines[i].includes('*/')) {
-          comment += lines[i].replace('/*', '').trim() + ' ';
+        const sameLine = line.match(/\/\*(.*?)\*\//);
+        
+        if (sameLine) {
+          // Single line /* */ comment
+          comment = sameLine[1].trim();
+        } else {
+          // Multi-line comment
+          comment = line.replace('/*', '').replace(/^\s*\*/, '').trim();
           i++;
+          
+          while (i < lines.length && !lines[i].includes('*/')) {
+            const cleaned = lines[i].replace(/^\s*\*/, '').trim();
+            if (cleaned) comment += ' ' + cleaned;
+            i++;
+          }
+          
+          if (i < lines.length) {
+            const ending = lines[i].replace('*/', '').replace(/^\s*\*/, '').trim();
+            if (ending) comment += ' ' + ending;
+          }
         }
-        if (i < lines.length) {
-          comment += lines[i].replace('*/', '').trim();
-        }
+        
         lastComment = comment.trim();
       }
       // Property line - associate with last comment
@@ -53,9 +67,9 @@ export class JsonParser {
           lastComment = '';
         }
       }
-      // Empty line resets comment
-      else if (line === '') {
-        lastComment = '';
+      // Empty line or closing brace - keep comment for next property
+      else if (line === '' || line === '}' || line === '},') {
+        // Don't reset comment - it might apply to the next property
       }
     }
   }
