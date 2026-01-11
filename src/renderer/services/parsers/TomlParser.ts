@@ -32,20 +32,6 @@ export class TomlParser {
   parseWithMetadata(content: string): { data: ConfigContent; metadata: Map<string, ParsedComment> } {
     const data = this.parse(content);
     const metadata = this.extractComments(content);
-    
-    // Debug logging
-    if (metadata.size > 0) {
-      console.log('[TomlParser] Extracted metadata for', metadata.size, 'settings');
-      let count = 0;
-      for (const [key, meta] of metadata.entries()) {
-        if (count++ < 5) {
-          console.log(`  ${key}:`, meta);
-        }
-      }
-    } else {
-      console.warn('[TomlParser] No metadata extracted from TOML comments!');
-    }
-    
     return { data, metadata };
   }
 
