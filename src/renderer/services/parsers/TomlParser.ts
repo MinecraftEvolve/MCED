@@ -3,7 +3,7 @@ import { ConfigContent, ConfigSetting } from '../types/config.types';
 
 interface ParsedComment {
   description?: string;
-  range?: { min: number; max: number };
+  range?: [number, number]; // Tuple format matching ConfigSetting
   allowedValues?: string[];
   unit?: string;
   defaultValue?: any;
@@ -32,6 +32,20 @@ export class TomlParser {
   parseWithMetadata(content: string): { data: ConfigContent; metadata: Map<string, ParsedComment> } {
     const data = this.parse(content);
     const metadata = this.extractComments(content);
+    
+    // Debug logging
+    if (metadata.size > 0) {
+      console.log('[TomlParser] Extracted metadata for', metadata.size, 'settings');
+      let count = 0;
+      for (const [key, meta] of metadata.entries()) {
+        if (count++ < 5) {
+          console.log(`  ${key}:`, meta);
+        }
+      }
+    } else {
+      console.warn('[TomlParser] No metadata extracted from TOML comments!');
+    }
+    
     return { data, metadata };
   }
 
@@ -121,17 +135,17 @@ export class TomlParser {
           // Two values: min ~ max
           const min = parseFloat(match[1]);
           const max = parseFloat(match[2]);
-          parsed.range = {
-            min: isFinite(min) ? min : 0,
-            max: isFinite(max) ? max : 100
-          };
+          parsed.range = [
+            isFinite(min) ? min : 0,
+            isFinite(max) ? max : 100
+          ];
         } else {
           // Single value: > X or >= X
           const min = parseFloat(match[1]);
-          parsed.range = {
-            min: isFinite(min) ? min + 1 : 1,
-            max: 10000 // Reasonable default
-          };
+          parsed.range = [
+            isFinite(min) ? min + 1 : 1,
+            10000 // Reasonable default
+          ];
         }
         break;
       }
