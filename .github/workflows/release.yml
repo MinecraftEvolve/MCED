@@ -54,8 +54,7 @@ jobs:
         with:
           name: windows-build
           path: |
-            dist-electron/*.exe
-            dist-electron/*.zip
+            release/*.exe
 
       - name: Upload artifacts (macOS)
         if: matrix.os == 'macos-latest'
@@ -63,8 +62,8 @@ jobs:
         with:
           name: macos-build
           path: |
-            dist-electron/*.dmg
-            dist-electron/*.zip
+            release/*.dmg
+            release/*.zip
 
       - name: Upload artifacts (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -72,9 +71,8 @@ jobs:
         with:
           name: linux-build
           path: |
-            dist-electron/*.AppImage
-            dist-electron/*.deb
-            dist-electron/*.rpm
+            release/*.AppImage
+            release/*.deb
 
   create-release:
     needs: release
