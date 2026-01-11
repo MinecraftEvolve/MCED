@@ -161,6 +161,44 @@ export class InstanceDetector {
       }
     }
 
+    // Try Modrinth meta/versions folder (more reliable)
+    try {
+      const minecraftVersion = await this.detectMinecraftVersion(instancePath);
+      const parentPath = path.dirname(instancePath);
+      const metaPath = path.join(path.dirname(parentPath), 'meta', 'versions');
+      
+      if (await this.folderExists(metaPath)) {
+        const versionDirs = await fs.readdir(metaPath);
+        for (const versionDir of versionDirs) {
+          if (versionDir.startsWith(minecraftVersion)) {
+            const versionFile = path.join(metaPath, versionDir, `${versionDir}.json`);
+            if (await this.fileExists(versionFile)) {
+              const content = await fs.readFile(versionFile, 'utf-8');
+              const data = JSON.parse(content);
+              if (data.arguments?.game) {
+                // Extract forge version from game arguments
+                const forgeVersionIndex = data.arguments.game.indexOf('--fml.forgeVersion');
+                if (forgeVersionIndex !== -1 && forgeVersionIndex + 1 < data.arguments.game.length) {
+                  return { type: 'forge', version: data.arguments.game[forgeVersionIndex + 1] };
+                }
+                // Check for Fabric
+                const fabricVersionIndex = data.arguments.game.indexOf('--fabric');
+                if (fabricVersionIndex !== -1) {
+                  // Try to extract version from id
+                  const versionMatch = versionDir.match(/\d+\.\d+\.\d+-(.+)/);
+                  if (versionMatch) {
+                    return { type: 'fabric', version: versionMatch[1] };
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check Modrinth meta:', error);
+    }
+
     // Try modrinth.index.json (Modrinth launcher)
     const modrinthIndex = path.join(instancePath, '..', path.basename(instancePath).replace(/\s+\d+\.\d+\.\d+$/, ''), 'profile.json');
     if (await this.fileExists(modrinthIndex)) {
