@@ -104,6 +104,55 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
     }
   };
 
+  const handleAddComment = (settingKey: string, text: string) => {
+    if (!selectedConfig) return;
+
+    const updatedSettings = selectedConfig.settings.map((setting) => {
+      if (setting.key === settingKey) {
+        const newComment = {
+          id: Date.now().toString(),
+          text,
+          timestamp: new Date().toISOString(),
+        };
+        return {
+          ...setting,
+          userComments: [...(setting.userComments || []), newComment],
+        };
+      }
+      return setting;
+    });
+
+    const updatedConfig = { ...selectedConfig, settings: updatedSettings };
+    setSelectedConfig(updatedConfig);
+    setConfigs(
+      configs.map((c) => (c.path === updatedConfig.path ? updatedConfig : c)),
+    );
+    setHasUnsavedChanges(true);
+  };
+
+  const handleDeleteComment = (settingKey: string, commentId: string) => {
+    if (!selectedConfig) return;
+
+    const updatedSettings = selectedConfig.settings.map((setting) => {
+      if (setting.key === settingKey) {
+        return {
+          ...setting,
+          userComments: (setting.userComments || []).filter(
+            (c) => c.id !== commentId,
+          ),
+        };
+      }
+      return setting;
+    });
+
+    const updatedConfig = { ...selectedConfig, settings: updatedSettings };
+    setSelectedConfig(updatedConfig);
+    setConfigs(
+      configs.map((c) => (c.path === updatedConfig.path ? updatedConfig : c)),
+    );
+    setHasUnsavedChanges(true);
+  };
+
   const handleSave = async () => {
     if (!selectedConfig) return;
 
@@ -194,6 +243,8 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
                   <SettingWrapper
                     setting={setting}
                     onChange={(value) => handleSettingChange(setting.key, value)}
+                    onAddComment={handleAddComment}
+                    onDeleteComment={handleDeleteComment}
                   />
                 </div>
               ))}
