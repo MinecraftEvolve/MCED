@@ -24,7 +24,7 @@ export function BooleanInput({ setting, onChange }: BooleanInputProps) {
         onClick={() => onChange(!value)}
         className={`
           relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-          ${value ? "bg-primary" : "bg-secondary"}
+          ${value ? "bg-[#9333ea]" : "bg-secondary"}
         `}
       >
         <span
