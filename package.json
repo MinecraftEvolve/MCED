@@ -179,7 +179,7 @@
       }
     },
     "linux": {
-      "icon": "assets/icons",
+      "icon": "build/icons",
       "target": [
         "AppImage",
         "deb"

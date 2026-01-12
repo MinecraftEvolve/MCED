@@ -7,7 +7,7 @@ import { Sidebar } from "./components/Sidebar";
 import { MainPanel } from "./components/MainPanel";
 import { StatusBar } from "./components/StatusBar";
 import { SmartSearch } from "./components/SmartSearch";
-import { Settings } from "./components/Settings/Settings";
+import { Settings } from "./components/Settings";
 import { smartSearchService } from "./services/SmartSearchService";
 import { configService } from "./services/ConfigService";
 import modrinthAPI from "./services/api/ModrinthAPI";

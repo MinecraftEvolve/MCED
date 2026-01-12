@@ -1,5 +1,5 @@
 import React from "react";
-import { ModList } from "../ModList/ModList";
+import { ModList } from "./ModList";
 import { useAppStore } from "@/store";
 
 export function Sidebar() {
