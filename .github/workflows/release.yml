@@ -39,71 +39,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y rpm
 
-      - name: Build Electron app (Windows)
+      - name: Package and Publish (Windows)
         if: matrix.os == 'windows-latest'
-        run: npm run package:win
+        run: npx electron-builder --win --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Electron app (macOS)
+      - name: Package and Publish (macOS)
         if: matrix.os == 'macos-latest'
-        run: npm run package:mac
+        run: npx electron-builder --mac --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
-      - name: Build Electron app (Linux)
+      - name: Package and Publish (Linux)
         if: matrix.os == 'ubuntu-latest'
-        run: npm run package:linux
+        run: npx electron-builder --linux --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts (Windows)
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-build
-          path: |
-            release/*.exe
-
-      - name: Upload artifacts (macOS)
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-build
-          path: |
-            release/*.dmg
-            release/*.zip
-
-      - name: Upload artifacts (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-build
-          path: |
-            release/*.AppImage
-            release/*.deb
-
-  create-release:
-    needs: release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    if: startsWith(github.ref, 'refs/tags/') && always()
-    
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            artifacts/**/*
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
