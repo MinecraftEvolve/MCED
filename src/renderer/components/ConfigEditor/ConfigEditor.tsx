@@ -4,7 +4,7 @@ import { ConfigFile, ConfigSetting } from "@/types/config.types";
 import { configService } from "@/services/ConfigService";
 import { useAppStore } from "@/store";
 import { SettingWrapper } from "./SettingWrapper";
-import { CommentSection } from "./CommentSection";
+import "./ConfigEditor.css";
 
 interface ConfigEditorProps {
   modId: string;
@@ -18,7 +18,7 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { setHasUnsavedChanges, addToHistory } = useAppStore();
+  const { setHasUnsavedChanges } = useAppStore();
 
   useEffect(() => {
     loadConfigs();
@@ -91,18 +91,59 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
     );
     setHasUnsavedChanges(true);
 
-    addToHistory({
-      type: "setting_change",
-      settingKey,
-      oldValue,
-      newValue,
-      configPath: selectedConfig.path,
-    });
-
     const autoSave = useAppStore.getState().settings.autoSave;
     if (autoSave) {
       setTimeout(() => handleSave(), 500);
     }
+  };
+
+  const handleAddComment = (settingKey: string, text: string) => {
+    if (!selectedConfig) return;
+
+    const updatedSettings = selectedConfig.settings.map((setting) => {
+      if (setting.key === settingKey) {
+        const newComment = {
+          id: Date.now().toString(),
+          text,
+          timestamp: new Date().toISOString(),
+        };
+        return {
+          ...setting,
+          userComments: [...(setting.userComments || []), newComment],
+        };
+      }
+      return setting;
+    });
+
+    const updatedConfig = { ...selectedConfig, settings: updatedSettings };
+    setSelectedConfig(updatedConfig);
+    setConfigs(
+      configs.map((c) => (c.path === updatedConfig.path ? updatedConfig : c)),
+    );
+    setHasUnsavedChanges(true);
+  };
+
+  const handleDeleteComment = (settingKey: string, commentId: string) => {
+    if (!selectedConfig) return;
+
+    const updatedSettings = selectedConfig.settings.map((setting) => {
+      if (setting.key === settingKey) {
+        return {
+          ...setting,
+          userComments: (setting.userComments || []).filter(
+            (c) => c.id !== commentId,
+          ),
+        };
+      }
+      return setting;
+    });
+
+    const updatedConfig = { ...selectedConfig, settings: updatedSettings };
+    setSelectedConfig(updatedConfig);
+    setConfigs(
+      configs.map((c) => (c.path === updatedConfig.path ? updatedConfig : c)),
+    );
+    setHasUnsavedChanges(true);
   };
 
   const handleSave = async () => {
@@ -195,10 +236,8 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
                   <SettingWrapper
                     setting={setting}
                     onChange={(value) => handleSettingChange(setting.key, value)}
-                  />
-                  <CommentSection
-                    settingKey={setting.key}
-                    configPath={selectedConfig.path}
+                    onAddComment={handleAddComment}
+                    onDeleteComment={handleDeleteComment}
                   />
                 </div>
               ))}

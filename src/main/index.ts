@@ -117,7 +117,8 @@ ipcMain.handle("scan-mods", async (_event, instancePath) => {
       version: String(mod.version || ""),
       description: mod.description ? String(mod.description) : undefined,
       authors: Array.isArray(mod.authors)
-        ? mod.authors.map((a: any) => String(a))
+        ? mod.authors.map((a: string | { name: string }) => 
+            typeof a === 'string' ? a : String(a))
         : undefined,
       homepage: mod.homepage ? String(mod.homepage) : undefined,
       sources: mod.sources ? String(mod.sources) : undefined,
@@ -133,10 +134,10 @@ ipcMain.handle("scan-mods", async (_event, instancePath) => {
       success: true,
       mods: serializedMods,
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message,
+      error: (error instanceof Error ? error.message : String(error)),
       mods: [],
     };
   }
@@ -146,8 +147,8 @@ ipcMain.handle("read-config", async (_event, configPath: string) => {
   try {
     const content = await fs.readFile(configPath, "utf-8");
     return { success: true, content };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
   }
 });
 
@@ -157,8 +158,8 @@ ipcMain.handle(
     try {
       await fs.writeFile(configPath, content, "utf-8");
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: (error instanceof Error ? error.message : String(error)) };
     }
   },
 );
@@ -199,8 +200,8 @@ ipcMain.handle("fs:readFile", async (_event, filePath: string) => {
   try {
     const content = await fs.readFile(filePath, "utf-8");
     return { success: true, content };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
   }
 });
 
@@ -210,8 +211,8 @@ ipcMain.handle(
     try {
       await fs.writeFile(filePath, content, "utf-8");
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: (error instanceof Error ? error.message : String(error)) };
     }
   },
 );
@@ -220,8 +221,8 @@ ipcMain.handle("fs:readdir", async (_event, dirPath: string) => {
   try {
     const files = await fs.readdir(dirPath);
     return { success: true, files };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
   }
 });
 
@@ -237,8 +238,8 @@ ipcMain.handle("fs:stat", async (_event, filePath: string) => {
         mtime: stats.mtime.getTime(), // Convert Date to timestamp
       },
     };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
   }
 });
 
@@ -283,8 +284,8 @@ ipcMain.handle("instance:detect", async (_event, instancePath: string) => {
     }
 
     return { success: true, instance: plainInstance };
-  } catch (error: any) {
-    return { success: false, error: error?.message || "Unknown error" };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 });
 
@@ -302,7 +303,8 @@ ipcMain.handle("mods:scan", async (_event, modsFolder: string) => {
         version: String(mod.version || ""),
         description: mod.description ? String(mod.description) : undefined,
         authors: Array.isArray(mod.authors)
-          ? mod.authors.map((a: any) => String(a))
+          ? mod.authors.map((a: string | { name: string }) => 
+              typeof a === 'string' ? a : String(a))
           : undefined,
         homepage: mod.homepage ? String(mod.homepage) : undefined,
         sources: mod.sources ? String(mod.sources) : undefined,
@@ -335,10 +337,10 @@ ipcMain.handle("mods:scan", async (_event, modsFolder: string) => {
     });
 
     return { success: true, mods: serializedMods };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error?.message || "Unknown error",
+      error: error instanceof Error ? error.message : String(error),
       mods: [],
     };
   }
@@ -351,8 +353,8 @@ ipcMain.handle(
       const scanner = new JarScanner();
       const iconData = await scanner.extractIcon(jarPath, iconPath);
       return { success: true, iconData };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: (error instanceof Error ? error.message : String(error)) };
     }
   },
 );
@@ -361,8 +363,8 @@ ipcMain.handle("app:getPath", async (_event, name: string) => {
   try {
     const appPath = app.getPath(name as any);
     return { success: true, path: appPath };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
   }
 });
 
@@ -370,21 +372,58 @@ ipcMain.handle("app:getVersion", async () => {
   return app.getVersion();
 });
 
+interface ModrinthSearchResult {
+  hits: Array<{
+    project_id: string;
+    slug: string;
+    title: string;
+    description: string;
+    icon_url?: string;
+    downloads: number;
+    follows: number;
+    categories?: string[];
+    versions?: string[];
+    date_created: string;
+    date_modified: string;
+    license?: { name: string };
+  }>;
+}
+
+interface ModrinthProject {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  icon_url?: string;
+  downloads: number;
+  followers: number;
+  categories?: string[];
+  versions?: string[];
+  published: string;
+  updated: string;
+  license?: { name: string };
+  source_url?: string;
+  wiki_url?: string;
+  issues_url?: string;
+  discord_url?: string;
+}
+
 ipcMain.handle("modrinth:search", async (_event, query: string) => {
   try {
     const response = await fetch(
       `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&limit=1`,
     );
     if (!response.ok) {
-      return { success: false, error: "Search failed" };
+      return { success: false, error: `Search failed: ${response.status}` };
     }
-    const data: any = await response.json();
+    const data = await response.json() as ModrinthSearchResult;
     if (data.hits && data.hits.length > 0) {
       return { success: true, mod: data.hits[0] };
     }
     return { success: false, error: "No results" };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: errorMessage };
   }
 });
 
@@ -394,13 +433,14 @@ ipcMain.handle("modrinth:getProject", async (_event, idOrSlug: string) => {
       `https://api.modrinth.com/v2/project/${idOrSlug}`,
     );
     if (!response.ok) {
-      return { success: false, error: "Project not found" };
+      return { success: false, error: `Project not found: ${response.status}` };
     }
-    const data = await response.json();
+    const data = await response.json() as ModrinthProject;
     // Return only serializable data
     return { success: true, project: JSON.parse(JSON.stringify(data)) };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: errorMessage };
   }
 });
 
@@ -437,7 +477,7 @@ ipcMain.handle("backup:list", async (_event, instancePath: string) => {
     }
 
     return backups.sort((a, b) => b.timestamp - a.timestamp);
-  } catch (error: any) {
+  } catch (error) {
     return [];
   }
 });
@@ -463,8 +503,8 @@ ipcMain.handle("backup:create", async (_event, instancePath: string) => {
     zip.writeZip(backupFile);
 
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
   }
 });
 
@@ -474,8 +514,8 @@ ipcMain.handle("clear-api-cache", async () => {
     await fs.rm(cacheDir, { recursive: true, force: true });
     await fs.mkdir(cacheDir, { recursive: true });
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
   }
 });
 
@@ -491,8 +531,8 @@ ipcMain.handle(
       zip.extractAllTo(configDir, true);
 
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: (error instanceof Error ? error.message : String(error)) };
     }
   },
 );
@@ -502,7 +542,7 @@ ipcMain.handle("load-config-profile", async (_event, profileId: string) => {
     const profilesPath = path.join(app.getPath("userData"), "profiles.json");
     const profilesData = await fs.readFile(profilesPath, "utf-8");
     const profiles = JSON.parse(profilesData);
-    const profile = profiles.find((p: any) => p.id === profileId);
+    const profile = profiles.find((p: { id: string }) => p.id === profileId);
 
     if (!profile) {
       throw new Error("Profile not found");
@@ -514,8 +554,8 @@ ipcMain.handle("load-config-profile", async (_event, profileId: string) => {
     }
 
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
   }
 });
 
@@ -526,8 +566,8 @@ ipcMain.handle(
       const backupFile = path.join(instancePath, ".mced-backups", backupId);
       await fs.unlink(backupFile);
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: (error instanceof Error ? error.message : String(error)) };
     }
   },
 );
@@ -568,8 +608,8 @@ ipcMain.handle(
         }
       }
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+    } catch (error) {
+      return { success: false, error: (error instanceof Error ? error.message : String(error)) };
     }
   },
 );
