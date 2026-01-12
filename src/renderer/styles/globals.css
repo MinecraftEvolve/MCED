@@ -95,6 +95,14 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    /* Dark theme specific variables */
+    --bg-primary: 240 10% 10%;
+    --bg-secondary: 240 5% 15%;
+    --bg-hover: 240 5% 20%;
+    --text-primary: 0 0% 98%;
+    --text-secondary: 0 0% 80%;
+    --border-color: 240 3.7% 30%;
+    --color-primary: 220 70% 55%;
   }
 }
 
