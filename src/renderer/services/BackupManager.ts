@@ -1,5 +1,5 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from "fs";
+import path from "path";
 
 interface Backup {
   id: string;
@@ -11,16 +11,14 @@ interface Backup {
 
 class BackupManager {
   private backups: Map<string, Backup[]> = new Map();
-  private backupDir: string = '';
+  private backupDir: string = "";
 
   async initialize(instancePath: string): Promise<void> {
-    this.backupDir = path.join(instancePath, '.mced-backups');
-    
+    this.backupDir = path.join(instancePath, ".mced-backups");
+
     try {
       await fs.mkdir(this.backupDir, { recursive: true });
-    } catch (error) {
-      console.error('Failed to create backup directory:', error);
-    }
+    } catch (error) {}
   }
 
   async createBackup(configPath: string, modName: string): Promise<string> {
@@ -31,10 +29,10 @@ class BackupManager {
       const backupPath = path.join(this.backupDir, `${backupId}_${fileName}`);
 
       // Read original file
-      const content = await fs.readFile(configPath, 'utf-8');
-      
+      const content = await fs.readFile(configPath, "utf-8");
+
       // Write backup
-      await fs.writeFile(backupPath, content, 'utf-8');
+      await fs.writeFile(backupPath, content, "utf-8");
 
       // Store backup metadata
       const backup: Backup = {
@@ -54,7 +52,6 @@ class BackupManager {
 
       return backupId;
     } catch (error) {
-      console.error('Failed to create backup:', error);
       throw error;
     }
   }
@@ -64,7 +61,7 @@ class BackupManager {
       // Find backup
       let targetBackup: Backup | null = null;
       for (const backups of this.backups.values()) {
-        const found = backups.find(b => b.id === backupId);
+        const found = backups.find((b) => b.id === backupId);
         if (found) {
           targetBackup = found;
           break;
@@ -76,14 +73,11 @@ class BackupManager {
       }
 
       // Read backup content
-      const content = await fs.readFile(targetBackup.backupPath, 'utf-8');
-      
-      // Restore to original location
-      await fs.writeFile(targetBackup.configPath, content, 'utf-8');
+      const content = await fs.readFile(targetBackup.backupPath, "utf-8");
 
-      console.log(`Restored backup ${backupId} to ${targetBackup.configPath}`);
+      // Restore to original location
+      await fs.writeFile(targetBackup.configPath, content, "utf-8");
     } catch (error) {
-      console.error('Failed to restore backup:', error);
       throw error;
     }
   }
@@ -98,22 +92,22 @@ class BackupManager {
     for (const backups of this.backups.values()) {
       allBackups.push(...backups);
     }
-    return allBackups.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    return allBackups.sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
+    );
   }
 
   private async cleanupOldBackups(configPath: string): Promise<void> {
     const backups = this.backups.get(configPath) || [];
-    
+
     // Keep only last 5 backups
     if (backups.length > 5) {
       const toDelete = backups.slice(5);
-      
+
       for (const backup of toDelete) {
         try {
           await fs.unlink(backup.backupPath);
-        } catch (error) {
-          console.error('Failed to delete old backup:', error);
-        }
+        } catch (error) {}
       }
 
       this.backups.set(configPath, backups.slice(0, 5));
@@ -123,7 +117,7 @@ class BackupManager {
   async deleteBackup(backupId: string): Promise<void> {
     try {
       for (const [configPath, backups] of this.backups.entries()) {
-        const index = backups.findIndex(b => b.id === backupId);
+        const index = backups.findIndex((b) => b.id === backupId);
         if (index !== -1) {
           const backup = backups[index];
           await fs.unlink(backup.backupPath);
@@ -134,7 +128,6 @@ class BackupManager {
       }
       throw new Error(`Backup ${backupId} not found`);
     } catch (error) {
-      console.error('Failed to delete backup:', error);
       throw error;
     }
   }
@@ -143,10 +136,7 @@ class BackupManager {
     try {
       await fs.rm(this.backupDir, { recursive: true, force: true });
       this.backups.clear();
-      console.log('All backups cleaned up');
-    } catch (error) {
-      console.error('Failed to cleanup backups:', error);
-    }
+    } catch (error) {}
   }
 }
 

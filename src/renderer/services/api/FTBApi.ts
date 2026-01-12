@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from "axios";
 
-const FTB_API_BASE = 'https://api.modpacks.ch/public';
+const FTB_API_BASE = "https://api.modpacks.ch/public";
 
 interface FTBModpack {
   id: number;
@@ -42,9 +42,11 @@ class FTBApi {
     if (cached) return cached;
 
     try {
-      const response = await axios.get(`${FTB_API_BASE}/modpack/search/8?term=${encodeURIComponent(name)}`);
+      const response = await axios.get(
+        `${FTB_API_BASE}/modpack/search/8?term=${encodeURIComponent(name)}`,
+      );
       const modpacks = response.data.packs || [];
-      
+
       if (modpacks.length > 0) {
         const modpack = modpacks[0];
         this.setCache(cacheKey, modpack);
@@ -52,7 +54,6 @@ class FTBApi {
       }
       return null;
     } catch (error) {
-      console.error('FTB API error:', error);
       return null;
     }
   }

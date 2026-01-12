@@ -20,21 +20,21 @@ export interface ModMetadata {
 
 export interface ModDependency {
   modId: string;
-  type: 'required' | 'optional' | 'incompatible' | 'before' | 'after';
+  type: "required" | "optional" | "incompatible" | "before" | "after";
   versionRange?: string;
 }
 
 export interface ModInfo extends ModMetadata {
   jarPath: string;
-  loader: 'forge' | 'fabric' | 'neoforge' | 'quilt';
+  loader: "forge" | "fabric" | "neoforge" | "quilt";
   configFiles: ConfigFile[];
   platformData?: PlatformData;
   isFavorite?: boolean;
-  lastModified?: Date;
+  lastModified?: number; // Timestamp in milliseconds
 }
 
 export interface PlatformData {
-  platform: 'curseforge' | 'modrinth';
+  platform: "curseforge" | "modrinth";
   projectId: string | number;
   slug?: string;
   downloadCount?: number;

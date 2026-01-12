@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from "axios";
 
-const TECHNIC_API_BASE = 'https://api.technicpack.net';
+const TECHNIC_API_BASE = "https://api.technicpack.net";
 
 interface TechnicModpack {
   name: string;
@@ -42,7 +42,6 @@ class TechnicApi {
       this.setCache(cacheKey, response.data);
       return response.data;
     } catch (error) {
-      console.error('Technic API error:', error);
       return null;
     }
   }
@@ -54,13 +53,12 @@ class TechnicApi {
 
     try {
       const response = await axios.get(`${TECHNIC_API_BASE}/modpack/search`, {
-        params: { q: query }
+        params: { q: query },
       });
       const modpacks = response.data.modpacks || [];
       this.setCache(cacheKey, modpacks);
       return modpacks;
     } catch (error) {
-      console.error('Technic API search error:', error);
       return [];
     }
   }

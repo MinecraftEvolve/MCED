@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { useAppStore } from '@/store';
-import './ProfileManager.css';
+import React, { useState } from "react";
+import { useAppStore } from "@/store";
+import { Save, FolderOpen, Upload, Trash2 } from "lucide-react";
+import "./ProfileManager.css";
 
 interface Profile {
   id: string;
@@ -14,8 +15,8 @@ export function ProfileManager() {
   const { configFiles } = useAppStore();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [showDialog, setShowDialog] = useState(false);
-  const [profileName, setProfileName] = useState('');
-  const [profileDescription, setProfileDescription] = useState('');
+  const [profileName, setProfileName] = useState("");
+  const [profileDescription, setProfileDescription] = useState("");
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
 
   const handleSaveProfile = () => {
@@ -23,10 +24,8 @@ export function ProfileManager() {
 
     // Create a snapshot of current configs
     const configSnapshot: Record<string, any> = {};
-    configFiles.forEach(file => {
-      if (file.parsed) {
-        configSnapshot[file.path] = file.parsed;
-      }
+    configFiles.forEach((file) => {
+      configSnapshot[file.path] = file.content;
     });
 
     const newProfile: Profile = {
@@ -38,56 +37,59 @@ export function ProfileManager() {
     };
 
     setProfiles([...profiles, newProfile]);
-    
-    // Save to localStorage
-    const saved = JSON.parse(localStorage.getItem('config-profiles') || '[]');
-    localStorage.setItem('config-profiles', JSON.stringify([...saved, newProfile]));
 
-    setProfileName('');
-    setProfileDescription('');
+    // Save to localStorage
+    const saved = JSON.parse(localStorage.getItem("config-profiles") || "[]");
+    localStorage.setItem(
+      "config-profiles",
+      JSON.stringify([...saved, newProfile]),
+    );
+
+    setProfileName("");
+    setProfileDescription("");
     setShowDialog(false);
   };
 
   const handleLoadProfile = async (profileId: string) => {
-    const profile = profiles.find(p => p.id === profileId);
+    const profile = profiles.find((p) => p.id === profileId);
     if (profile) {
       try {
-        await window.electron.loadConfigProfile(profileId);
+        // TODO: Implement loadConfigProfile in electron API
+        // await window.electron.loadConfigProfile(profileId);
         setSelectedProfile(profileId);
-        onClose();
+        // onClose(); // Fix: onClose doesn't exist
         window.location.reload();
       } catch (error) {
-        console.error('Failed to load profile:', error);
-        alert('Failed to load profile. Please try again.');
+        alert("Failed to load profile. Please try again.");
       }
     }
   };
 
   const handleDeleteProfile = (profileId: string) => {
-    const updated = profiles.filter(p => p.id !== profileId);
+    const updated = profiles.filter((p) => p.id !== profileId);
     setProfiles(updated);
-    localStorage.setItem('config-profiles', JSON.stringify(updated));
+    localStorage.setItem("config-profiles", JSON.stringify(updated));
     if (selectedProfile === profileId) {
       setSelectedProfile(null);
     }
   };
 
   const handleExportProfile = (profileId: string) => {
-    const profile = profiles.find(p => p.id === profileId);
+    const profile = profiles.find((p) => p.id === profileId);
     if (profile) {
       const dataStr = JSON.stringify(profile, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
       const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `${profile.name.replace(/\s+/g, '-')}.json`;
+      link.download = `${profile.name.replace(/\s+/g, "-")}.json`;
       link.click();
       URL.revokeObjectURL(url);
     }
   };
 
   React.useEffect(() => {
-    const saved = localStorage.getItem('config-profiles');
+    const saved = localStorage.getItem("config-profiles");
     if (saved) {
       setProfiles(JSON.parse(saved));
     }
@@ -98,21 +100,24 @@ export function ProfileManager() {
       <div className="profile-header">
         <h3>Config Profiles</h3>
         <button className="btn-primary" onClick={() => setShowDialog(true)}>
-          💾 Save Current Config
+          <Save className="icon" size={16} />
+          Save Current Config
         </button>
       </div>
 
       {profiles.length === 0 ? (
         <div className="empty-state">
           <p>No saved profiles yet</p>
-          <p className="hint">Save your current configuration to quickly switch between setups</p>
+          <p className="hint">
+            Save your current configuration to quickly switch between setups
+          </p>
         </div>
       ) : (
         <div className="profiles-grid">
-          {profiles.map(profile => (
-            <div 
-              key={profile.id} 
-              className={`profile-card ${selectedProfile === profile.id ? 'active' : ''}`}
+          {profiles.map((profile) => (
+            <div
+              key={profile.id}
+              className={`profile-card ${selectedProfile === profile.id ? "active" : ""}`}
             >
               <div className="profile-info">
                 <h4>{profile.name}</h4>
@@ -122,26 +127,28 @@ export function ProfileManager() {
                 </span>
               </div>
               <div className="profile-actions">
-                <button 
+                <button
                   className="btn-load"
                   onClick={() => handleLoadProfile(profile.id)}
                   title="Load this profile"
                 >
-                  📂 Load
+                  <FolderOpen className="icon" size={16} />
+                  Load
                 </button>
-                <button 
+                <button
                   className="btn-export"
                   onClick={() => handleExportProfile(profile.id)}
                   title="Export as JSON"
                 >
-                  📤 Export
+                  <Upload className="icon" size={16} />
+                  Export
                 </button>
-                <button 
+                <button
                   className="btn-delete"
                   onClick={() => handleDeleteProfile(profile.id)}
                   title="Delete this profile"
                 >
-                  🗑️
+                  <Trash2 className="icon" size={16} />
                 </button>
               </div>
             </div>
@@ -151,14 +158,14 @@ export function ProfileManager() {
 
       {showDialog && (
         <div className="modal-overlay" onClick={() => setShowDialog(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Save Config Profile</h3>
             <div className="form-group">
               <label>Profile Name</label>
               <input
                 type="text"
                 value={profileName}
-                onChange={e => setProfileName(e.target.value)}
+                onChange={(e) => setProfileName(e.target.value)}
                 placeholder="e.g., Performance Build"
                 autoFocus
               />
@@ -167,17 +174,20 @@ export function ProfileManager() {
               <label>Description (optional)</label>
               <textarea
                 value={profileDescription}
-                onChange={e => setProfileDescription(e.target.value)}
+                onChange={(e) => setProfileDescription(e.target.value)}
                 placeholder="Describe this configuration..."
                 rows={3}
               />
             </div>
             <div className="modal-actions">
-              <button className="btn-secondary" onClick={() => setShowDialog(false)}>
+              <button
+                className="btn-secondary"
+                onClick={() => setShowDialog(false)}
+              >
                 Cancel
               </button>
-              <button 
-                className="btn-primary" 
+              <button
+                className="btn-primary"
                 onClick={handleSaveProfile}
                 disabled={!profileName.trim()}
               >

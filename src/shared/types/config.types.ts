@@ -10,7 +10,14 @@ export interface ConfigFile {
   hasChanges?: boolean;
 }
 
-export type ConfigFormat = 'toml' | 'json' | 'json5' | 'yaml' | 'cfg' | 'properties' | 'txt';
+export type ConfigFormat =
+  | "toml"
+  | "json"
+  | "json5"
+  | "yaml"
+  | "cfg"
+  | "properties"
+  | "txt";
 
 export interface ConfigContent {
   [key: string]: ConfigValue | ConfigSection;
@@ -20,7 +27,12 @@ export interface ConfigSection {
   [key: string]: ConfigValue | ConfigSection;
 }
 
-export type ConfigValue = string | number | boolean | Array<string | number | boolean> | null;
+export type ConfigValue =
+  | string
+  | number
+  | boolean
+  | Array<string | number | boolean>
+  | null;
 
 export interface ConfigSetting {
   key: string;
@@ -29,22 +41,28 @@ export interface ConfigSetting {
   description?: string;
   comment?: string;
   default?: ConfigValue;
+  defaultValue?: ConfigValue;
   range?: [number, number];
+  min?: number;
+  max?: number;
   options?: string[];
+  enumValues?: string[];
   unit?: string;
   category?: string;
   path: string[]; // Path to nested value
 }
 
-export type ConfigSettingType = 
-  | 'boolean' 
-  | 'integer' 
-  | 'float' 
-  | 'string' 
-  | 'enum' 
-  | 'list' 
-  | 'color'
-  | 'object';
+export type ConfigSettingType =
+  | "boolean"
+  | "integer"
+  | "float"
+  | "string"
+  | "enum"
+  | "array"
+  | "list"
+  | "range"
+  | "color"
+  | "object";
 
 export interface ParsedConfig {
   file: ConfigFile;
@@ -81,6 +99,6 @@ export interface ConfigProfile {
   name: string;
   description?: string;
   configs: Record<string, ConfigContent>;
-  created: Date;
-  modified: Date;
+  created?: Date;
+  modified?: Date;
 }

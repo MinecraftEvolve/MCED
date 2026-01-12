@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ConfigSetting } from '@shared/types/config.types';
+import React, { useState, useEffect } from "react";
+import { ConfigSetting } from "@/types/config.types";
 
 interface SliderInputProps {
   setting: ConfigSetting;
@@ -9,15 +9,15 @@ interface SliderInputProps {
 export function SliderInput({ setting, onChange }: SliderInputProps) {
   const value = setting.value as number;
   const [inputValue, setInputValue] = useState(String(value));
-  
+
   // Sync input value when setting.value changes (e.g., on discard)
   useEffect(() => {
     setInputValue(String(value));
   }, [value]);
-  
+
   const min = setting.min ?? 0;
   const max = setting.max ?? 100;
-  const step = setting.type === 'integer' ? 1 : 0.1;
+  const step = setting.type === "integer" ? 1 : 0.1;
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = Number(e.target.value);
@@ -62,11 +62,13 @@ export function SliderInput({ setting, onChange }: SliderInputProps) {
           max={max}
         />
       </div>
-      
+
       {setting.description && (
-        <p className="text-xs text-muted-foreground mb-2">{setting.description}</p>
+        <p className="text-xs text-muted-foreground mb-2">
+          {setting.description}
+        </p>
       )}
-      
+
       <div className="flex items-center gap-3">
         <span className="text-xs text-muted-foreground font-mono">{min}</span>
         <input
@@ -80,19 +82,20 @@ export function SliderInput({ setting, onChange }: SliderInputProps) {
         />
         <span className="text-xs text-muted-foreground font-mono">{max}</span>
       </div>
-      
+
       <div className="flex items-center justify-between mt-2">
-        {setting.defaultValue !== undefined && value !== setting.defaultValue && (
-          <button
-            onClick={() => {
-              onChange(setting.defaultValue as number);
-              setInputValue(String(setting.defaultValue));
-            }}
-            className="text-xs text-primary hover:underline"
-          >
-            Reset to default ({setting.defaultValue})
-          </button>
-        )}
+        {setting.defaultValue !== undefined &&
+          value !== setting.defaultValue && (
+            <button
+              onClick={() => {
+                onChange(setting.defaultValue as number);
+                setInputValue(String(setting.defaultValue));
+              }}
+              className="text-xs text-primary hover:underline"
+            >
+              Reset to default ({String(setting.defaultValue)})
+            </button>
+          )}
         {setting.range && (
           <span className="text-xs text-muted-foreground ml-auto">
             Range: {min} ~ {max}

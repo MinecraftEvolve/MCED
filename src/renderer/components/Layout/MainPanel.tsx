@@ -1,7 +1,7 @@
-import React from 'react';
-import { useAppStore } from '@/store';
-import { ModCard } from '../ModInfo/ModCard';
-import { ConfigEditor } from '../ConfigEditor/ConfigEditor';
+import React from "react";
+import { useAppStore } from "@/store";
+import { ModCard } from "../ModInfo/ModCard";
+import { ConfigEditor } from "../ConfigEditor/ConfigEditor";
 
 export function MainPanel() {
   const { selectedMod, currentInstance } = useAppStore();
@@ -16,9 +16,9 @@ export function MainPanel() {
             <ModCard mod={selectedMod} />
             <div className="border-t border-border pt-6">
               <h2 className="text-2xl font-bold mb-4">Configuration</h2>
-              <ConfigEditor 
-                modId={selectedMod.modId} 
-                instancePath={currentInstance.path} 
+              <ConfigEditor
+                modId={selectedMod.modId}
+                instancePath={currentInstance.path}
               />
             </div>
           </>

@@ -52,7 +52,9 @@
   border: 1px solid hsl(var(--border));
   border-radius: 12px;
   padding: 24px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .config-section:hover {
@@ -152,7 +154,7 @@
 }
 
 .config-meta-item code {
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   color: hsl(var(--accent));
   font-weight: 600;
 }
@@ -188,18 +190,22 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .config-empty {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
   padding: 64px 32px;
   color: hsl(var(--muted-foreground));
 }
 
 .config-empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
   opacity: 0.5;
 }
 
@@ -256,4 +262,59 @@
 .config-setting,
 .config-tab {
   will-change: transform;
+}
+
+/* Compact Mode */
+body.compact-mode .config-tabs {
+  padding: 12px;
+  gap: 6px;
+}
+
+body.compact-mode .config-tab {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+body.compact-mode .config-content {
+  padding: 16px;
+}
+
+body.compact-mode .config-section {
+  margin-bottom: 20px;
+  padding: 16px;
+}
+
+body.compact-mode .config-section-header {
+  font-size: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+}
+
+body.compact-mode .config-setting {
+  margin-bottom: 12px;
+  padding: 12px;
+}
+
+body.compact-mode .config-setting-name {
+  font-size: 14px;
+}
+
+body.compact-mode .config-setting-description {
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+body.compact-mode .config-meta-item {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+body.compact-mode .config-actions {
+  padding: 12px;
+  gap: 8px;
+}
+
+body.compact-mode .config-action-btn {
+  padding: 8px 16px;
+  font-size: 13px;
 }

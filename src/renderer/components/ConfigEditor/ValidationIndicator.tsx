@@ -1,6 +1,6 @@
-import React from 'react';
-import { AlertCircle, CheckCircle } from 'lucide-react';
-import './ValidationIndicator.css';
+import React from "react";
+import { AlertCircle, CheckCircle } from "lucide-react";
+import "./ValidationIndicator.css";
 
 interface ValidationResult {
   isValid: boolean;
@@ -24,7 +24,7 @@ export function ValidationIndicator({ validation }: ValidationIndicatorProps) {
   return (
     <div className="validation-indicator invalid">
       <AlertCircle size={16} />
-      <span>{validation.error || 'Invalid value'}</span>
+      <span>{validation.error || "Invalid value"}</span>
     </div>
   );
 }

@@ -26,7 +26,7 @@ export interface ModrinthMod {
 }
 
 class ModrinthAPIService {
-  private baseUrl = 'https://api.modrinth.com/v2';
+  private baseUrl = "https://api.modrinth.com/v2";
   private cache: Map<string, { data: any; timestamp: number }> = new Map();
   private cacheDuration = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -49,7 +49,7 @@ class ModrinthAPIService {
       } catch {}
 
       // Search by query via Electron API
-      const result = await window.electronAPI.modrinthSearch(query);
+      const result = await window.api.modrinthSearch(query);
       if (result.success && result.mod) {
         const hit = result.mod;
         const mod: ModrinthMod = {
@@ -64,7 +64,7 @@ class ModrinthAPIService {
           versions: hit.versions || [],
           date_created: hit.date_created,
           date_modified: hit.date_modified,
-          license: hit.license || { name: 'Unknown' },
+          license: hit.license || { name: "Unknown" },
         };
 
         this.setCache(`search:${query}`, mod);
@@ -73,7 +73,6 @@ class ModrinthAPIService {
 
       return null;
     } catch (error) {
-      console.error('Modrinth API error:', error);
       return null;
     }
   }
@@ -86,7 +85,7 @@ class ModrinthAPIService {
       const cached = this.getFromCache(`project:${idOrSlug}`);
       if (cached) return cached;
 
-      const result = await window.electronAPI.modrinthGetProject(idOrSlug);
+      const result = await window.api.modrinthGetProject(idOrSlug);
       if (!result.success || !result.project) return null;
 
       const data = result.project;
@@ -102,7 +101,7 @@ class ModrinthAPIService {
         versions: data.versions || [],
         date_created: data.published,
         date_modified: data.updated,
-        license: data.license || { name: 'Unknown' },
+        license: data.license || { name: "Unknown" },
         source_url: data.source_url,
         wiki_url: data.wiki_url,
         issues_url: data.issues_url,
@@ -112,7 +111,6 @@ class ModrinthAPIService {
       this.setCache(`project:${idOrSlug}`, mod);
       return mod;
     } catch (error) {
-      console.error('Modrinth getProject error:', error);
       return null;
     }
   }

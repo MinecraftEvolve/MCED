@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Download, Upload, Save, Trash2 } from 'lucide-react';
-import { useAppStore } from '@/store';
-import './ConfigProfileManager.css';
+import React, { useState } from "react";
+import { Download, Upload, Save, Trash2 } from "lucide-react";
+import { useAppStore } from "@/store";
+import "./ConfigProfileManager.css";
 
 interface ConfigProfile {
   name: string;
@@ -12,11 +12,11 @@ interface ConfigProfile {
 
 export function ConfigProfileManager() {
   const [showDialog, setShowDialog] = useState(false);
-  const [profileName, setProfileName] = useState('');
-  const [profileDescription, setProfileDescription] = useState('');
+  const [profileName, setProfileName] = useState("");
+  const [profileDescription, setProfileDescription] = useState("");
   const [savedProfiles, setSavedProfiles] = useState<ConfigProfile[]>([]);
   const currentInstance = useAppStore((state) => state.currentInstance);
-  const configs = useAppStore((state) => state.configs);
+  const configFiles = useAppStore((state) => state.configFiles);
 
   const handleSaveProfile = () => {
     if (!profileName.trim()) return;
@@ -24,43 +24,49 @@ export function ConfigProfileManager() {
     const profile: ConfigProfile = {
       name: profileName,
       description: profileDescription,
-      configs: configs,
+      configs: {}, // TODO: Extract config content from configFiles
       createdAt: new Date().toISOString(),
     };
 
     setSavedProfiles([...savedProfiles, profile]);
-    setProfileName('');
-    setProfileDescription('');
+    setProfileName("");
+    setProfileDescription("");
     setShowDialog(false);
 
     // Save to localStorage
     localStorage.setItem(
       `config-profiles-${currentInstance?.name}`,
-      JSON.stringify([...savedProfiles, profile])
+      JSON.stringify([...savedProfiles, profile]),
     );
   };
 
   const handleLoadProfile = (profile: ConfigProfile) => {
-    if (confirm(`Load profile "${profile.name}"? This will replace current configs.`)) {
-      useAppStore.setState({ configs: profile.configs });
+    if (
+      confirm(
+        `Load profile "${profile.name}"? This will replace current configs.`,
+      )
+    ) {
+      // TODO: Load profile configs back into configFiles
+      // useAppStore.setState({ configFiles: ... });
     }
   };
 
   const handleExportProfile = (profile: ConfigProfile) => {
     const dataStr = JSON.stringify(profile, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    const exportFileDefaultName = `${profile.name.replace(/\s+/g, '-')}-profile.json`;
+    const dataUri =
+      "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+    const exportFileDefaultName = `${profile.name.replace(/\s+/g, "-")}-profile.json`;
 
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
     linkElement.click();
   };
 
   const handleImportProfile = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
     input.onchange = (e: any) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -72,10 +78,10 @@ export function ConfigProfileManager() {
           setSavedProfiles([...savedProfiles, profile]);
           localStorage.setItem(
             `config-profiles-${currentInstance?.name}`,
-            JSON.stringify([...savedProfiles, profile])
+            JSON.stringify([...savedProfiles, profile]),
           );
         } catch (error) {
-          alert('Failed to import profile: Invalid file format');
+          alert("Failed to import profile: Invalid file format");
         }
       };
       reader.readAsText(file);
@@ -84,12 +90,12 @@ export function ConfigProfileManager() {
   };
 
   const handleDeleteProfile = (index: number) => {
-    if (confirm('Delete this profile?')) {
+    if (confirm("Delete this profile?")) {
       const newProfiles = savedProfiles.filter((_, i) => i !== index);
       setSavedProfiles(newProfiles);
       localStorage.setItem(
         `config-profiles-${currentInstance?.name}`,
-        JSON.stringify(newProfiles)
+        JSON.stringify(newProfiles),
       );
     }
   };
@@ -108,7 +114,10 @@ export function ConfigProfileManager() {
       </div>
 
       {showDialog && (
-        <div className="profile-dialog-overlay" onClick={() => setShowDialog(false)}>
+        <div
+          className="profile-dialog-overlay"
+          onClick={() => setShowDialog(false)}
+        >
           <div className="profile-dialog" onClick={(e) => e.stopPropagation()}>
             <h3>Save Configuration Profile</h3>
             <input
@@ -126,7 +135,10 @@ export function ConfigProfileManager() {
               rows={3}
             />
             <div className="profile-dialog-actions">
-              <button onClick={() => setShowDialog(false)} className="btn-cancel">
+              <button
+                onClick={() => setShowDialog(false)}
+                className="btn-cancel"
+              >
                 Cancel
               </button>
               <button onClick={handleSaveProfile} className="btn-save">
@@ -145,7 +157,9 @@ export function ConfigProfileManager() {
               <div className="profile-info">
                 <div className="profile-name">{profile.name}</div>
                 {profile.description && (
-                  <div className="profile-description">{profile.description}</div>
+                  <div className="profile-description">
+                    {profile.description}
+                  </div>
                 )}
                 <div className="profile-date">
                   {new Date(profile.createdAt).toLocaleDateString()}

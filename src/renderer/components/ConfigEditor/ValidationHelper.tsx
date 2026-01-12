@@ -1,5 +1,5 @@
-import React from 'react';
-import './ValidationHelper.css';
+import React from "react";
+import "./ValidationHelper.css";
 
 interface ValidationHelperProps {
   value: any;
@@ -10,24 +10,31 @@ interface ValidationHelperProps {
   required?: boolean;
 }
 
-export function ValidationHelper({ value, type, min, max, pattern, required }: ValidationHelperProps) {
+export function ValidationHelper({
+  value,
+  type,
+  min,
+  max,
+  pattern,
+  required,
+}: ValidationHelperProps) {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   // Required check
-  if (required && (value === '' || value === null || value === undefined)) {
-    errors.push('This field is required');
+  if (required && (value === "" || value === null || value === undefined)) {
+    errors.push("This field is required");
   }
 
   // Type-specific validation
-  if (value !== '' && value !== null && value !== undefined) {
+  if (value !== "" && value !== null && value !== undefined) {
     switch (type) {
-      case 'number':
-      case 'integer':
-      case 'float':
+      case "number":
+      case "integer":
+      case "float":
         const num = Number(value);
         if (isNaN(num)) {
-          errors.push('Must be a valid number');
+          errors.push("Must be a valid number");
         } else {
           if (min !== undefined && num < min) {
             errors.push(`Must be at least ${min}`);
@@ -35,18 +42,18 @@ export function ValidationHelper({ value, type, min, max, pattern, required }: V
           if (max !== undefined && num > max) {
             errors.push(`Must be at most ${max}`);
           }
-          if (type === 'integer' && !Number.isInteger(num)) {
-            errors.push('Must be a whole number');
+          if (type === "integer" && !Number.isInteger(num)) {
+            errors.push("Must be a whole number");
           }
         }
         break;
 
-      case 'string':
+      case "string":
         if (pattern) {
           try {
             const regex = new RegExp(pattern);
             if (!regex.test(String(value))) {
-              errors.push('Invalid format');
+              errors.push("Invalid format");
             }
           } catch (e) {
             // Invalid regex pattern
@@ -60,24 +67,28 @@ export function ValidationHelper({ value, type, min, max, pattern, required }: V
         }
         break;
 
-      case 'boolean':
-        if (typeof value !== 'boolean' && value !== 'true' && value !== 'false') {
-          errors.push('Must be true or false');
+      case "boolean":
+        if (
+          typeof value !== "boolean" &&
+          value !== "true" &&
+          value !== "false"
+        ) {
+          errors.push("Must be true or false");
         }
         break;
     }
   }
 
   // Performance warnings for common settings
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     if (min !== undefined && max !== undefined) {
       const range = max - min;
       const percentile = ((Number(value) - min) / range) * 100;
-      
+
       if (percentile > 90) {
-        warnings.push('⚠️ High value may impact performance');
+        warnings.push("High value may impact performance");
       } else if (percentile < 10) {
-        warnings.push('⚠️ Low value may reduce quality');
+        warnings.push("Low value may reduce quality");
       }
     }
   }

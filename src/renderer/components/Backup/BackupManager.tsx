@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useAppStore } from '@/store';
-import './BackupManager.css';
+import React, { useState, useEffect } from "react";
+import { useAppStore } from "@/store";
+import "./BackupManager.css";
 
 interface Backup {
   id: string;
@@ -11,7 +11,8 @@ interface Backup {
 }
 
 export function BackupManager() {
-  const { instancePath } = useAppStore();
+  const { currentInstance } = useAppStore();
+  const instancePath = currentInstance?.path;
   const [backups, setBackups] = useState<Backup[]>([]);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -21,56 +22,57 @@ export function BackupManager() {
 
   const loadBackups = async () => {
     if (!instancePath) return;
-    
+
     try {
-      const result = await window.electronAPI.listBackups(instancePath);
+      const result = await window.api.listBackups(instancePath);
       setBackups(result);
-    } catch (error) {
-      console.error('Failed to load backups:', error);
-    }
+    } catch (error) {}
   };
 
   const createBackup = async () => {
     if (!instancePath) return;
-    
+
     setIsCreating(true);
     try {
-      await window.electronAPI.createBackup(instancePath);
+      await window.api.createBackup(instancePath);
       await loadBackups();
     } catch (error) {
-      console.error('Failed to create backup:', error);
-      alert('Failed to create backup: ' + error);
+      alert("Failed to create backup: " + error);
     } finally {
       setIsCreating(false);
     }
   };
 
   const restoreBackup = async (backupId: string) => {
-    if (!confirm('Are you sure you want to restore this backup? Current configs will be overwritten.')) {
+    if (
+      !confirm(
+        "Are you sure you want to restore this backup? Current configs will be overwritten.",
+      )
+    ) {
       return;
     }
 
     try {
-      await window.electronAPI.restoreBackup(instancePath, backupId);
-      alert('Backup restored successfully! The page will reload.');
+      if (!instancePath) return;
+      await window.api.restoreBackup(instancePath, backupId);
+      alert("Backup restored successfully! The page will reload.");
       window.location.reload();
     } catch (error) {
-      console.error('Failed to restore backup:', error);
-      alert('Failed to restore backup: ' + error);
+      alert("Failed to restore backup: " + error);
     }
   };
 
   const deleteBackup = async (backupId: string) => {
-    if (!confirm('Are you sure you want to delete this backup?')) {
+    if (!confirm("Are you sure you want to delete this backup?")) {
       return;
     }
 
     try {
-      await window.electronAPI.deleteBackup(instancePath, backupId);
+      if (!instancePath) return;
+      await window.api.deleteBackup(instancePath, backupId);
       await loadBackups();
     } catch (error) {
-      console.error('Failed to delete backup:', error);
-      alert('Failed to delete backup: ' + error);
+      alert("Failed to delete backup: " + error);
     }
   };
 
@@ -79,17 +81,21 @@ export function BackupManager() {
   };
 
   const formatSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
   };
 
   return (
     <div className="backup-manager">
       <div className="backup-header">
         <h2>Backup Manager</h2>
-        <button onClick={createBackup} disabled={isCreating} className="btn-create-backup">
-          {isCreating ? 'Creating...' : '+ Create Backup'}
+        <button
+          onClick={createBackup}
+          disabled={isCreating}
+          className="btn-create-backup"
+        >
+          {isCreating ? "Creating..." : "+ Create Backup"}
         </button>
       </div>
 
@@ -105,14 +111,21 @@ export function BackupManager() {
               <div className="backup-info">
                 <div className="backup-name">{backup.name}</div>
                 <div className="backup-meta">
-                  {formatDate(backup.timestamp)} • {backup.configCount} configs • {formatSize(backup.size)}
+                  {formatDate(backup.timestamp)} • {backup.configCount} configs
+                  • {formatSize(backup.size)}
                 </div>
               </div>
               <div className="backup-actions">
-                <button onClick={() => restoreBackup(backup.id)} className="btn-restore">
+                <button
+                  onClick={() => restoreBackup(backup.id)}
+                  className="btn-restore"
+                >
                   Restore
                 </button>
-                <button onClick={() => deleteBackup(backup.id)} className="btn-delete">
+                <button
+                  onClick={() => deleteBackup(backup.id)}
+                  className="btn-delete"
+                >
                   Delete
                 </button>
               </div>

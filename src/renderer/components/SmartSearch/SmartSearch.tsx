@@ -1,14 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useAppStore } from '@/store';
-import { smartSearchService } from '@/services/SmartSearchService';
+import React, { useState, useEffect, useRef } from "react";
+import { useAppStore } from "@/store";
+import { smartSearchService } from "@/services/SmartSearchService";
+
+interface SearchableItem {
+  modId: string;
+  modName: string;
+  setting: {
+    key: string;
+    value: unknown;
+    type: string;
+    description?: string;
+  };
+  configFile: string;
+}
+
+interface SearchResult {
+  item: SearchableItem;
+  score?: number;
+  matches?: unknown[];
+}
 
 interface SmartSearchProps {
   onClose: () => void;
 }
 
 export function SmartSearch({ onClose }: SmartSearchProps) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<any[]>([]);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -30,12 +48,12 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
     const timer = setTimeout(() => {
       const searchResults = smartSearchService.search(query);
       setResults(searchResults.slice(0, 20));
-      
+
       if (query.length >= 2) {
         const sugg = smartSearchService.getSuggestions(query);
         setSuggestions(sugg.slice(0, 5));
       }
-      
+
       setIsSearching(false);
     }, 300);
 
@@ -43,14 +61,14 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
   }, [query]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       onClose();
     }
   };
 
-  const handleResultClick = (result: any) => {
+  const handleResultClick = (result: SearchResult) => {
     // Find and select the mod
-    const mod = mods.find(m => m.modId === result.item.modId);
+    const mod = mods.find((m) => m.modId === result.item.modId);
     if (mod) {
       useAppStore.getState().setSelectedMod(mod);
       onClose();
@@ -58,10 +76,10 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
   };
 
   const exampleQueries = [
-    'settings about performance',
-    'mod:create',
-    'type:boolean',
-    'value:true',
+    "settings about performance",
+    "mod:create",
+    "type:boolean",
+    "value:true",
   ];
 
   return (
@@ -104,7 +122,7 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
             <div className="mt-4">
               <p className="text-sm text-muted-foreground mb-2">Try:</p>
               <div className="flex flex-wrap gap-2">
-                {exampleQueries.map(example => (
+                {exampleQueries.map((example) => (
                   <button
                     key={example}
                     onClick={() => setQuery(example)}
@@ -148,7 +166,9 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium truncate">{result.item.setting.key}</h4>
+                      <h4 className="font-medium truncate">
+                        {result.item.setting.key}
+                      </h4>
                       <p className="text-sm text-muted-foreground mt-1">
                         {result.item.modName} • {result.item.configFile}
                       </p>
@@ -173,7 +193,9 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
           ) : query && !isSearching ? (
             <div className="p-8 text-center text-muted-foreground">
               <p>No results found for "{query}"</p>
-              <p className="text-sm mt-2">Try different keywords or check the examples above</p>
+              <p className="text-sm mt-2">
+                Try different keywords or check the examples above
+              </p>
             </div>
           ) : null}
         </div>
@@ -182,7 +204,8 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
         <div className="p-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
           <span>
             {results.length > 0 && `${results.length} results`}
-            {smartSearchService.getIndexedCount() > 0 && ` • ${smartSearchService.getIndexedCount()} settings indexed`}
+            {smartSearchService.getIndexedCount() > 0 &&
+              ` • ${smartSearchService.getIndexedCount()} settings indexed`}
           </span>
           <span>Press ESC to close</span>
         </div>

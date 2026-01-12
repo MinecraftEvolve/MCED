@@ -1,16 +1,16 @@
-import React from 'react';
-import { useAppStore } from '@/store';
+import React from "react";
+import { useAppStore } from "@/store";
 
 export function ModSearch() {
   const { searchQuery, setSearchQuery } = useAppStore();
 
   const handleClear = () => {
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setSearchQuery('');
+    if (e.key === "Escape") {
+      setSearchQuery("");
       (e.target as HTMLInputElement).blur();
     }
   };
@@ -44,8 +44,18 @@ export function ModSearch() {
             onClick={handleClear}
             className="absolute right-2 top-2 p-1 hover:bg-accent rounded"
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         )}

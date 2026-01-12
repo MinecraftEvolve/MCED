@@ -1,5 +1,5 @@
-import TOML from '@iarna/toml';
-import { ConfigContent, ConfigSetting } from '../types/config.types';
+import TOML from "@iarna/toml";
+import { ConfigContent, ConfigSetting } from "@/types/config.types";
 
 interface ParsedComment {
   description?: string;
@@ -14,7 +14,6 @@ export class TomlParser {
     try {
       return TOML.parse(content) as ConfigContent;
     } catch (error) {
-      console.error('Failed to parse TOML:', error);
       throw new Error(`TOML parsing error: ${error}`);
     }
   }
@@ -23,13 +22,15 @@ export class TomlParser {
     try {
       return TOML.stringify(content as any);
     } catch (error) {
-      console.error('Failed to stringify TOML:', error);
       throw new Error(`TOML stringify error: ${error}`);
     }
   }
 
   // Enhanced method to extract metadata from TOML comments
-  parseWithMetadata(content: string): { data: ConfigContent; metadata: Map<string, ParsedComment> } {
+  parseWithMetadata(content: string): {
+    data: ConfigContent;
+    metadata: Map<string, ParsedComment>;
+  } {
     const data = this.parse(content);
     const metadata = this.extractComments(content);
     return { data, metadata };
@@ -37,9 +38,9 @@ export class TomlParser {
 
   private extractComments(content: string): Map<string, ParsedComment> {
     const comments = new Map<string, ParsedComment>();
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     let currentComments: string[] = [];
-    let currentSection = '';
+    let currentSection = "";
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -53,10 +54,10 @@ export class TomlParser {
       }
 
       // Collect comment lines
-      if (line.startsWith('#')) {
+      if (line.startsWith("#")) {
         const comment = line.substring(1).trim();
         // Skip empty comments and single dots
-        if (comment && comment !== '.') {
+        if (comment && comment !== ".") {
           currentComments.push(comment);
         }
         continue;
@@ -66,22 +67,23 @@ export class TomlParser {
       const settingMatch = line.match(/^([\w\.]+)\s*=/);
       if (settingMatch) {
         const settingName = settingMatch[1];
-        const fullKey = currentSection ? `${currentSection}.${settingName}` : settingName;
-        
+        const fullKey = currentSection
+          ? `${currentSection}.${settingName}`
+          : settingName;
+
         // Only parse if we have comments
         if (currentComments.length > 0) {
           const parsed = this.parseCommentMetadata(currentComments);
           comments.set(fullKey, parsed);
-          console.log(`[TomlParser] Parsed "${fullKey}":`, parsed);
         }
         currentComments = []; // Reset for next setting
         continue;
       }
 
       // Reset comments on empty lines or other content
-      if (line === '') {
+      if (line === "") {
         // Don't reset - allow comments to span empty lines
-      } else if (!line.startsWith('#')) {
+      } else if (!line.startsWith("#")) {
         currentComments = [];
       }
     }
@@ -91,7 +93,7 @@ export class TomlParser {
 
   private parseCommentMetadata(comments: string[]): ParsedComment {
     const parsed: ParsedComment = {};
-    const fullText = comments.join(' '); // Join with spaces for easier matching
+    const fullText = comments.join(" "); // Join with spaces for easier matching
 
     // Keep the FULL comment as description - don't remove metadata
     parsed.description = fullText;
@@ -113,16 +115,13 @@ export class TomlParser {
           // Two values: min ~ max
           const min = parseFloat(match[1]);
           const max = parseFloat(match[2]);
-          parsed.range = [
-            isFinite(min) ? min : 0,
-            isFinite(max) ? max : 100
-          ];
+          parsed.range = [isFinite(min) ? min : 0, isFinite(max) ? max : 100];
         } else {
           // Single value: > X or >= X
           const min = parseFloat(match[1]);
           parsed.range = [
             isFinite(min) ? min + 1 : 1,
-            10000 // Reasonable default
+            10000, // Reasonable default
           ];
         }
         break;
@@ -130,37 +129,39 @@ export class TomlParser {
     }
 
     // Extract allowed values
-    const allowedMatch = fullText.match(/Allowed Values?:\s*([A-Z_,\s]+?)(?=\.|$)/i);
+    const allowedMatch = fullText.match(
+      /Allowed Values?:\s*([A-Z_,\s]+?)(?=\.|$)/i,
+    );
     if (allowedMatch) {
       const valuesStr = allowedMatch[1].trim();
       // Split by comma or space
       parsed.allowedValues = valuesStr
         .split(/[,\s]+/)
-        .map(v => v.trim())
-        .filter(v => v && v.length > 0);
+        .map((v) => v.trim())
+        .filter((v) => v && v.length > 0);
     }
 
     // Extract unit
     if (fullText.match(/\bseconds?\b/i)) {
-      parsed.unit = 'seconds';
+      parsed.unit = "seconds";
     } else if (fullText.match(/\bblocks?\b/i)) {
-      parsed.unit = 'blocks';
+      parsed.unit = "blocks";
     } else if (fullText.match(/\bticks?\b/i)) {
-      parsed.unit = 'ticks';
+      parsed.unit = "ticks";
     } else if (fullText.match(/\bpercent\b|%/i)) {
-      parsed.unit = '%';
+      parsed.unit = "%";
     }
 
     // Extract default value
     const defaultMatch = fullText.match(/Default(?:s to)?:\s*([^\s.]+)/i);
     if (defaultMatch) {
       const defaultStr = defaultMatch[1].trim();
-      if (defaultStr === 'true' || defaultStr === 'false') {
-        parsed.defaultValue = defaultStr === 'true';
+      if (defaultStr === "true" || defaultStr === "false") {
+        parsed.defaultValue = defaultStr === "true";
       } else if (defaultStr.match(/^-?\d+(\.\d+)?$/)) {
         parsed.defaultValue = Number(defaultStr);
       } else {
-        parsed.defaultValue = defaultStr.replace(/^["']|["']$/g, '');
+        parsed.defaultValue = defaultStr.replace(/^["']|["']$/g, "");
       }
     }
 

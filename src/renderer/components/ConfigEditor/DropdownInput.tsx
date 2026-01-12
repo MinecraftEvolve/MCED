@@ -1,5 +1,5 @@
-import React from 'react';
-import { ConfigSetting } from '@shared/types/config.types';
+import React from "react";
+import { ConfigSetting } from "@/types/config.types";
 
 interface DropdownInputProps {
   setting: ConfigSetting;
@@ -13,11 +13,13 @@ export function DropdownInput({ setting, onChange }: DropdownInputProps) {
   return (
     <div className="py-3 border-b border-border">
       <label className="block font-medium text-sm mb-2">{setting.key}</label>
-      
+
       {setting.description && (
-        <p className="text-xs text-muted-foreground mb-2">{setting.description}</p>
+        <p className="text-xs text-muted-foreground mb-2">
+          {setting.description}
+        </p>
       )}
-      
+
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -29,19 +31,19 @@ export function DropdownInput({ setting, onChange }: DropdownInputProps) {
           </option>
         ))}
       </select>
-      
+
       {options.length > 0 && (
         <p className="text-xs text-muted-foreground mt-1">
-          Allowed values: {options.join(', ')}
+          Allowed values: {options.join(", ")}
         </p>
       )}
-      
+
       {setting.defaultValue !== undefined && value !== setting.defaultValue && (
         <button
           onClick={() => onChange(String(setting.defaultValue))}
           className="text-xs text-primary hover:underline mt-2"
         >
-          Reset to default ({setting.defaultValue})
+          Reset to default ({String(setting.defaultValue)})
         </button>
       )}
     </div>

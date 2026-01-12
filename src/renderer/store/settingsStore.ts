@@ -1,27 +1,31 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface AppSettings {
   // Appearance
-  theme: 'dark' | 'light' | 'auto';
+  theme: "dark" | "light" | "auto";
   compactMode: boolean;
-  
+  accentColor: string;
+
   // Behavior
   autoSave: boolean;
   createBackupBeforeSave: boolean;
   showAdvancedOptions: boolean;
-  
+
   // API Integration
   curseforgeApiKey?: string;
   cacheDuration: number; // in hours
-  
+
   // Editor
   showLineNumbers: boolean;
   enableValidation: boolean;
-  
+
   // Recent Instances
   recentInstances: string[];
   maxRecentInstances: number;
+
+  // Mod List
+  modsWithoutConfigsAtEnd: boolean;
 }
 
 interface SettingsStore {
@@ -33,8 +37,9 @@ interface SettingsStore {
 }
 
 const defaultSettings: AppSettings = {
-  theme: 'dark',
+  theme: "dark",
   compactMode: false,
+  accentColor: "#3b82f6",
   autoSave: false,
   createBackupBeforeSave: true,
   showAdvancedOptions: false,
@@ -43,6 +48,7 @@ const defaultSettings: AppSettings = {
   enableValidation: true,
   recentInstances: [],
   maxRecentInstances: 10,
+  modsWithoutConfigsAtEnd: true,
 };
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -54,23 +60,26 @@ export const useSettingsStore = create<SettingsStore>()(
         set((state) => ({
           settings: { ...state.settings, ...updates },
         }));
-        
+
         // Apply theme
         if (updates.theme !== undefined) {
           applyTheme(updates.theme);
         }
-        
+
         // Apply compact mode
         if (updates.compactMode !== undefined) {
-          document.body.classList.toggle('compact-mode', updates.compactMode);
+          document.body.classList.toggle("compact-mode", updates.compactMode);
         }
       },
 
       addRecentInstance: (path) => {
         set((state) => {
-          const recent = [path, ...state.settings.recentInstances.filter(p => p !== path)];
+          const recent = [
+            path,
+            ...state.settings.recentInstances.filter((p) => p !== path),
+          ];
           const trimmed = recent.slice(0, state.settings.maxRecentInstances);
-          
+
           return {
             settings: {
               ...state.settings,
@@ -92,35 +101,51 @@ export const useSettingsStore = create<SettingsStore>()(
       resetSettings: () => {
         set({ settings: defaultSettings });
         applyTheme(defaultSettings.theme);
-        document.body.classList.toggle('compact-mode', defaultSettings.compactMode);
+        document.body.classList.toggle(
+          "compact-mode",
+          defaultSettings.compactMode,
+        );
       },
     }),
     {
-      name: 'mced-settings',
+      name: "mced-settings",
       onRehydrateStorage: () => (state) => {
         if (state) {
           // Apply settings on load
           applyTheme(state.settings.theme);
-          document.body.classList.toggle('compact-mode', state.settings.compactMode);
+          document.body.classList.toggle(
+            "compact-mode",
+            state.settings.compactMode,
+          );
         }
       },
-    }
-  )
+    },
+  ),
 );
 
-function applyTheme(theme: 'dark' | 'light' | 'auto') {
-  if (theme === 'auto') {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+function applyTheme(theme: "dark" | "light" | "auto") {
+  if (theme === "auto") {
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    document.documentElement.setAttribute(
+      "data-theme",
+      prefersDark ? "dark" : "light",
+    );
   } else {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute("data-theme", theme);
   }
 }
 
 // Listen for system theme changes when in auto mode
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-  const settings = useSettingsStore.getState().settings;
-  if (settings.theme === 'auto') {
-    document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-  }
-});
+window
+  .matchMedia("(prefers-color-scheme: dark)")
+  .addEventListener("change", (e) => {
+    const settings = useSettingsStore.getState().settings;
+    if (settings.theme === "auto") {
+      document.documentElement.setAttribute(
+        "data-theme",
+        e.matches ? "dark" : "light",
+      );
+    }
+  });

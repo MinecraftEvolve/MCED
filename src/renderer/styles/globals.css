@@ -24,6 +24,46 @@
     --input: 0 0% 18%;
     --ring: 271 81% 56%;
     --radius: 0.5rem;
+
+    /* Custom Properties for Settings */
+    --bg-primary: #0d0d0d;
+    --bg-secondary: #1a1a1a;
+    --bg-hover: #242424;
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --border-color: #2d2d2d;
+    --color-primary: #9333ea;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 271 81% 56%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 271 81% 56%;
+
+    /* Custom Properties for Settings - Light Mode */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --bg-hover: #f3f4f6;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --color-primary: #9333ea;
   }
 }
 
@@ -33,7 +73,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 }
 
@@ -92,4 +134,38 @@
 /* Selection */
 ::selection {
   background: hsl(var(--primary) / 0.3);
+}
+
+/* Compact Mode */
+body.compact-mode {
+  font-size: 0.9rem;
+}
+
+body.compact-mode .mod-list-item {
+  padding: 0.5rem 0.75rem;
+}
+
+body.compact-mode .config-section {
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+body.compact-mode .config-item {
+  padding: 0.5rem 0.75rem;
+}
+
+body.compact-mode button {
+  padding: 0.375rem 0.75rem;
+}
+
+body.compact-mode h1 {
+  font-size: 1.5rem;
+}
+
+body.compact-mode h2 {
+  font-size: 1.25rem;
+}
+
+body.compact-mode h3 {
+  font-size: 1.1rem;
 }

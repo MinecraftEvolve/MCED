@@ -1,19 +1,20 @@
-import React from 'react';
-import { useAppStore } from '@/store';
+import React from "react";
+import { useAppStore } from "@/store";
 
 export function StatusBar() {
-  const { hasUnsavedChanges, setHasUnsavedChanges, currentInstance } = useAppStore();
+  const { hasUnsavedChanges, setHasUnsavedChanges, currentInstance } =
+    useAppStore();
 
   const handleSaveAll = () => {
     // Trigger save event - components will handle their own saves
-    const event = new CustomEvent('save-all-configs');
+    const event = new CustomEvent("save-all-configs");
     window.dispatchEvent(event);
   };
 
   const handleDiscardChanges = () => {
     // Trigger discard event - components will reload their configs
-    if (confirm('Are you sure you want to discard all changes?')) {
-      const event = new CustomEvent('discard-all-changes');
+    if (confirm("Are you sure you want to discard all changes?")) {
+      const event = new CustomEvent("discard-all-changes");
       window.dispatchEvent(event);
       setHasUnsavedChanges(false);
     }
@@ -31,7 +32,7 @@ export function StatusBar() {
             <span>Ready</span>
           )}
         </div>
-        
+
         <div className="flex items-center gap-3">
           {hasUnsavedChanges && (
             <>

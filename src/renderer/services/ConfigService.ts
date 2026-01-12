@@ -1,35 +1,48 @@
-import { ConfigFile, ConfigSetting } from '../types/config.types';
-import { TomlParser } from './parsers/TomlParser';
+import { ConfigFile, ConfigSetting } from "../types/config.types";
+import { TomlParser } from "./parsers/TomlParser";
 
 export class ConfigService {
   private tomlParser = new TomlParser();
   /**
    * Load config files for a specific mod
    */
-  async loadModConfigs(instancePath: string, modId: string): Promise<ConfigFile[]> {
+  async loadModConfigs(
+    instancePath: string,
+    modId: string,
+  ): Promise<ConfigFile[]> {
     try {
-      const result = await window.electronAPI.readdir(`${instancePath}/config`);
+      const result = await window.api.readdir(`${instancePath}/config`);
       if (!result.success || !result.files) {
         return [];
       }
 
       // Find config files that match the mod
       const configFiles = result.files.filter((file: string) => {
-        if (!(file.endsWith('.toml') || file.endsWith('.json') || file.endsWith('.json5'))) {
+        if (
+          !(
+            file.endsWith(".toml") ||
+            file.endsWith(".json") ||
+            file.endsWith(".json5")
+          )
+        ) {
           return false;
         }
-        
+
         return this.matchesModId(file, modId);
       });
 
       const configs: ConfigFile[] = [];
-      
+
       for (const fileName of configFiles) {
         const filePath = `${instancePath}/config/${fileName}`;
-        const fileResult = await window.electronAPI.readFile(filePath);
-        
+        const fileResult = await window.api.readFile(filePath);
+
         if (fileResult.success && fileResult.content) {
-          const config = await this.parseConfig(fileName, fileResult.content, filePath);
+          const config = await this.parseConfig(
+            fileName,
+            fileResult.content,
+            filePath,
+          );
           if (config) {
             configs.push(config);
           }
@@ -38,7 +51,6 @@ export class ConfigService {
 
       return configs;
     } catch (error) {
-      console.error('Error loading configs:', error);
       return [];
     }
   }
@@ -47,48 +59,57 @@ export class ConfigService {
    * Match config file to mod ID with smart matching
    */
   private matchesModId(fileName: string, modId: string): boolean {
-    const fileNameLower = fileName.toLowerCase().replace(/\.(toml|json|json5)$/, '');
+    const fileNameLower = fileName
+      .toLowerCase()
+      .replace(/\.(toml|json|json5)$/, "");
     const modIdLower = modId.toLowerCase();
-    
+
+    // Normalize both by replacing underscores and hyphens
+    const normalizedFileName = fileNameLower.replace(/[-_]/g, "");
+    const normalizedModId = modIdLower.replace(/[-_]/g, "");
+
     // Exact match (e.g., "create.toml" matches "create")
-    if (fileNameLower === modIdLower) {
+    if (normalizedFileName === normalizedModId) {
       return true;
     }
-    
-    // Match with hyphen or underscore separator ONLY at start
-    // e.g., "create-common.toml" matches "create"
-    // but "create_jetpack-common.toml" does NOT match "create"
-    if (fileNameLower.startsWith(modIdLower + '-') || fileNameLower.startsWith(modIdLower + '_')) {
-      // Additional check: make sure the modId is complete
-      // "create_jetpack" should not match "create-common"
-      const afterModId = fileNameLower.substring(modIdLower.length);
-      if (afterModId[0] === '-' || afterModId[0] === '_') {
+
+    // Check if starts with mod ID followed by a variant suffix
+    // e.g., "create-common.toml" or "create_common.toml" matches "create"
+    const validSuffixes = ["client", "common", "server", "forge", "fabric"];
+
+    for (const suffix of validSuffixes) {
+      const normalizedSuffix = suffix.replace(/[-_]/g, "");
+      // Check if filename is modId + suffix
+      if (normalizedFileName === normalizedModId + normalizedSuffix) {
         return true;
       }
     }
-    
+
     return false;
   }
 
   /**
    * Parse config file content
    */
-  private async parseConfig(fileName: string, content: string, filePath: string): Promise<ConfigFile | null> {
+  private async parseConfig(
+    fileName: string,
+    content: string,
+    filePath: string,
+  ): Promise<ConfigFile | null> {
     const format = this.detectFormat(fileName);
-    
+
     try {
       const settings = await this.parseSettings(content, format);
-      
+
       return {
         name: fileName,
         path: filePath,
         format,
-        content,
-        rawContent: content, // Store raw content for editor
+        content, // ConfigContent type
+        rawContent: content, // Store raw string content
         settings,
       };
     } catch (error) {
-      console.error(`Error parsing ${fileName}:`, error);
       return null;
     }
   }
@@ -96,26 +117,29 @@ export class ConfigService {
   /**
    * Detect config file format
    */
-  private detectFormat(fileName: string): ConfigFile['format'] {
+  private detectFormat(fileName: string): ConfigFile["format"] {
     const lower = fileName.toLowerCase();
-    if (lower.endsWith('.toml')) return 'toml';
-    if (lower.endsWith('.json5')) return 'json5';
-    if (lower.endsWith('.json')) return 'json';
-    if (lower.endsWith('.yml') || lower.endsWith('.yaml')) return 'yaml';
-    if (lower.endsWith('.cfg')) return 'cfg';
-    if (lower.endsWith('.properties')) return 'properties';
-    return 'toml';
+    if (lower.endsWith(".toml")) return "toml";
+    if (lower.endsWith(".json5")) return "json5";
+    if (lower.endsWith(".json")) return "json";
+    if (lower.endsWith(".yml") || lower.endsWith(".yaml")) return "yaml";
+    if (lower.endsWith(".cfg")) return "cfg";
+    if (lower.endsWith(".properties")) return "properties";
+    return "toml";
   }
 
   /**
    * Parse settings from config content
    */
-  private async parseSettings(content: string, format: ConfigFile['format']): Promise<ConfigSetting[]> {
+  private async parseSettings(
+    content: string,
+    format: ConfigFile["format"],
+  ): Promise<ConfigSetting[]> {
     const settings: ConfigSetting[] = [];
 
-    if (format === 'toml') {
+    if (format === "toml") {
       return this.parseToml(content);
-    } else if (format === 'json' || format === 'json5') {
+    } else if (format === "json" || format === "json5") {
       return this.parseJson(content);
     }
 
@@ -127,15 +151,14 @@ export class ConfigService {
    */
   private parseToml(content: string): ConfigSetting[] {
     const settings: ConfigSetting[] = [];
-    
+
     try {
       // Use enhanced parser to get metadata
       const { data, metadata } = this.tomlParser.parseWithMetadata(content);
-      
+
       // Flatten the TOML object into settings
-      this.extractSettingsFromToml(data, settings, '', metadata);
+      this.extractSettingsFromToml(data, settings, "", metadata);
     } catch (error) {
-      console.error('Error parsing TOML:', error);
       // Fallback to simple parsing
       return this.parseTomlFallback(content);
     }
@@ -150,28 +173,31 @@ export class ConfigService {
     obj: any,
     settings: ConfigSetting[],
     path: string,
-    metadata: Map<string, any>
+    metadata: Map<string, any>,
   ) {
     for (const [key, value] of Object.entries(obj)) {
       const fullKey = path ? `${path}.${key}` : key;
 
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         // Nested object - recurse
         this.extractSettingsFromToml(value, settings, fullKey, metadata);
       } else {
         // Leaf value - create setting with metadata
         const meta = metadata.get(fullKey) || metadata.get(key) || {};
-        
-        // Debug logging
-        if (!meta.description) {
-          console.log(`[ConfigService] No metadata for key "${fullKey}" (also tried "${key}")`);
-        }
-        
+
         const setting: ConfigSetting = {
           key: fullKey,
           value,
-          defaultValue: meta.defaultValue !== undefined ? meta.defaultValue : value,
-          type: meta.allowedValues && meta.allowedValues.length > 0 ? 'enum' : this.inferType(value),
+          defaultValue:
+            meta.defaultValue !== undefined ? meta.defaultValue : value,
+          type:
+            meta.allowedValues && meta.allowedValues.length > 0
+              ? "enum"
+              : this.inferType(value),
           description: meta.description,
           section: path || undefined,
           range: meta.range,
@@ -191,37 +217,39 @@ export class ConfigService {
    */
   private parseTomlFallback(content: string): ConfigSetting[] {
     const settings: ConfigSetting[] = [];
-    const lines = content.split('\n');
-    let currentSection = '';
+    const lines = content.split("\n");
+    let currentSection = "";
     let currentComments: string[] = [];
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
 
       // Section header
-      if (line.startsWith('[') && line.endsWith(']')) {
+      if (line.startsWith("[") && line.endsWith("]")) {
         currentSection = line.slice(1, -1);
         currentComments = [];
         continue;
       }
 
       // Comment
-      if (line.startsWith('#')) {
+      if (line.startsWith("#")) {
         const comment = line.slice(1).trim();
-        if (comment && comment !== '.') {
+        if (comment && comment !== ".") {
           currentComments.push(comment);
         }
         continue;
       }
 
       // Key-value pair
-      if (line.includes('=')) {
-        const [key, ...valueParts] = line.split('=');
-        const value = valueParts.join('=').trim();
-        
-        const fullKey = currentSection ? `${currentSection}.${key.trim()}` : key.trim();
-        const description = currentComments.join(' ');
-        
+      if (line.includes("=")) {
+        const [key, ...valueParts] = line.split("=");
+        const value = valueParts.join("=").trim();
+
+        const fullKey = currentSection
+          ? `${currentSection}.${key.trim()}`
+          : key.trim();
+        const description = currentComments.join(" ");
+
         const setting: ConfigSetting = {
           key: fullKey,
           value: this.parseValue(value),
@@ -230,10 +258,10 @@ export class ConfigService {
           description: description || undefined,
           section: currentSection || undefined,
         };
-        
+
         settings.push(setting);
         currentComments = [];
-      } else if (line !== '') {
+      } else if (line !== "") {
         // Reset comments on non-empty non-setting lines
         currentComments = [];
       }
@@ -247,12 +275,12 @@ export class ConfigService {
    */
   private parseJson(content: string): ConfigSetting[] {
     const settings: ConfigSetting[] = [];
-    
+
     try {
       const obj = JSON.parse(content);
-      this.extractSettings(obj, settings, '');
+      this.extractSettings(obj, settings, "");
     } catch (error) {
-      console.error('Error parsing JSON:', error);
+      // Silently fail
     }
 
     return settings;
@@ -265,12 +293,16 @@ export class ConfigService {
     for (const [key, value] of Object.entries(obj)) {
       const fullKey = path ? `${path}.${key}` : key;
 
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         // Nested object - recurse
         this.extractSettings(value, settings, fullKey);
       } else {
         // Leaf value - create setting
-        settings.push(this.createSetting(fullKey, value, '', ''));
+        settings.push(this.createSetting(fullKey, value, "", ""));
       }
     }
   }
@@ -280,14 +312,16 @@ export class ConfigService {
    */
   private parseValue(value: string): any {
     // Remove quotes
-    if ((value.startsWith('"') && value.endsWith('"')) || 
-        (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       return value.slice(1, -1);
     }
 
     // Boolean
-    if (value === 'true') return true;
-    if (value === 'false') return false;
+    if (value === "true") return true;
+    if (value === "false") return false;
 
     // Number
     if (!isNaN(Number(value))) {
@@ -295,7 +329,7 @@ export class ConfigService {
     }
 
     // Array
-    if (value.startsWith('[') && value.endsWith(']')) {
+    if (value.startsWith("[") && value.endsWith("]")) {
       try {
         return JSON.parse(value);
       } catch {
@@ -313,7 +347,7 @@ export class ConfigService {
     key: string,
     value: any,
     comment: string,
-    section: string
+    section: string,
   ): ConfigSetting {
     return {
       key,
@@ -328,13 +362,13 @@ export class ConfigService {
   /**
    * Infer setting type from value
    */
-  private inferType(value: any): ConfigSetting['type'] {
-    if (typeof value === 'boolean') return 'boolean';
-    if (typeof value === 'number') {
-      return Number.isInteger(value) ? 'integer' : 'float';
+  private inferType(value: any): ConfigSetting["type"] {
+    if (typeof value === "boolean") return "boolean";
+    if (typeof value === "number") {
+      return Number.isInteger(value) ? "integer" : "float";
     }
-    if (Array.isArray(value)) return 'array';
-    return 'string';
+    if (Array.isArray(value)) return "array";
+    return "string";
   }
 
   /**
@@ -344,13 +378,12 @@ export class ConfigService {
     try {
       // Update content with new values
       const updatedContent = this.updateConfigContent(config);
-      
+
       // Write file
-      const result = await window.electronAPI.writeFile(config.path, updatedContent);
-      
+      const result = await window.api.writeFile(config.path, updatedContent);
+
       return result.success;
     } catch (error) {
-      console.error('Error saving config:', error);
       return false;
     }
   }
@@ -365,12 +398,12 @@ export class ConfigService {
     for (const setting of config.settings) {
       const oldValue = this.formatValue(setting.defaultValue ?? setting.value);
       const newValue = this.formatValue(setting.value);
-      
+
       if (oldValue !== newValue) {
         // Replace the value in the content
         const regex = new RegExp(
           `(${this.escapeRegex(setting.key)}\\s*=\\s*)${this.escapeRegex(oldValue)}`,
-          'g'
+          "g",
         );
         content = content.replace(regex, `$1${newValue}`);
       }
@@ -383,7 +416,7 @@ export class ConfigService {
    * Format value for config file
    */
   private formatValue(value: any): string {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       return `"${value}"`;
     }
     if (Array.isArray(value)) {
@@ -396,24 +429,24 @@ export class ConfigService {
    * Escape regex special characters
    */
   private escapeRegex(str: string): string {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   /**
    * Match configs to mod
    */
   matchConfigsToMod(configs: ConfigFile[], modId: string): ConfigFile[] {
-    return configs.filter(config => {
+    return configs.filter((config) => {
       const fileName = config.name.toLowerCase();
       const modIdLower = modId.toLowerCase();
-      
+
       // Direct match
       if (fileName.includes(modIdLower)) return true;
-      
+
       // Match without version/numbers
-      const cleanModId = modIdLower.replace(/[-_]\d+/g, '');
+      const cleanModId = modIdLower.replace(/[-_]\d+/g, "");
       if (fileName.includes(cleanModId)) return true;
-      
+
       return false;
     });
   }

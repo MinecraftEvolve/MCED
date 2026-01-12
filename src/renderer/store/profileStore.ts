@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface ConfigProfile {
   id: string;
@@ -13,8 +13,10 @@ export interface ConfigProfile {
 interface ProfileStore {
   profiles: ConfigProfile[];
   activeProfileId: string | null;
-  
-  addProfile: (profile: Omit<ConfigProfile, 'id' | 'createdAt' | 'modifiedAt'>) => void;
+
+  addProfile: (
+    profile: Omit<ConfigProfile, "id" | "createdAt" | "modifiedAt">,
+  ) => void;
   updateProfile: (id: string, updates: Partial<ConfigProfile>) => void;
   deleteProfile: (id: string) => void;
   setActiveProfile: (id: string | null) => void;
@@ -35,7 +37,7 @@ export const useProfileStore = create<ProfileStore>()(
           createdAt: Date.now(),
           modifiedAt: Date.now(),
         };
-        
+
         set((state) => ({
           profiles: [...state.profiles, newProfile],
         }));
@@ -44,7 +46,7 @@ export const useProfileStore = create<ProfileStore>()(
       updateProfile: (id, updates) => {
         set((state) => ({
           profiles: state.profiles.map((p) =>
-            p.id === id ? { ...p, ...updates, modifiedAt: Date.now() } : p
+            p.id === id ? { ...p, ...updates, modifiedAt: Date.now() } : p,
           ),
         }));
       },
@@ -52,7 +54,8 @@ export const useProfileStore = create<ProfileStore>()(
       deleteProfile: (id) => {
         set((state) => ({
           profiles: state.profiles.filter((p) => p.id !== id),
-          activeProfileId: state.activeProfileId === id ? null : state.activeProfileId,
+          activeProfileId:
+            state.activeProfileId === id ? null : state.activeProfileId,
         }));
       },
 
@@ -62,7 +65,7 @@ export const useProfileStore = create<ProfileStore>()(
 
       exportProfile: (id) => {
         const profile = get().profiles.find((p) => p.id === id);
-        if (!profile) throw new Error('Profile not found');
+        if (!profile) throw new Error("Profile not found");
         return JSON.stringify(profile, null, 2);
       },
 
@@ -75,17 +78,17 @@ export const useProfileStore = create<ProfileStore>()(
             createdAt: Date.now(),
             modifiedAt: Date.now(),
           };
-          
+
           set((state) => ({
             profiles: [...state.profiles, newProfile],
           }));
         } catch (error) {
-          throw new Error('Invalid profile data');
+          throw new Error("Invalid profile data");
         }
       },
     }),
     {
-      name: 'mced-profiles',
-    }
-  )
+      name: "mced-profiles",
+    },
+  ),
 );

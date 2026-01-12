@@ -1,4 +1,3 @@
-
 /* Compact Mode Styles */
 body.compact-mode .mod-list-item {
   padding: 8px 12px;
@@ -37,4 +36,36 @@ body.compact-mode .mod-info-card {
 
 body.compact-mode .search-input {
   padding: 8px 12px;
+}
+
+/* Icon Styles */
+.icon {
+  display: inline-flex;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+button .icon {
+  margin-right: 6px;
+}
+
+h2 .icon,
+h3 .icon {
+  margin-right: 8px;
+}
+
+.heart-icon {
+  color: var(--color-primary);
+  display: inline-block;
+  margin: 0 4px;
+}
+
+.config-empty-icon {
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
+}
+
+.feature-icon {
+  color: var(--color-primary);
+  margin-bottom: 16px;
 }

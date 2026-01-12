@@ -7,11 +7,11 @@ export interface MinecraftInstance {
   modsFolder: string;
   configFolder: string;
   totalMods: number;
-  lastAccessed?: Date;
+  lastAccessed?: number; // Timestamp in milliseconds
 }
 
 export interface LoaderInfo {
-  type: 'forge' | 'fabric' | 'neoforge' | 'quilt' | 'vanilla';
+  type: "forge" | "fabric" | "neoforge" | "quilt" | "vanilla";
   version: string;
 }
 
@@ -23,18 +23,24 @@ export interface ModpackInfo {
   projectId?: string | number;
 }
 
-export type ModpackSource = 
-  | 'curseforge' 
-  | 'modrinth' 
-  | 'atlauncher' 
-  | 'multimc' 
-  | 'prism' 
-  | 'ftb'
-  | 'technic'
-  | 'custom';
+export type ModpackSource =
+  | "curseforge"
+  | "modrinth"
+  | "atlauncher"
+  | "multimc"
+  | "prism"
+  | "ftb"
+  | "technic"
+  | "custom";
 
 export interface InstanceMetadata {
-  instanceType: 'multimc' | 'prism' | 'curseforge' | 'atlauncher' | 'vanilla' | 'custom';
+  instanceType:
+    | "multimc"
+    | "prism"
+    | "curseforge"
+    | "atlauncher"
+    | "vanilla"
+    | "custom";
   configPath?: string;
   hasInstanceJson: boolean;
   hasMMCPack: boolean;
@@ -42,7 +48,7 @@ export interface InstanceMetadata {
 }
 
 export interface LauncherInfo {
-  type: 'multimc' | 'prism' | 'curseforge' | 'atlauncher' | 'vanilla';
+  type: "multimc" | "prism" | "curseforge" | "atlauncher" | "vanilla";
   path: string;
   executable: string;
   version?: string;
@@ -58,6 +64,6 @@ export interface GameStats {
 export interface RecentInstance {
   path: string;
   name: string;
-  lastOpened: Date;
+  lastOpened: number; // Timestamp in milliseconds
   thumbnail?: string;
 }
