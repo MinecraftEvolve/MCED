@@ -1,6 +1,6 @@
 {
   "name": "minecraft-config-editor-desktop",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Minecraft Config Editor (MCED) - A modern desktop application for editing Minecraft modpack configuration files",
   "main": "dist/main/index.js",
   "scripts": {
@@ -42,8 +42,8 @@
     "@radix-ui/react-tooltip": "^1.0.7",
     "adm-zip": "^0.5.10",
     "axios": "^1.6.5",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "framer-motion": "^10.18.0",
     "fuse.js": "^7.1.0",
     "js-yaml": "^4.1.0",
@@ -54,7 +54,8 @@
     "react-dom": "^18.2.0",
     "react-loading-skeleton": "^3.5.0",
     "react-window": "^2.2.5",
-    "tailwind-merge": "^2.2.0",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
@@ -151,7 +152,10 @@
       "target": [
         {
           "target": "zip",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "category": "public.app-category.utilities",
@@ -163,11 +167,15 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "deb",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "category": "Utility",
