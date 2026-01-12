@@ -152,6 +152,10 @@
         {
           "target": "zip",
           "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
         }
       ],
       "category": "public.app-category.utilities",
@@ -159,6 +163,9 @@
       "gatekeeperAssess": false
     },
     "dmg": {
+      "writeUpdateInfo": false,
+      "sign": false,
+      "format": "ULFO",
       "contents": [
         {
           "x": 130,
