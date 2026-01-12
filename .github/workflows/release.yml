@@ -49,6 +49,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
+          USE_HARD_LINKS: false
 
       - name: Build Electron app (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -70,7 +71,6 @@ jobs:
         with:
           name: macos-build
           path: |
-            release/*.dmg
             release/*.zip
 
       - name: Upload artifacts (Linux)

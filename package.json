@@ -152,38 +152,11 @@
         {
           "target": "zip",
           "arch": ["x64", "arm64"]
-        },
-        {
-          "target": "dmg",
-          "arch": ["x64", "arm64"]
         }
       ],
       "category": "public.app-category.utilities",
       "hardenedRuntime": false,
       "gatekeeperAssess": false
-    },
-    "dmg": {
-      "writeUpdateInfo": false,
-      "sign": false,
-      "format": "ULFO",
-      "contents": [
-        {
-          "x": 130,
-          "y": 220
-        },
-        {
-          "x": 410,
-          "y": 220,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ],
-      "artifactName": "${productName}-${version}.${ext}",
-      "backgroundColor": "#1a1a1a",
-      "window": {
-        "width": 540,
-        "height": 380
-      }
     },
     "linux": {
       "icon": "build/icons",
