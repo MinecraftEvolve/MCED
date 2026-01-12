@@ -17,7 +17,7 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { setHasUnsavedChanges, addToHistory } = useAppStore();
+  const { setHasUnsavedChanges } = useAppStore();
 
   useEffect(() => {
     loadConfigs();
@@ -89,14 +89,6 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
       configs.map((c) => (c.path === updatedConfig.path ? updatedConfig : c)),
     );
     setHasUnsavedChanges(true);
-
-    addToHistory({
-      type: "setting_change",
-      settingKey,
-      oldValue,
-      newValue,
-      configPath: selectedConfig.path,
-    });
 
     const autoSave = useAppStore.getState().settings.autoSave;
     if (autoSave) {
