@@ -361,11 +361,11 @@ export function Settings({ onClose }: { onClose: () => void }) {
                 </div>
                 <input
                   type="password"
-                  value={localSettings.curseforgeApiKey || ""}
+                  value={localSettings.curseForgeApiKey || ""}
                   onChange={(e) =>
                     setLocalSettings({
                       ...localSettings,
-                      curseforgeApiKey: e.target.value,
+                      curseForgeApiKey: e.target.value,
                     })
                   }
                   onBlur={() => applySettings(localSettings)}
@@ -534,14 +534,14 @@ export function Settings({ onClose }: { onClose: () => void }) {
               </p>
               <div className="about-links">
                 <a
-                  href="https://github.com/yourusername/minecraft-config-editor"
+                  href="https://github.com/MinecraftEvolve/MCED"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   GitHub
                 </a>
                 <a
-                  href="https://github.com/yourusername/minecraft-config-editor/issues"
+                  href="https://github.com/MinecraftEvolve/MCED/issues"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
