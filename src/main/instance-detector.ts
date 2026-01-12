@@ -110,6 +110,56 @@ export class InstanceDetector {
       } catch (error) {}
     }
 
+    // Try instance.json (ATLauncher)
+    const atlauncherInstance = path.join(instancePath, "instance.json");
+    if (await this.fileExists(atlauncherInstance)) {
+      try {
+        const content = await fs.readFile(atlauncherInstance, "utf-8");
+        const json = JSON.parse(content);
+        if (json.id || json.minecraft) return json.id || json.minecraft;
+      } catch (error) {}
+    }
+
+    // Try config.json (GDLauncher)
+    const gdlauncherConfig = path.join(instancePath, "config.json");
+    if (await this.fileExists(gdlauncherConfig)) {
+      try {
+        const content = await fs.readFile(gdlauncherConfig, "utf-8");
+        const json = JSON.parse(content);
+        if (json.version) return json.version;
+      } catch (error) {}
+    }
+
+    // Try modpack.json (FTB App)
+    const ftbModpack = path.join(instancePath, "modpack.json");
+    if (await this.fileExists(ftbModpack)) {
+      try {
+        const content = await fs.readFile(ftbModpack, "utf-8");
+        const json = JSON.parse(content);
+        if (json.mcVersion || json.gameVersion) return json.mcVersion || json.gameVersion;
+      } catch (error) {}
+    }
+
+    // Try version.json (Technic)
+    const technicVersion = path.join(instancePath, "version.json");
+    if (await this.fileExists(technicVersion)) {
+      try {
+        const content = await fs.readFile(technicVersion, "utf-8");
+        const json = JSON.parse(content);
+        if (json.minecraft || json.version) return json.minecraft || json.version;
+      } catch (error) {}
+    }
+
+    // Try profile.json (Modrinth)
+    const modrinthProfile = path.join(instancePath, "..", path.basename(instancePath).replace(/\s+\d+\.\d+\.\d+$/, ""), "profile.json");
+    if (await this.fileExists(modrinthProfile)) {
+      try {
+        const content = await fs.readFile(modrinthProfile, "utf-8");
+        const json = JSON.parse(content);
+        if (json.game_version) return json.game_version;
+      } catch (error) {}
+    }
+
     // Fallback: Detect from mod filenames
     const modsFolder = path.join(instancePath, "mods");
     const altModsFolder = path.join(instancePath, ".minecraft", "mods");
@@ -122,7 +172,6 @@ export class InstanceDetector {
         const files = await fs.readdir(finalModsFolder);
         const jarFiles = files.filter((f) => f.endsWith(".jar"));
 
-        // Try to extract version from filenames
         for (const jar of jarFiles) {
           const match = jar.match(
             /[-_](?:mc|minecraft)?[-_]?([0-9]+\.[0-9]+(?:\.[0-9]+)?)/i,
@@ -283,6 +332,64 @@ export class InstanceDetector {
               type: "neoforge",
               version: json.baseModLoader.minecraftVersion || "Unknown",
             };
+          }
+        }
+      } catch (error) {}
+    }
+
+    // Try instance.json (ATLauncher)
+    const atlauncherInstance = path.join(instancePath, "instance.json");
+    if (await this.fileExists(atlauncherInstance)) {
+      try {
+        const content = await fs.readFile(atlauncherInstance, "utf-8");
+        const json = JSON.parse(content);
+        if (json.launcher?.loaderVersion) {
+          const loaderType = json.launcher.loaderVersion.type?.toLowerCase() || "";
+          if (loaderType.includes("forge")) {
+            return { type: "forge", version: json.launcher.loaderVersion.version || "Unknown" };
+          }
+          if (loaderType.includes("fabric")) {
+            return { type: "fabric", version: json.launcher.loaderVersion.version || "Unknown" };
+          }
+          if (loaderType.includes("neoforge")) {
+            return { type: "neoforge", version: json.launcher.loaderVersion.version || "Unknown" };
+          }
+        }
+      } catch (error) {}
+    }
+
+    // Try config.json (GDLauncher)
+    const gdlauncherConfig = path.join(instancePath, "config.json");
+    if (await this.fileExists(gdlauncherConfig)) {
+      try {
+        const content = await fs.readFile(gdlauncherConfig, "utf-8");
+        const json = JSON.parse(content);
+        const loaderType = (json.loader || json.modloader || "").toLowerCase();
+        if (loaderType.includes("forge")) {
+          return { type: "forge", version: json.loaderVersion || "Unknown" };
+        }
+        if (loaderType.includes("fabric")) {
+          return { type: "fabric", version: json.loaderVersion || "Unknown" };
+        }
+        if (loaderType.includes("neoforge")) {
+          return { type: "neoforge", version: json.loaderVersion || "Unknown" };
+        }
+      } catch (error) {}
+    }
+
+    // Try modpack.json (FTB App)
+    const ftbModpack = path.join(instancePath, "modpack.json");
+    if (await this.fileExists(ftbModpack)) {
+      try {
+        const content = await fs.readFile(ftbModpack, "utf-8");
+        const json = JSON.parse(content);
+        if (json.modLoader) {
+          const loaderType = json.modLoader.toLowerCase();
+          if (loaderType.includes("forge")) {
+            return { type: "forge", version: json.modLoaderVersion || "Unknown" };
+          }
+          if (loaderType.includes("fabric")) {
+            return { type: "fabric", version: json.modLoaderVersion || "Unknown" };
           }
         }
       } catch (error) {}
@@ -486,6 +593,91 @@ export class InstanceDetector {
       } catch (error) {}
     }
 
+    // Try instance.json (ATLauncher)
+    const atlauncherInstance = path.join(instancePath, "instance.json");
+    if (await this.fileExists(atlauncherInstance)) {
+      try {
+        const content = await fs.readFile(atlauncherInstance, "utf-8");
+        const json = JSON.parse(content);
+        return {
+          source: "atlauncher",
+          name: json.launcher?.name || json.name || "Unknown",
+          version: json.launcher?.version || json.id,
+        };
+      } catch (error) {}
+    }
+
+    // Try config.json (GDLauncher)
+    const gdlauncherConfig = path.join(instancePath, "config.json");
+    if (await this.fileExists(gdlauncherConfig)) {
+      try {
+        const content = await fs.readFile(gdlauncherConfig, "utf-8");
+        const json = JSON.parse(content);
+        if (json.loader || json.modloader) {
+          return {
+            source: "gdlauncher",
+            name: json.name || path.basename(instancePath),
+            version: json.version,
+          };
+        }
+      } catch (error) {}
+    }
+
+    // Try modpack.json (FTB App)
+    const ftbModpack = path.join(instancePath, "modpack.json");
+    if (await this.fileExists(ftbModpack)) {
+      try {
+        const content = await fs.readFile(ftbModpack, "utf-8");
+        const json = JSON.parse(content);
+        return {
+          source: "ftb",
+          name: json.name || "Unknown",
+          version: json.version,
+          author: json.author,
+        };
+      } catch (error) {}
+    }
+
+    // Try modpack/manifest.json (FTB Legacy)
+    const ftbLegacyManifest = path.join(instancePath, "modpack", "manifest.json");
+    if (await this.fileExists(ftbLegacyManifest)) {
+      try {
+        const content = await fs.readFile(ftbLegacyManifest, "utf-8");
+        const json = JSON.parse(content);
+        return {
+          source: "ftb",
+          name: json.name || "Unknown",
+          version: json.version,
+        };
+      } catch (error) {}
+    }
+
+    // Try bin/modpack.jar (Technic/Tekkit)
+    const technicModpack = path.join(instancePath, "bin", "modpack.jar");
+    if (await this.fileExists(technicModpack)) {
+      const instanceName = path.basename(instancePath);
+      return {
+        source: "technic",
+        name: instanceName,
+      };
+    }
+
+    // Try version.json (Technic Platform)
+    const technicVersion = path.join(instancePath, "version.json");
+    if (await this.fileExists(technicVersion)) {
+      try {
+        const content = await fs.readFile(technicVersion, "utf-8");
+        const json = JSON.parse(content);
+        if (json.modpacks || json.solder || json.displayName) {
+          return {
+            source: "technic",
+            name: json.displayName || path.basename(instancePath),
+            version: json.version,
+          };
+        }
+      } catch (error) {}
+    }
+
     // Check if it's MultiMC/Prism based on folder structure
     const mmcPack = path.join(instancePath, "mmc-pack.json");
     if (await this.fileExists(mmcPack)) {
@@ -496,6 +688,21 @@ export class InstanceDetector {
       };
     }
 
+    // Check for Vanilla Minecraft Launcher
+    const vanillaVersionJson = path.join(instancePath, ".minecraft", "versions");
+    if (await this.folderExists(vanillaVersionJson)) {
+      try {
+        const versions = await fs.readdir(vanillaVersionJson);
+        if (versions.length > 0) {
+          return {
+            source: "vanilla",
+            name: "Minecraft",
+            version: versions[0],
+          };
+        }
+      } catch (error) {}
+    }
+
     // Check if it's in Modrinth launcher directory
     if (instancePath.includes("ModrinthApp")) {
       const instanceName = path.basename(instancePath);
@@ -503,6 +710,42 @@ export class InstanceDetector {
         source: "modrinth",
         name: instanceName.replace(/\s+\d+\.\d+\.\d+$/, ""),
         version: instanceName.match(/(\d+\.\d+\.\d+)$/)?.[1],
+      };
+    }
+
+    // Check if it's in ATLauncher directory
+    if (instancePath.includes("ATLauncher")) {
+      const instanceName = path.basename(instancePath);
+      return {
+        source: "atlauncher",
+        name: instanceName,
+      };
+    }
+
+    // Check if it's in GDLauncher directory
+    if (instancePath.includes("gdlauncher") || instancePath.includes("GDLauncher")) {
+      const instanceName = path.basename(instancePath);
+      return {
+        source: "gdlauncher",
+        name: instanceName,
+      };
+    }
+
+    // Check if it's in FTB directory
+    if (instancePath.includes("FTBApp") || instancePath.includes("FeedTheBeast")) {
+      const instanceName = path.basename(instancePath);
+      return {
+        source: "ftb",
+        name: instanceName,
+      };
+    }
+
+    // Check if it's in Technic directory
+    if (instancePath.includes("technic") || instancePath.includes("Technic")) {
+      const instanceName = path.basename(instancePath);
+      return {
+        source: "technic",
+        name: instanceName,
       };
     }
 

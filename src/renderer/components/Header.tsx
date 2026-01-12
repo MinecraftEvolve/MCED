@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useAppStore } from "@/store";
 import { Settings } from "../Settings/Settings";
+import { BackupModal } from "../Backup/BackupModal";
 import {
   Settings as SettingsIcon,
   Search as SearchIcon,
   FolderOpen,
   X,
+  Database,
 } from "lucide-react";
 
 interface HeaderProps {
@@ -21,6 +23,7 @@ export function Header({
 }: HeaderProps) {
   const { currentInstance } = useAppStore();
   const [showSettings, setShowSettings] = useState(false);
+  const [showBackups, setShowBackups] = useState(false);
 
   // If no instance, show minimal header with just settings button
   if (!currentInstance) {
@@ -29,7 +32,7 @@ export function Header({
         <div className="flex h-16 items-center px-6 gap-4">
           <div className="flex items-center gap-3">
             <img
-              src="/assets/icon.png"
+              src="./icon.png"
               alt="Logo"
               className="w-10 h-10 rounded-lg shadow-lg"
             />
@@ -55,7 +58,7 @@ export function Header({
         {/* App Logo & Title */}
         <div className="flex items-center gap-3">
           <img
-            src="/assets/icon.png"
+            src="./icon.png"
             alt="Logo"
             className="w-10 h-10 rounded-lg shadow-lg"
           />
@@ -89,7 +92,7 @@ export function Header({
         {/* Actions */}
         <div className="flex items-center gap-3">
           <button
-            onClick={onSearchClick}
+            onClick={() => onSearchClick()}
             className="px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-sm"
           >
             <SearchIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -99,9 +102,17 @@ export function Header({
             </kbd>
           </button>
 
+          <button
+            onClick={() => setShowBackups(true)}
+            className="px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-sm"
+            title="Backup Manager"
+          >
+            <Database className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          </button>
+
           {onOpenInstance && (
             <button
-              onClick={onOpenInstance}
+              onClick={() => onOpenInstance()}
               className="px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-sm"
               title="Open Another Instance"
             >
@@ -111,7 +122,7 @@ export function Header({
 
           {onCloseInstance && (
             <button
-              onClick={onCloseInstance}
+              onClick={() => onCloseInstance()}
               className="px-3 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-sm"
               title="Close Instance"
             >
@@ -130,6 +141,7 @@ export function Header({
       </div>
 
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+      {showBackups && <BackupModal onClose={() => setShowBackups(false)} />}
     </header>
   );
 }

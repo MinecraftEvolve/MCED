@@ -33,12 +33,14 @@ contextBridge.exposeInMainWorld("api", {
   // Backups
   listBackups: (instancePath: string) =>
     ipcRenderer.invoke("backup:list", instancePath),
-  createBackup: (instancePath: string) =>
-    ipcRenderer.invoke("backup:create", instancePath),
+  createBackup: (instancePath: string, name?: string) =>
+    ipcRenderer.invoke("backup:create", instancePath, name),
   restoreBackup: (instancePath: string, backupId: string) =>
     ipcRenderer.invoke("backup:restore", instancePath, backupId),
   deleteBackup: (instancePath: string, backupId: string) =>
     ipcRenderer.invoke("backup:delete", instancePath, backupId),
+  renameBackup: (instancePath: string, backupId: string, newName: string) =>
+    ipcRenderer.invoke("backup:rename", instancePath, backupId, newName),
 
   // External Editor
   openInEditor: (filePath: string, editorCommand?: string) =>
@@ -89,6 +91,7 @@ declare global {
       listBackups: (instancePath: string) => Promise<any[]>;
       createBackup: (
         instancePath: string,
+        name?: string,
       ) => Promise<{ success: boolean; error?: string }>;
       restoreBackup: (
         instancePath: string,
@@ -97,6 +100,11 @@ declare global {
       deleteBackup: (
         instancePath: string,
         backupId: string,
+      ) => Promise<{ success: boolean; error?: string }>;
+      renameBackup: (
+        instancePath: string,
+        backupId: string,
+        newName: string,
       ) => Promise<{ success: boolean; error?: string }>;
       openInEditor: (
         filePath: string,

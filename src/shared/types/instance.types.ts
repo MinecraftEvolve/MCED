@@ -31,6 +31,8 @@ export type ModpackSource =
   | "prism"
   | "ftb"
   | "technic"
+  | "gdlauncher"
+  | "vanilla"
   | "custom";
 
 export interface InstanceMetadata {
@@ -39,6 +41,9 @@ export interface InstanceMetadata {
     | "prism"
     | "curseforge"
     | "atlauncher"
+    | "ftb"
+    | "technic"
+    | "gdlauncher"
     | "vanilla"
     | "custom";
   configPath?: string;
@@ -48,7 +53,7 @@ export interface InstanceMetadata {
 }
 
 export interface LauncherInfo {
-  type: "multimc" | "prism" | "curseforge" | "atlauncher" | "vanilla";
+  type: "multimc" | "prism" | "curseforge" | "atlauncher" | "ftb" | "technic" | "gdlauncher" | "vanilla";
   path: string;
   executable: string;
   version?: string;

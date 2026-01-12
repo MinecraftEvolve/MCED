@@ -36,6 +36,14 @@ export interface ConfigSetting {
   range?: [number, number];
   min?: number;
   max?: number;
+  userComments?: UserComment[];
+}
+
+export interface UserComment {
+  id: string;
+  text: string;
+  timestamp: string;
+  author?: string;
   step?: number;
   options?: string[];
   enumValues?: string[];

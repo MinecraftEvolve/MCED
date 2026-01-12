@@ -37,6 +37,18 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
   }, []);
 
   useEffect(() => {
+    // Global ESC key handler
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [onClose]);
+
+  useEffect(() => {
     if (!query.trim()) {
       setResults([]);
       setSuggestions([]);
@@ -83,8 +95,14 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center pt-20">
-      <div className="w-full max-w-2xl bg-background border border-border rounded-lg shadow-2xl">
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center pt-20"
+      onClick={onClose}
+    >
+      <div 
+        className="w-full max-w-2xl bg-background border border-border rounded-lg shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Search Input */}
         <div className="p-4 border-b border-border">
           <div className="relative">

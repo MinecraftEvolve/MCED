@@ -1,4 +1,4 @@
-import { ConfigFile, ConfigSetting } from "../types/config.types";
+import { ConfigFile, ConfigSetting, UserComment } from "../types/config.types";
 import { TomlParser } from "./parsers/TomlParser";
 
 export class ConfigService {
@@ -220,6 +220,7 @@ export class ConfigService {
     const lines = content.split("\n");
     let currentSection = "";
     let currentComments: string[] = [];
+    let userComments: UserComment[] = [];
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -228,10 +229,29 @@ export class ConfigService {
       if (line.startsWith("[") && line.endsWith("]")) {
         currentSection = line.slice(1, -1);
         currentComments = [];
+        userComments = [];
         continue;
       }
 
-      // Comment
+      // MCED user comment
+      if (line.startsWith("#@MCED:")) {
+        const commentContent = line.substring(7).trim(); // Remove "#@MCED:"
+        const pipeIndex = commentContent.indexOf("|");
+        
+        if (pipeIndex !== -1) {
+          const timestamp = commentContent.substring(0, pipeIndex).trim();
+          const text = commentContent.substring(pipeIndex + 1).trim();
+          
+          userComments.push({
+            id: `${timestamp}-${Math.random().toString(36).substr(2, 9)}`,
+            timestamp,
+            text,
+          });
+        }
+        continue;
+      }
+
+      // Regular comment
       if (line.startsWith("#")) {
         const comment = line.slice(1).trim();
         if (comment && comment !== ".") {
@@ -257,13 +277,16 @@ export class ConfigService {
           type: this.inferType(this.parseValue(value)),
           description: description || undefined,
           section: currentSection || undefined,
+          userComments: userComments.length > 0 ? [...userComments] : undefined,
         };
 
         settings.push(setting);
         currentComments = [];
+        userComments = [];
       } else if (line !== "") {
         // Reset comments on non-empty non-setting lines
         currentComments = [];
+        userComments = [];
       }
     }
 
@@ -389,23 +412,78 @@ export class ConfigService {
   }
 
   /**
-   * Update config content while preserving comments
+   * Update config content while preserving comments and adding user comments
    */
   private updateConfigContent(config: ConfigFile): string {
-    let content = config.content;
+    let content = config.rawContent || config.content;
 
-    // Simple replacement for now - preserves structure
+    // For each setting, update its value and comments
     for (const setting of config.settings) {
+      const key = setting.key.split(".").pop() || setting.key;
       const oldValue = this.formatValue(setting.defaultValue ?? setting.value);
       const newValue = this.formatValue(setting.value);
 
+      // Update value if changed
       if (oldValue !== newValue) {
-        // Replace the value in the content
-        const regex = new RegExp(
-          `(${this.escapeRegex(setting.key)}\\s*=\\s*)${this.escapeRegex(oldValue)}`,
-          "g",
-        );
-        content = content.replace(regex, `$1${newValue}`);
+        const patterns = [
+          new RegExp(
+            `(${this.escapeRegex(key)}\\s*=\\s*)${this.escapeRegex(oldValue)}`,
+            "g",
+          ),
+          new RegExp(
+            `(${this.escapeRegex(setting.key)}\\s*=\\s*)${this.escapeRegex(oldValue)}`,
+            "g",
+          ),
+        ];
+
+        for (const regex of patterns) {
+          if (regex.test(content)) {
+            content = content.replace(regex, `$1${newValue}`);
+            break;
+          }
+        }
+      }
+
+      // Add/update user comments (recalculate line index after value update)
+      if (setting.userComments && setting.userComments.length > 0) {
+        const lines = content.split("\n");
+        let settingLineIndex = -1;
+
+        // Find the line with this setting
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (
+            line.startsWith(key + " =") ||
+            line.startsWith(key + "=") ||
+            line.startsWith(setting.key + " =") ||
+            line.startsWith(setting.key + "=")
+          ) {
+            settingLineIndex = i;
+            break;
+          }
+        }
+
+        if (settingLineIndex !== -1) {
+          // Remove old MCED comments for this setting
+          let insertIndex = settingLineIndex;
+          while (
+            insertIndex > 0 &&
+            lines[insertIndex - 1].trim().startsWith("#@MCED:")
+          ) {
+            lines.splice(insertIndex - 1, 1);
+            insertIndex--;
+            settingLineIndex--;
+          }
+
+          // Add new MCED comments
+          const commentLines = setting.userComments.map(
+            (comment) =>
+              `#@MCED: ${comment.timestamp} | ${comment.text.replace(/\n/g, " ")}`,
+          );
+
+          lines.splice(insertIndex, 0, ...commentLines);
+          content = lines.join("\n");
+        }
       }
     }
 

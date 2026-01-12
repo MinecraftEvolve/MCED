@@ -32,7 +32,7 @@ export function LandingPage({
       {/* Hero Section */}
       <div className="landing-hero">
         <div className="landing-logo-container">
-          <img src="/icon.png" alt="MCED Logo" className="landing-logo" />
+          <img src="./icon.png" alt="MCED Logo" className="landing-logo" />
         </div>
         <h1 className="landing-title">Minecraft Config Editor</h1>
         <p className="landing-subtitle">

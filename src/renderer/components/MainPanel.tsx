@@ -1,7 +1,7 @@
 import React from "react";
 import { useAppStore } from "@/store";
-import { ModCard } from "../ModInfo/ModCard";
-import { ConfigEditor } from "../ConfigEditor/ConfigEditor";
+import { ModCard } from "./ModCard";
+import { ConfigEditor } from "./ConfigEditor/ConfigEditor";
 
 export function MainPanel() {
   const { selectedMod, currentInstance } = useAppStore();

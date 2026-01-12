@@ -9,6 +9,10 @@
   align-items: center;
 }
 
+:root.light .landing-page {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%);
+}
+
 /* Hero Section */
 .landing-hero {
   text-align: center;

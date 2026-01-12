@@ -1,35 +1,32 @@
 .backup-manager {
-  padding: 24px;
+  padding: 0;
 }
 
 .backup-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.backup-header h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #f9fafb;
+  margin-bottom: 16px;
 }
 
 .btn-create-backup {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%);
+  color: hsl(var(--primary-foreground));
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  width: 100%;
+  justify-content: center;
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.2);
 }
 
 .btn-create-backup:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.3);
 }
 
 .btn-create-backup:disabled {
@@ -37,90 +34,349 @@
   cursor: not-allowed;
 }
 
-.no-backups {
+.backup-empty-state {
   text-align: center;
-  padding: 64px 24px;
+  padding: 48px 24px;
+  background: hsl(var(--muted) / 0.2);
+  border: 2px dashed hsl(var(--border));
+  border-radius: 12px;
+  margin-top: 16px;
 }
 
-.no-backups p {
-  font-size: 16px;
-  color: #9ca3af;
-  margin-bottom: 8px;
+.backup-empty-state .empty-icon {
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 12px;
+  opacity: 0.5;
 }
 
-.no-backups .hint {
+.backup-empty-state p {
+  font-size: 15px;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 6px;
+}
+
+.backup-empty-state .hint {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  opacity: 0.7;
+}
+
+.backup-loading {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid hsl(var(--primary) / 0.3);
+  border-top-color: hsl(var(--primary));
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.backup-loading p {
   font-size: 14px;
-  color: #6b7280;
+  color: hsl(var(--muted-foreground));
 }
 
 .backup-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .backup-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #1f2937;
-  border: 1px solid #374151;
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.8) 100%);
+  border: 1px solid hsl(var(--border));
   border-radius: 12px;
   padding: 16px;
-  transition: all 0.2s;
+  transition: all 0.3s;
+  box-shadow: 0 1px 3px hsl(var(--foreground) / 0.05);
 }
 
 .backup-item:hover {
-  border-color: #4b5563;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  border-color: hsl(var(--primary) / 0.3);
+  background: hsl(var(--accent));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsl(var(--foreground) / 0.08);
 }
 
 .backup-info {
   flex: 1;
+  min-width: 0;
 }
 
 .backup-name {
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
   font-weight: 600;
-  color: #f9fafb;
+  color: hsl(var(--foreground));
   margin-bottom: 6px;
 }
 
+.backup-name svg {
+  flex-shrink: 0;
+  color: hsl(var(--primary));
+}
+
 .backup-meta {
-  font-size: 13px;
-  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+
+.backup-meta svg {
+  flex-shrink: 0;
 }
 
 .backup-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .btn-restore,
+.btn-rename,
 .btn-delete {
-  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
   border: none;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-restore {
-  background: #3b82f6;
-  color: white;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.85) 100%);
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 2px 4px hsl(var(--primary) / 0.2);
 }
 
 .btn-restore:hover {
-  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px hsl(var(--primary) / 0.3);
+}
+
+.btn-rename {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border: 1px solid hsl(var(--border));
+  padding: 6px 10px;
+}
+
+.btn-rename:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--primary) / 0.3);
+  transform: translateY(-1px);
 }
 
 .btn-delete {
-  background: #ef4444;
-  color: white;
+  background: transparent;
+  color: hsl(var(--destructive));
+  border: 1px solid hsl(var(--destructive) / 0.5);
+  padding: 6px 10px;
 }
 
 .btn-delete:hover {
-  background: #dc2626;
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+  border-color: hsl(var(--destructive));
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px hsl(var(--destructive) / 0.3);
+}
+
+/* Backup Name Dialog */
+.backup-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+:root.light .backup-dialog-overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.backup-dialog {
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root.light .backup-dialog {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.backup-dialog h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  margin: 0 0 8px 0;
+}
+
+.dialog-description {
+  font-size: 14px;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 16px;
+}
+
+.backup-name-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: hsl(var(--input));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  color: hsl(var(--foreground));
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+  margin-bottom: 20px;
+}
+
+.backup-name-input:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-confirm {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.btn-cancel:hover {
+  background: hsl(var(--secondary) / 0.8);
+}
+
+.btn-confirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.btn-confirm:hover {
+  opacity: 0.9;
+}
+
+/* Delete Dialog Specific Styles */
+.delete-dialog {
+  max-width: 400px;
+  text-align: center;
+}
+
+.delete-dialog-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, hsl(var(--destructive) / 0.1) 0%, hsl(var(--destructive) / 0.05) 100%);
+  border: 2px solid hsl(var(--destructive) / 0.2);
+  border-radius: 50%;
+  color: hsl(var(--destructive));
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.delete-dialog h3 {
+  color: hsl(var(--destructive));
+}
+
+.btn-delete-confirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: linear-gradient(135deg, hsl(var(--destructive)) 0%, hsl(var(--destructive) / 0.85) 100%);
+  color: hsl(var(--destructive-foreground));
+  box-shadow: 0 2px 8px hsl(var(--destructive) / 0.3);
+}
+
+.btn-delete-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px hsl(var(--destructive) / 0.4);
 }

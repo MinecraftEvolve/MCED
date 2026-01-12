@@ -50,6 +50,14 @@ export interface ConfigSetting {
   unit?: string;
   category?: string;
   path: string[]; // Path to nested value
+  userComments?: UserComment[]; // User-added comments with timestamps
+}
+
+export interface UserComment {
+  id: string;
+  text: string;
+  timestamp: string; // ISO 8601 format
+  author?: string;
 }
 
 export type ConfigSettingType =

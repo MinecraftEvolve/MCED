@@ -1,8 +1,22 @@
 import { useEffect } from "react";
 import { useAppStore } from "@/store";
 
-export function useKeyboardShortcuts() {
-  const { hasUnsavedChanges, saveConfigs, discardChanges } = useAppStore();
+export function useKeyboardShortcuts(callbacks?: {
+  onOpenSettings?: () => void;
+  onOpenBackups?: () => void;
+  onOpenSearch?: () => void;
+  onOpenInstance?: () => void;
+  onCloseInstance?: () => void;
+}) {
+  const { 
+    hasUnsavedChanges, 
+    saveConfigs, 
+    discardChanges,
+    mods,
+    selectedMod,
+    setSelectedMod,
+    currentInstance
+  } = useAppStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -15,23 +29,68 @@ export function useKeyboardShortcuts() {
       }
 
       // Ctrl+Z - Undo/Discard
-      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         if (hasUnsavedChanges) {
           discardChanges();
         }
       }
 
-      // Ctrl+F - Focus search
+      // Ctrl+F - Open Smart Search
       if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();
-        const searchInput = document.querySelector<HTMLInputElement>(
-          'input[placeholder*="Search"]',
-        );
-        searchInput?.focus();
+        callbacks?.onOpenSearch?.();
       }
 
-      // Escape - Clear search or deselect mod
+      // Ctrl+, - Open Settings
+      if ((e.ctrlKey || e.metaKey) && e.key === ",") {
+        e.preventDefault();
+        callbacks?.onOpenSettings?.();
+      }
+
+      // Ctrl+B - Open Backups
+      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
+        e.preventDefault();
+        callbacks?.onOpenBackups?.();
+      }
+
+      // Ctrl+O - Open Instance
+      if ((e.ctrlKey || e.metaKey) && e.key === "o") {
+        e.preventDefault();
+        callbacks?.onOpenInstance?.();
+      }
+
+      // Ctrl+W - Close Instance
+      if ((e.ctrlKey || e.metaKey) && e.key === "w") {
+        e.preventDefault();
+        if (currentInstance) {
+          callbacks?.onCloseInstance?.();
+        }
+      }
+
+      // Alt+Left - Previous mod
+      if (e.altKey && e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (selectedMod && mods.length > 0) {
+          const currentIndex = mods.findIndex(m => m.modId === selectedMod.modId);
+          if (currentIndex > 0) {
+            setSelectedMod(mods[currentIndex - 1]);
+          }
+        }
+      }
+
+      // Alt+Right - Next mod
+      if (e.altKey && e.key === "ArrowRight") {
+        e.preventDefault();
+        if (selectedMod && mods.length > 0) {
+          const currentIndex = mods.findIndex(m => m.modId === selectedMod.modId);
+          if (currentIndex < mods.length - 1) {
+            setSelectedMod(mods[currentIndex + 1]);
+          }
+        }
+      }
+
+      // Escape - Clear search or close modals
       if (e.key === "Escape") {
         const searchInput = document.querySelector<HTMLInputElement>(
           'input[placeholder*="Search"]',
@@ -45,5 +104,14 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hasUnsavedChanges, saveConfigs, discardChanges]);
+  }, [
+    hasUnsavedChanges, 
+    saveConfigs, 
+    discardChanges, 
+    callbacks,
+    mods,
+    selectedMod,
+    setSelectedMod,
+    currentInstance
+  ]);
 }

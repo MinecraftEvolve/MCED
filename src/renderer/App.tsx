@@ -2,110 +2,81 @@ import { useState, useEffect } from "react";
 import { useAppStore } from "./store";
 import { useSettingsStore } from "./store/settingsStore";
 import { Loader2, Settings as SettingsIcon, FolderOpen } from "lucide-react";
-import { Header } from "./components/Layout/Header";
-import { Sidebar } from "./components/Layout/Sidebar";
-import { MainPanel } from "./components/Layout/MainPanel";
-import { StatusBar } from "./components/Layout/StatusBar";
-import { SmartSearch } from "./components/SmartSearch/SmartSearch";
+import { Header } from "./components/Header";
+import { Sidebar } from "./components/Sidebar";
+import { MainPanel } from "./components/MainPanel";
+import { StatusBar } from "./components/StatusBar";
+import { SmartSearch } from "./components/SmartSearch";
 import { Settings } from "./components/Settings/Settings";
 import { smartSearchService } from "./services/SmartSearchService";
+import { configService } from "./services/ConfigService";
 import modrinthAPI from "./services/api/ModrinthAPI";
+import curseForgeAPI from "./services/api/CurseForgeAPI";
 import { ModInfo } from "../shared/types/mod.types";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 
-// Helper to associate config files with mods
 async function associateConfigsWithMods(
   mods: ModInfo[],
-  configFolder: string,
+  instancePath: string,
 ): Promise<ModInfo[]> {
   try {
-    // Get all config files
-    const result = await window.api.readdir(configFolder);
-    if (!result.success || !result.files) {
-      return mods;
-    }
-
-    const configFiles = result.files.filter(
-      (file: string) => file.endsWith(".toml") || file.endsWith(".json"),
+    const modsWithConfigs = await Promise.all(
+      mods.map(async (mod) => {
+        try {
+          const configFiles = await configService.loadModConfigs(
+            instancePath,
+            mod.modId,
+          );
+          return { ...mod, configFiles };
+        } catch (error) {
+          return mod;
+        }
+      }),
     );
-
-    // Associate configs with mods based on filename matching
-    return mods.map((mod) => {
-      const modConfigs = configFiles.filter((configFile: string) => {
-        const fileName = configFile.toLowerCase().replace(/\.(toml|json)$/, "");
-        const modIdLower = mod.modId.toLowerCase();
-
-        // Normalize by removing hyphens and underscores
-        const normalizedFileName = fileName.replace(/[-_]/g, "");
-        const normalizedModId = modIdLower.replace(/[-_]/g, "");
-
-        // Exact match
-        if (normalizedFileName === normalizedModId) {
-          return true;
-        }
-
-        // Check if filename is modId + config variant (client, common, server, etc.)
-        const validSuffixes = ["client", "common", "server", "forge", "fabric"];
-        for (const suffix of validSuffixes) {
-          const normalizedSuffix = suffix.replace(/[-_]/g, "");
-          if (normalizedFileName === normalizedModId + normalizedSuffix) {
-            return true;
-          }
-        }
-
-        return false;
-      });
-
-      return {
-        ...mod,
-        configFiles: modConfigs.map((file: string) => ({
-          filename: file,
-          name: file,
-          path: `${configFolder}/${file}`,
-          content: "",
-          format: file.endsWith(".toml") ? "toml" : "json",
-          settings: [],
-        })),
-      };
-    });
+    return modsWithConfigs;
   } catch (error) {
     return mods;
   }
 }
 
-// Helper to fetch icons from Modrinth for mods that don't have icons
-async function enrichModsWithModrinthIcons(
+async function enrichModsWithIcons(
   mods: ModInfo[],
+  preferCurseForge: boolean = false,
 ): Promise<ModInfo[]> {
   const enrichedMods = await Promise.all(
     mods.map(async (mod) => {
-      // If mod already has an icon, skip
       if (mod.icon) {
         return mod;
       }
 
       try {
-        // Try to fetch from Modrinth using mod ID or name
-        const modrinthMod = await modrinthAPI.searchMod(mod.modId);
-        if (modrinthMod && modrinthMod.icon_url) {
-          return {
-            ...mod,
-            icon: modrinthMod.icon_url,
-          };
+        if (preferCurseForge) {
+          const curseForgeMod = await curseForgeAPI.searchMod(mod.modId);
+          if (curseForgeMod && curseForgeMod.logo) {
+            return { ...mod, icon: curseForgeMod.logo.url };
+          }
+
+          if (mod.name && mod.name !== mod.modId) {
+            const curseForgeMod2 = await curseForgeAPI.searchMod(mod.name);
+            if (curseForgeMod2 && curseForgeMod2.logo) {
+              return { ...mod, icon: curseForgeMod2.logo.url };
+            }
+          }
         }
 
-        // Try with mod name if modId didn't work
+        const modrinthMod = await modrinthAPI.searchMod(mod.modId);
+        if (modrinthMod && modrinthMod.icon_url) {
+          return { ...mod, icon: modrinthMod.icon_url };
+        }
+
         if (mod.name && mod.name !== mod.modId) {
           const modrinthMod2 = await modrinthAPI.searchMod(mod.name);
           if (modrinthMod2 && modrinthMod2.icon_url) {
-            return {
-              ...mod,
-              icon: modrinthMod2.icon_url,
-            };
+            return { ...mod, icon: modrinthMod2.icon_url };
           }
         }
       } catch (error) {
-        // Failed to fetch icon - silently continue
+        // Failed to fetch icon
       }
 
       return mod;
@@ -131,7 +102,12 @@ function App() {
   const [showSearch, setShowSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Apply theme on app load
+  useEffect(() => {
+    if (settings.curseForgeApiKey) {
+      curseForgeAPI.setApiKey(settings.curseForgeApiKey);
+    }
+  }, [settings.curseForgeApiKey]);
+
   useEffect(() => {
     const root = document.documentElement;
 
@@ -158,15 +134,11 @@ function App() {
     }
   }, [settings]);
 
-  // Enable keyboard shortcuts
-  useKeyboardShortcuts();
-
   const handleOpenInstance = async (providedPath?: string) => {
     try {
       setError(null);
       setIsLoading(true);
 
-      // Get instance path
       const instancePath =
         providedPath || (await window.electron.openDirectory());
 
@@ -184,12 +156,10 @@ function App() {
         return;
       }
 
-      // Store instance info
       const instanceInfo = result.instance;
       setCurrentInstance(instanceInfo);
       addRecentInstance(String(instanceInfo.path));
 
-      // Scan mods from mods folder
       const modsResult = await window.api.scanMods(instanceInfo.modsFolder);
 
       const modsList =
@@ -197,19 +167,18 @@ function App() {
           ? modsResult.mods
           : [];
 
-      // Associate config files with mods
       const modsWithConfigs = await associateConfigsWithMods(
         modsList,
-        instanceInfo.configFolder,
+        instanceInfo.path,
       );
       setMods(modsWithConfigs);
       setIsLoading(false);
 
-      // Enrich with icons in background
       if (modsWithConfigs.length > 0) {
-        enrichModsWithModrinthIcons(modsWithConfigs)
+        const preferCurseForge = settings.curseForgeApiKey ? true : false;
+        enrichModsWithIcons(modsWithConfigs, preferCurseForge)
           .then((modsWithIcons) => setMods(modsWithIcons))
-          .catch(() => {}); // Silently fail
+          .catch(() => {});
       }
     } catch (error) {
       setError(
@@ -220,11 +189,26 @@ function App() {
     }
   };
 
+  const handleCloseInstance = () => {
+    setCurrentInstance(null);
+    setMods([]);
+    setError(null);
+  };
+
+  useKeyboardShortcuts({
+    onOpenSettings: () => setShowSettings(true),
+    onOpenBackups: () => {
+      const backupBtn = document.querySelector('[title="Backup Manager"]') as HTMLButtonElement;
+      backupBtn?.click();
+    },
+    onOpenSearch: () => setShowSearch(true),
+    onOpenInstance: () => handleOpenInstance(),
+    onCloseInstance: handleCloseInstance,
+  });
+
   useEffect(() => {
-    // Add dark mode class to html element
     document.documentElement.classList.add("dark");
 
-    // Keyboard shortcut for search
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();
@@ -236,7 +220,6 @@ function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Index configs when mods are loaded
   useEffect(() => {
     if (mods.length > 0 && currentInstance) {
       const configsByMod = new Map();
@@ -342,12 +325,6 @@ function App() {
       </>
     );
   }
-
-  const handleCloseInstance = () => {
-    setCurrentInstance(null);
-    setMods([]);
-    setError(null);
-  };
 
   return (
     <>
