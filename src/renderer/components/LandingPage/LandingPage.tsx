@@ -137,7 +137,7 @@ export function LandingPage({
           <Heart className="heart-icon" size={16} fill="currentColor" /> for the
           Minecraft community
         </p>
-        <p className="version">Version 1.0.0</p>
+        <p className="version">Version 1.0.6</p>
       </div>
     </div>
   );

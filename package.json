@@ -1,6 +1,6 @@
 {
   "name": "minecraft-config-editor-desktop",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Minecraft Config Editor (MCED) - A modern desktop application for editing Minecraft modpack configuration files",
   "main": "dist/main/index.js",
   "scripts": {
