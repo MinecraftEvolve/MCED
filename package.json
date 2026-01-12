@@ -149,14 +149,18 @@
     "mac": {
       "icon": "assets/icon.icns",
       "target": [
-        "dmg",
-        "zip"
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
       ],
       "category": "public.app-category.utilities",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
     },
     "dmg": {
       "contents": [
@@ -181,14 +185,25 @@
     "linux": {
       "icon": "build/icons",
       "target": [
-        "AppImage",
-        "deb"
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
       ],
       "category": "Utility",
       "maintainer": "MCED Team <support@mced.app>",
       "vendor": "MCED Team",
       "synopsis": "Modern Minecraft Config Editor",
-      "description": "A beautiful desktop application for editing Minecraft modpack configuration files with intelligent mod detection and modern UI"
+      "description": "A beautiful desktop application for editing Minecraft modpack configuration files with intelligent mod detection and modern UI",
+      "desktop": {
+        "Name": "Minecraft Config Editor",
+        "Comment": "Modern Minecraft Config Editor",
+        "Categories": "Utility;"
+      }
     },
     "appImage": {
       "artifactName": "${productName}-${version}.${ext}"
