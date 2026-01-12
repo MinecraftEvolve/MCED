@@ -43,6 +43,7 @@ async function enrichModsWithIcons(
   mods: ModInfo[],
   preferCurseForge: boolean = false,
 ): Promise<ModInfo[]> {
+  console.log(`[Icon Enrichment] Starting for ${mods.length} mods`);
   const enrichedMods = await Promise.all(
     mods.map(async (mod) => {
       if (mod.icon) {
@@ -53,12 +54,14 @@ async function enrichModsWithIcons(
         if (preferCurseForge) {
           const curseForgeMod = await curseForgeAPI.searchMod(mod.modId);
           if (curseForgeMod && curseForgeMod.logo) {
+            console.log(`[Icon] Found CurseForge icon for ${mod.modId}`);
             return { ...mod, icon: curseForgeMod.logo.url };
           }
 
           if (mod.name && mod.name !== mod.modId) {
             const curseForgeMod2 = await curseForgeAPI.searchMod(mod.name);
             if (curseForgeMod2 && curseForgeMod2.logo) {
+              console.log(`[Icon] Found CurseForge icon for ${mod.name}`);
               return { ...mod, icon: curseForgeMod2.logo.url };
             }
           }
@@ -66,23 +69,28 @@ async function enrichModsWithIcons(
 
         const modrinthMod = await modrinthAPI.searchMod(mod.modId);
         if (modrinthMod && modrinthMod.icon_url) {
+          console.log(`[Icon] Found Modrinth icon for ${mod.modId}: ${modrinthMod.icon_url}`);
           return { ...mod, icon: modrinthMod.icon_url };
         }
 
         if (mod.name && mod.name !== mod.modId) {
           const modrinthMod2 = await modrinthAPI.searchMod(mod.name);
           if (modrinthMod2 && modrinthMod2.icon_url) {
+            console.log(`[Icon] Found Modrinth icon for ${mod.name}: ${modrinthMod2.icon_url}`);
             return { ...mod, icon: modrinthMod2.icon_url };
           }
         }
+        
+        console.log(`[Icon] No icon found for ${mod.modId}`);
       } catch (error) {
-        // Failed to fetch icon
+        console.error(`[Icon] Error fetching icon for ${mod.modId}:`, error);
       }
 
       return mod;
     }),
   );
-
+  
+  console.log(`[Icon Enrichment] Completed. ${enrichedMods.filter(m => m.icon).length}/${mods.length} mods have icons`);
   return enrichedMods;
 }
 

@@ -372,34 +372,43 @@ ipcMain.handle("app:getVersion", async () => {
 
 ipcMain.handle("modrinth:search", async (_event, query: string) => {
   try {
+    console.log(`[Modrinth API] Searching for: ${query}`);
     const response = await fetch(
       `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&limit=1`,
     );
     if (!response.ok) {
-      return { success: false, error: "Search failed" };
+      console.error(`[Modrinth API] Search failed with status: ${response.status}`);
+      return { success: false, error: `Search failed: ${response.status}` };
     }
     const data: any = await response.json();
     if (data.hits && data.hits.length > 0) {
+      console.log(`[Modrinth API] Found mod: ${data.hits[0].title}, icon: ${data.hits[0].icon_url ? 'Yes' : 'No'}`);
       return { success: true, mod: data.hits[0] };
     }
+    console.log(`[Modrinth API] No results for: ${query}`);
     return { success: false, error: "No results" };
   } catch (error: any) {
+    console.error(`[Modrinth API] Error searching for ${query}:`, error.message);
     return { success: false, error: error.message };
   }
 });
 
 ipcMain.handle("modrinth:getProject", async (_event, idOrSlug: string) => {
   try {
+    console.log(`[Modrinth API] Getting project: ${idOrSlug}`);
     const response = await fetch(
       `https://api.modrinth.com/v2/project/${idOrSlug}`,
     );
     if (!response.ok) {
-      return { success: false, error: "Project not found" };
+      console.error(`[Modrinth API] Project not found: ${idOrSlug}, status: ${response.status}`);
+      return { success: false, error: `Project not found: ${response.status}` };
     }
-    const data = await response.json();
+    const data: any = await response.json();
+    console.log(`[Modrinth API] Project found: ${data.title}, icon: ${data.icon_url ? 'Yes' : 'No'}`);
     // Return only serializable data
     return { success: true, project: JSON.parse(JSON.stringify(data)) };
   } catch (error: any) {
+    console.error(`[Modrinth API] Error getting project ${idOrSlug}:`, error.message);
     return { success: false, error: error.message };
   }
 });
