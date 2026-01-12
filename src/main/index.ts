@@ -410,45 +410,36 @@ interface ModrinthProject {
 
 ipcMain.handle("modrinth:search", async (_event, query: string) => {
   try {
-    console.log(`[Modrinth API] Searching for: ${query}`);
     const response = await fetch(
       `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&limit=1`,
     );
     if (!response.ok) {
-      console.error(`[Modrinth API] Search failed with status: ${response.status}`);
       return { success: false, error: `Search failed: ${response.status}` };
     }
     const data = await response.json() as ModrinthSearchResult;
     if (data.hits && data.hits.length > 0) {
-      console.log(`[Modrinth API] Found mod: ${data.hits[0].title}, icon: ${data.hits[0].icon_url ? 'Yes' : 'No'}`);
       return { success: true, mod: data.hits[0] };
     }
-    console.log(`[Modrinth API] No results for: ${query}`);
     return { success: false, error: "No results" };
   } catch (error) {
-    const errorMessage = error instanceof Error ? (error instanceof Error ? error.message : String(error)) : 'Unknown error';
-    console.error(`[Modrinth API] Error searching for ${query}:`, errorMessage);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return { success: false, error: errorMessage };
   }
 });
 
 ipcMain.handle("modrinth:getProject", async (_event, idOrSlug: string) => {
   try {
-    console.log(`[Modrinth API] Getting project: ${idOrSlug}`);
     const response = await fetch(
       `https://api.modrinth.com/v2/project/${idOrSlug}`,
     );
     if (!response.ok) {
-      console.error(`[Modrinth API] Project not found: ${idOrSlug}, status: ${response.status}`);
       return { success: false, error: `Project not found: ${response.status}` };
     }
     const data = await response.json() as ModrinthProject;
-    console.log(`[Modrinth API] Project found: ${data.title}, icon: ${data.icon_url ? 'Yes' : 'No'}`);
     // Return only serializable data
     return { success: true, project: JSON.parse(JSON.stringify(data)) };
   } catch (error) {
-    const errorMessage = error instanceof Error ? (error instanceof Error ? error.message : String(error)) : 'Unknown error';
-    console.error(`[Modrinth API] Error getting project ${idOrSlug}:`, errorMessage);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return { success: false, error: errorMessage };
   }
 });
