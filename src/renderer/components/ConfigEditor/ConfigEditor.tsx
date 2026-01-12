@@ -4,7 +4,6 @@ import { ConfigFile, ConfigSetting } from "@/types/config.types";
 import { configService } from "@/services/ConfigService";
 import { useAppStore } from "@/store";
 import { SettingWrapper } from "./SettingWrapper";
-import { CommentSection } from "./CommentSection";
 
 interface ConfigEditorProps {
   modId: string;
@@ -195,10 +194,6 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
                   <SettingWrapper
                     setting={setting}
                     onChange={(value) => handleSettingChange(setting.key, value)}
-                  />
-                  <CommentSection
-                    settingKey={setting.key}
-                    configPath={selectedConfig.path}
                   />
                 </div>
               ))}
