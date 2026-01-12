@@ -13,7 +13,7 @@ export interface AppSettings {
   showAdvancedOptions: boolean;
 
   // API Integration
-  curseforgeApiKey?: string;
+  curseForgeApiKey?: string;
   cacheDuration: number; // in hours
 
   // Editor
