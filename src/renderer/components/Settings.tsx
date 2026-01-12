@@ -20,7 +20,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
   const { settings, updateSettings, clearRecentInstances, resetSettings } =
     useSettingsStore();
   const [localSettings, setLocalSettings] = useState(settings);
-  const [appVersion, setAppVersion] = useState("");
+  const [appVersion, setAppVersion] = useState("...");
 
   // Apply settings only when explicitly changed
   const applySettings = useCallback(

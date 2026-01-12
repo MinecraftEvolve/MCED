@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAppStore } from "@/store";
 import { BackupModal } from "./Backup/BackupModal";
+import { Settings } from "./Settings";
 import {
   Settings as SettingsIcon,
   Search as SearchIcon,
