@@ -4,6 +4,7 @@ import { ConfigFile, ConfigSetting } from "@/types/config.types";
 import { configService } from "@/services/ConfigService";
 import { useAppStore } from "@/store";
 import { SettingWrapper } from "./SettingWrapper";
+import "./ConfigEditor.css";
 
 interface ConfigEditorProps {
   modId: string;
