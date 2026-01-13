@@ -378,28 +378,30 @@ export function ConfigEditor({ modId, instancePath, viewMode, onViewModeChange }
 
       {/* Raw Editor View */}
       {selectedConfig && currentViewMode === 'raw' && (
-        <div className="flex-1 flex flex-col min-h-0">
-          <Editor
-            height="100%"
-            defaultLanguage="properties"
-            value={rawContent}
-            onChange={handleRawContentChange}
-            theme="vs-dark"
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              lineNumbers: 'on',
-              scrollBeyondLastLine: false,
-              wordWrap: 'on',
-              automaticLayout: true,
-            }}
-            onMount={(editor) => {
-              // Auto-save on Ctrl+S
-              editor.addCommand(2097, () => {
-                saveRawContent();
-              });
-            }}
-          />
+        <div className="flex-1 flex flex-col p-4">
+          <div className="h-[calc(100vh-200px)] border border-border rounded-lg overflow-hidden">
+            <Editor
+              height="100%"
+              defaultLanguage="properties"
+              value={rawContent}
+              onChange={handleRawContentChange}
+              theme="vs-dark"
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                lineNumbers: 'on',
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                automaticLayout: true,
+              }}
+              onMount={(editor) => {
+                // Auto-save on Ctrl+S
+                editor.addCommand(2097, () => {
+                  saveRawContent();
+                });
+              }}
+            />
+          </div>
         </div>
       )}
     </div>
