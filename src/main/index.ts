@@ -115,25 +115,112 @@ ipcMain.handle("scan-mods", async (_event, instancePath) => {
     const modsPath = path.join(instancePath, "mods");
     const mods = await scanner.scanModsFolder(modsPath);
 
-    // Return minimal serializable objects
-    const serializedMods = mods.map((mod) => ({
-      modId: String(mod.modId || ""),
-      name: String(mod.name || ""),
-      version: String(mod.version || ""),
-      description: mod.description ? String(mod.description) : undefined,
-      authors: Array.isArray(mod.authors)
-        ? mod.authors.map((a: string | { name: string }) => 
-            typeof a === 'string' ? a : String(a))
-        : undefined,
-      homepage: mod.homepage ? String(mod.homepage) : undefined,
-      sources: mod.sources ? String(mod.sources) : undefined,
-      license: mod.license ? String(mod.license) : undefined,
-      icon: mod.icon ? String(mod.icon) : undefined,
-      jarPath: String(mod.jarPath || ""),
-      loader: String(mod.loader || "forge"),
-      configFiles: [],
-      isFavorite: false,
-    }));
+    const configPath = path.join(instancePath, "config");
+    const defaultConfigsPath = path.join(instancePath, "defaultconfigs");
+    
+    // Get server config folder (first world's serverconfig)
+    let serverConfigPath = null;
+    try {
+      const savesPath = path.join(instancePath, "saves");
+      const saves = await fs.readdir(savesPath);
+      if (saves.length > 0) {
+        const firstWorld = saves[0];
+        const potentialServerConfigPath = path.join(savesPath, firstWorld, "serverconfig");
+        try {
+          await fs.access(potentialServerConfigPath);
+          serverConfigPath = potentialServerConfigPath;
+        } catch {}
+      }
+    } catch {}
+
+    // Helper to check if file matches mod
+    const matchesModId = (fileName: string, modId: string): boolean => {
+      const baseName = fileName.replace(/\.(toml|json5?|txt)$/, "");
+      const patterns = [
+        baseName === modId,
+        baseName === `${modId}-client`,
+        baseName === `${modId}-common`,
+        baseName === `${modId}-server`,
+        baseName.startsWith(`${modId}-`),
+        baseName.startsWith(modId) && /^[_-]/.test(baseName.slice(modId.length)),
+      ];
+      return patterns.some((match) => match);
+    };
+
+    // Scan for config files for each mod
+    const serializedMods = await Promise.all(
+      mods.map(async (mod) => {
+        const configFiles: { path: string; filename: string; format: string }[] = [];
+        const modId = String(mod.modId || "");
+
+        // Check main config folder
+        try {
+          const files = await fs.readdir(configPath);
+          for (const file of files) {
+            if ((file.endsWith(".toml") || file.endsWith(".json") || file.endsWith(".json5")) && matchesModId(file, modId)) {
+              configFiles.push({
+                path: path.join(configPath, file),
+                filename: file,
+                format: file.split(".").pop() || "toml",
+              });
+            }
+          }
+        } catch {}
+
+        // Check defaultconfigs folder
+        try {
+          const files = await fs.readdir(defaultConfigsPath);
+          for (const file of files) {
+            if ((file.endsWith(".toml") || file.endsWith(".json") || file.endsWith(".json5")) && matchesModId(file, modId)) {
+              configFiles.push({
+                path: path.join(defaultConfigsPath, file),
+                filename: file,
+                format: file.split(".").pop() || "toml",
+              });
+            }
+          }
+        } catch {}
+
+        // Check serverconfig folder
+        if (serverConfigPath) {
+          try {
+            const files = await fs.readdir(serverConfigPath);
+            for (const file of files) {
+              const matches = matchesModId(file, modId);
+              if ((file.endsWith(".toml") || file.endsWith(".json") || file.endsWith(".json5")) && matches) {
+                configFiles.push({
+                  path: path.join(serverConfigPath, file),
+                  filename: file,
+                  format: file.split(".").pop() || "toml",
+                });
+              }
+            }
+          } catch (err) {
+
+          }
+        }
+
+
+        return {
+          modId,
+          name: String(mod.name || ""),
+          version: String(mod.version || ""),
+          description: mod.description ? String(mod.description) : undefined,
+          authors: Array.isArray(mod.authors)
+            ? mod.authors.map((a: string | { name: string }) => 
+                typeof a === 'string' ? a : String(a))
+            : undefined,
+          homepage: mod.homepage ? String(mod.homepage) : undefined,
+          sources: mod.sources ? String(mod.sources) : undefined,
+          license: mod.license ? String(mod.license) : undefined,
+          icon: mod.icon ? String(mod.icon) : undefined,
+          jarPath: String(mod.jarPath || ""),
+          loader: String(mod.loader || "forge"),
+          configFiles,
+          isFavorite: false,
+        };
+      })
+    );
 
     return {
       success: true,
@@ -144,6 +231,95 @@ ipcMain.handle("scan-mods", async (_event, instancePath) => {
       success: false,
       error: (error instanceof Error ? error.message : String(error)),
       mods: [],
+    };
+  }
+});
+
+ipcMain.handle("get-server-config-folder", async (_event, instancePath: string) => {
+  try {
+    const savesPath = path.join(instancePath, "saves");
+    const saves = await fs.readdir(savesPath);
+    
+    if (saves.length === 0) {
+      return null;
+    }
+    
+    // Get the first world's serverconfig folder
+    const firstWorld = saves[0];
+    const serverConfigPath = path.join(savesPath, firstWorld, "serverconfig");
+    
+    // Check if serverconfig exists
+    try {
+      await fs.access(serverConfigPath);
+      return serverConfigPath;
+    } catch {
+      return null;
+    }
+  } catch (error) {
+    console.error("Error getting server config folder:", error);
+    return null;
+  }
+});
+
+ipcMain.handle("instance:migrateAllServerConfigs", async (_event, instancePath: string) => {
+  try {
+    const savesPath = path.join(instancePath, "saves");
+    const defaultConfigsPath = path.join(instancePath, "defaultconfigs");
+    
+    // Ensure defaultconfigs folder exists
+    await fs.mkdir(defaultConfigsPath, { recursive: true });
+    
+    // Get all worlds
+    const saves = await fs.readdir(savesPath);
+    
+    let migratedCount = 0;
+    const errors: string[] = [];
+    
+    for (const worldName of saves) {
+      const serverConfigPath = path.join(savesPath, worldName, "serverconfig");
+      
+      // Check if serverconfig exists
+      try {
+        await fs.access(serverConfigPath);
+      } catch {
+        continue; // No serverconfig in this world
+      }
+      
+      // Read all files in serverconfig
+      const configFiles = await fs.readdir(serverConfigPath);
+      
+      for (const fileName of configFiles) {
+        const sourcePath = path.join(serverConfigPath, fileName);
+        const destPath = path.join(defaultConfigsPath, fileName);
+        
+        // Check if it's a file
+        const stats = await fs.stat(sourcePath);
+        if (!stats.isFile()) continue;
+        
+        try {
+          // Copy file to defaultconfigs
+          await fs.copyFile(sourcePath, destPath);
+          
+          // Delete original file
+          await fs.unlink(sourcePath);
+          
+          migratedCount++;
+        } catch (error) {
+          errors.push(`Failed to migrate ${fileName}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+    }
+    
+    return { 
+      success: true, 
+      migratedCount,
+      errors: errors.length > 0 ? errors : undefined
+    };
+  } catch (error) {
+    console.error("Error migrating server configs:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error)
     };
   }
 });
@@ -240,6 +416,51 @@ ipcMain.handle("fs:readdir", async (_event, dirPath: string) => {
   }
 });
 
+// Recursive directory reader for config files
+ipcMain.handle("fs:readdirRecursive", async (_event, dirPath: string, options?: { extensions?: string[], maxDepth?: number }) => {
+  const extensions = options?.extensions || ['.toml', '.json', '.json5', '.yml', '.yaml', '.cfg', '.properties'];
+  const maxDepth = options?.maxDepth || 5;
+  
+  const files: { path: string, relativePath: string }[] = [];
+  
+  async function scan(currentPath: string, depth: number, relativePath: string = '') {
+    if (depth > maxDepth) return;
+    
+    try {
+      const entries = await fs.readdir(currentPath, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const fullPath = path.join(currentPath, entry.name);
+        const relPath = relativePath ? `${relativePath}/${entry.name}` : entry.name;
+        
+        if (entry.isDirectory()) {
+          // Recursively scan subdirectories
+          await scan(fullPath, depth + 1, relPath);
+        } else if (entry.isFile()) {
+          // Check if file has one of the target extensions
+          const hasValidExtension = extensions.some(ext => entry.name.toLowerCase().endsWith(ext));
+          if (hasValidExtension) {
+            files.push({
+              path: fullPath,
+              relativePath: relPath
+            });
+          }
+        }
+      }
+    } catch (error) {
+      // Skip directories we can't read
+      console.error(`Error scanning ${currentPath}:`, error);
+    }
+  }
+  
+  try {
+    await scan(dirPath, 0);
+    return { success: true, files };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), files: [] };
+  }
+});
+
 ipcMain.handle("fs:stat", async (_event, filePath: string) => {
   try {
     const stats = await fs.stat(filePath);
@@ -252,6 +473,15 @@ ipcMain.handle("fs:stat", async (_event, filePath: string) => {
         mtime: stats.mtime.getTime(), // Convert Date to timestamp
       },
     };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("fs:deleteFile", async (_event, filePath: string) => {
+  try {
+    await fs.unlink(filePath);
+    return { success: true };
   } catch (error) {
     return { success: false, error: (error instanceof Error ? error.message : String(error)) };
   }
@@ -286,6 +516,8 @@ ipcMain.handle("instance:detect", async (_event, instancePath: string) => {
         : undefined,
       modsFolder: String(instance.modsFolder || ""),
       configFolder: String(instance.configFolder || ""),
+      defaultConfigsFolder: String(instance.defaultConfigsFolder || ""),
+      serverConfigFolder: String(instance.serverConfigFolder || ""),
       totalMods: Number(instance.totalMods || 0),
       lastAccessed: Number(instance.lastAccessed || Date.now()),
     };
@@ -668,6 +900,16 @@ ipcMain.handle("discord:clear-mod", async () => {
 ipcMain.handle("discord:clear-instance", async () => {
   try {
     discordRPC.clearInstance();
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// External Links
+ipcMain.handle("shell:openExternal", async (_event, url: string) => {
+  try {
+    await shell.openExternal(url);
     return { success: true };
   } catch (error) {
     return { success: false, error: (error instanceof Error ? error.message : String(error)) };

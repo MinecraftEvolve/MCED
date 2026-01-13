@@ -1,13 +1,15 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useAppStore } from "@/store";
 import { useSettingsStore } from "@/store/settingsStore";
 import { ModSearch } from "./ModSearch";
 import { ModListItem } from "./ModListItem";
 import { ModInfo } from "../../shared/types/mod.types";
+import { FolderSync } from "lucide-react";
 
 export function ModList() {
-  const { mods, searchQuery, selectedMod, setSelectedMod } = useAppStore();
+  const { mods, searchQuery, selectedMod, setSelectedMod, currentInstance, reloadMods } = useAppStore();
   const { settings } = useSettingsStore();
+  const [isMigrating, setIsMigrating] = useState(false);
 
   const handleModSelect = (mod: ModInfo) => {
     setSelectedMod(mod);
@@ -15,6 +17,25 @@ export function ModList() {
     // Update Discord RPC with selected mod
     if (settings.discordRpcEnabled) {
       window.api.discordSetMod(mod.name, mods.length);
+    }
+  };
+
+  const handleMigrateAll = async () => {
+    if (!currentInstance) return;
+    
+    setIsMigrating(true);
+    try {
+      const result = await window.api.migrateAllServerConfigs(currentInstance.path);
+      if (result.success) {
+        // Reload mods to reflect changes without leaving the page
+        await reloadMods();
+      } else {
+        console.error('Migration failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Migration error:', error);
+    } finally {
+      setIsMigrating(false);
     }
   };
 
@@ -69,8 +90,19 @@ export function ModList() {
         )}
       </div>
 
-      <div className="p-3 border-t border-border text-xs text-muted-foreground">
-        {filteredMods.length} of {mods.length} mods
+      <div className="p-3 border-t border-border space-y-2">
+        <button
+          onClick={handleMigrateAll}
+          disabled={isMigrating || !currentInstance}
+          className="w-full px-3 py-2 text-xs font-medium rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          title="Move all server configs to defaultconfigs folder"
+        >
+          <FolderSync size={14} />
+          {isMigrating ? 'Migrating...' : 'Migrate All Server Configs'}
+        </button>
+        <div className="text-xs text-muted-foreground text-center">
+          {filteredMods.length} of {mods.length} mods
+        </div>
       </div>
     </>
   );

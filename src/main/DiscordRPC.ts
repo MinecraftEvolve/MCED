@@ -48,6 +48,19 @@ class DiscordRPCService {
         }
       });
 
+      // Handle connection errors silently
+      const transport = (this.client as any).transport;
+      if (transport) {
+        transport.on('error', (error: Error) => {
+          if (error.message.includes('connection closed')) {
+            // Discord connection closed, will retry automatically
+            this.connected = false;
+          } else {
+            console.error('[Discord RPC] Transport error:', error);
+          }
+        });
+      }
+
       await this.client.login({ clientId: CLIENT_ID });
     } catch (error) {
       this.connected = false;
@@ -124,8 +137,11 @@ class DiscordRPCService {
       }
 
       await this.client.setActivity(presence);
-    } catch (error) {
-      console.error('[Discord RPC] Failed to set default presence:', error);
+    } catch (error: any) {
+      // Silently handle connection closed errors
+      if (!error?.message?.includes('connection closed')) {
+        console.error('[Discord RPC] Failed to set default presence:', error);
+      }
     }
   }
 
@@ -183,8 +199,11 @@ class DiscordRPCService {
       }
 
       await this.client.setActivity(presence);
-    } catch (error) {
-      console.error('[Discord RPC] Failed to update presence:', error);
+    } catch (error: any) {
+      // Silently handle connection closed errors
+      if (!error?.message?.includes('connection closed')) {
+        console.error('[Discord RPC] Failed to update presence:', error);
+      }
     }
   }
 
@@ -193,8 +212,11 @@ class DiscordRPCService {
 
     try {
       await this.client.clearActivity();
-    } catch (error) {
-      console.error('[Discord RPC] Failed to clear presence:', error);
+    } catch (error: any) {
+      // Silently handle connection closed errors
+      if (!error?.message?.includes('connection closed')) {
+        console.error('[Discord RPC] Failed to clear presence:', error);
+      }
     }
   }
 

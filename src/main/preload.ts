@@ -11,10 +11,15 @@ contextBridge.exposeInMainWorld("api", {
   writeFile: (path: string, content: string) =>
     ipcRenderer.invoke("fs:writeFile", path, content),
   readdir: (path: string) => ipcRenderer.invoke("fs:readdir", path),
+  readdirRecursive: (path: string, options?: { extensions?: string[], maxDepth?: number }) => 
+    ipcRenderer.invoke("fs:readdirRecursive", path, options),
   stat: (path: string) => ipcRenderer.invoke("fs:stat", path),
+  deleteFile: (path: string) => ipcRenderer.invoke("fs:deleteFile", path),
 
   // Instance
   detectInstance: (path: string) => ipcRenderer.invoke("instance:detect", path),
+  getServerConfigFolder: (instancePath: string) => ipcRenderer.invoke("get-server-config-folder", instancePath),
+  migrateAllServerConfigs: (instancePath: string) => ipcRenderer.invoke("instance:migrateAllServerConfigs", instancePath),
 
   // Mods
   scanMods: (modsFolder: string) => ipcRenderer.invoke("mods:scan", modsFolder),
@@ -73,6 +78,9 @@ contextBridge.exposeInMainWorld("api", {
   onUpdateDownloaded: (callback: () => void) => {
     ipcRenderer.on('update-downloaded', () => callback());
   },
+
+  // External Links
+  openExternal: (url: string) => ipcRenderer.invoke("shell:openExternal", url),
 });
 
 declare global {
@@ -91,12 +99,20 @@ declare global {
       readdir: (
         path: string,
       ) => Promise<{ success: boolean; files?: string[]; error?: string }>;
+      readdirRecursive: (
+        path: string,
+        options?: { extensions?: string[], maxDepth?: number }
+      ) => Promise<{ success: boolean; files?: { path: string, relativePath: string }[]; error?: string }>;
       stat: (
         path: string,
       ) => Promise<{ success: boolean; stats?: any; error?: string }>;
+      deleteFile: (
+        path: string,
+      ) => Promise<{ success: boolean; error?: string }>;
       detectInstance: (
         path: string,
       ) => Promise<{ success: boolean; instance?: any; error?: string }>;
+      getServerConfigFolder: (instancePath: string) => Promise<string | null>;
       scanMods: (
         modsFolder: string,
       ) => Promise<{ success: boolean; mods?: any[]; error?: string }>;
@@ -147,6 +163,9 @@ declare global {
       onUpdateAvailable: (callback: (updateInfo: UpdateInfo) => void) => void;
       onUpdateDownloadProgress: (callback: (progress: { percent: number; transferred: number; total: number }) => void) => void;
       onUpdateDownloaded: (callback: () => void) => void;
+      openExternal: (url: string) => Promise<{ success: boolean; error?: string }>;
+      getAppVersion: () => Promise<string>;
+      migrateAllServerConfigs: (instancePath: string) => Promise<{ success: boolean; migratedCount?: number; errors?: string[]; error?: string }>;
     };
   }
 }

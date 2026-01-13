@@ -15,11 +15,11 @@ class UpdateCheckerService {
 
     // Set up event handlers
     autoUpdater.on('checking-for-update', () => {
-      console.log('[Auto Updater] Checking for updates...');
+
     });
 
     autoUpdater.on('update-available', (info) => {
-      console.log('[Auto Updater] Update available:', info.version);
+
       this.notifyRenderer({
         available: true,
         currentVersion: app.getVersion(),
@@ -31,7 +31,7 @@ class UpdateCheckerService {
     });
 
     autoUpdater.on('update-not-available', () => {
-      console.log('[Auto Updater] No updates available');
+
     });
 
     autoUpdater.on('error', (err) => {
@@ -39,7 +39,7 @@ class UpdateCheckerService {
     });
 
     autoUpdater.on('download-progress', (progress) => {
-      console.log(`[Auto Updater] Download progress: ${progress.percent.toFixed(2)}%`);
+
       if (this.mainWindow) {
         this.mainWindow.webContents.send('update-download-progress', {
           percent: progress.percent,
@@ -50,7 +50,7 @@ class UpdateCheckerService {
     });
 
     autoUpdater.on('update-downloaded', () => {
-      console.log('[Auto Updater] Update downloaded');
+
       this.updateDownloaded = true;
       if (this.mainWindow) {
         this.mainWindow.webContents.send('update-downloaded');
@@ -90,7 +90,7 @@ class UpdateCheckerService {
 
   async downloadUpdate(): Promise<void> {
     try {
-      console.log('[Auto Updater] Starting download...');
+
       await autoUpdater.downloadUpdate();
     } catch (error) {
       console.error('[Auto Updater] Failed to download update:', error);

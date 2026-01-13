@@ -154,6 +154,23 @@ function App() {
     }
   }, [settings]);
 
+  // Global handler for external links
+  useEffect(() => {
+    const handleLinkClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'A') {
+        const href = target.getAttribute('href');
+        if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+          e.preventDefault();
+          window.api.openExternal(href);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleLinkClick);
+    return () => document.removeEventListener('click', handleLinkClick);
+  }, []);
+
   const handleOpenInstance = async (providedPath?: string) => {
     try {
       setError(null);
@@ -240,6 +257,48 @@ function App() {
       window.api.discordClearInstance();
     }
   };
+
+  const handleReloadMods = async () => {
+    if (!currentInstance) return;
+    
+    try {
+      setIsLoading(true);
+
+      const modsResult = await window.api.scanMods(currentInstance.modsFolder);
+      const modsList = modsResult.success && Array.isArray(modsResult.mods) ? modsResult.mods : [];
+
+      const modsWithConfigs = await associateConfigsWithMods(
+        modsList,
+        currentInstance.path,
+        currentInstance.defaultConfigsFolder,
+        currentInstance.serverConfigFolder,
+      );
+      
+      setMods(modsWithConfigs);
+      setIsLoading(false);
+
+      // Update Discord RPC
+      if (settings.discordRpcEnabled && modsList.length > 0) {
+        window.api.discordSetMod(`${modsList.length} mods installed`, modsList.length);
+      }
+
+      // Enrich with icons
+      if (modsWithConfigs.length > 0) {
+        const preferCurseForge = settings.curseForgeApiKey ? true : false;
+        enrichModsWithIcons(modsWithConfigs, preferCurseForge)
+          .then((modsWithIcons) => setMods(modsWithIcons))
+          .catch(() => {});
+      }
+    } catch (error) {
+      console.error('Failed to reload mods:', error);
+      setIsLoading(false);
+    }
+  };
+
+  // Set reloadMods in store
+  useEffect(() => {
+    useAppStore.setState({ reloadMods: handleReloadMods });
+  }, [currentInstance, settings.discordRpcEnabled, settings.curseForgeApiKey]);
 
   useKeyboardShortcuts({
     onOpenSettings: () => setShowSettings(true),

@@ -12,6 +12,10 @@ import {
   Info,
   Trash2,
   FileCode,
+  Database,
+  ArrowRightLeft,
+  Download,
+  FileText,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import "./Settings.css";
@@ -21,6 +25,8 @@ export function Settings({ onClose }: { onClose: () => void }) {
     useSettingsStore();
   const [localSettings, setLocalSettings] = useState(settings);
   const [appVersion, setAppVersion] = useState("...");
+  const [latestVersion, setLatestVersion] = useState<string | null>(null);
+  const [changelog, setChangelog] = useState<string>("");
 
   // Apply settings only when explicitly changed
   const applySettings = useCallback(
@@ -65,6 +71,9 @@ export function Settings({ onClose }: { onClose: () => void }) {
     window.api.getAppVersion().then((version) => {
       setAppVersion(version);
     });
+
+    // Fetch latest changelog
+    fetchChangelog();
   }, []);
 
   const handleClearCache = useCallback(async () => {
@@ -87,6 +96,75 @@ export function Settings({ onClose }: { onClose: () => void }) {
     }
   }, [clearRecentInstances, localSettings, applySettings]);
 
+  const handleCheckForUpdates = useCallback(async () => {
+    try {
+      const response = await fetch('https://api.github.com/repos/MinecraftEvolve/MCED/releases/latest');
+      const data = await response.json();
+      const latest = data.tag_name.replace('v', '');
+      setLatestVersion(latest);
+      
+      if (latest !== appVersion) {
+        if (confirm(`New version ${latest} is available!\n\nCurrent version: ${appVersion}\n\nWould you like to download it?`)) {
+          await window.api.openExternal(data.html_url);
+        }
+      } else {
+        alert('You are already using the latest version!');
+      }
+    } catch (error) {
+      alert('Failed to check for updates: ' + error);
+    }
+  }, [appVersion]);
+
+  const fetchChangelog = useCallback(async () => {
+    try {
+      const response = await fetch('https://raw.githubusercontent.com/MinecraftEvolve/MCED/main/CHANGELOG.md');
+      const text = await response.text();
+      setChangelog(text);
+    } catch (error) {
+      // Silently fail - not critical
+    }
+  }, []);
+
+  const handleViewChangelog = useCallback(async () => {
+    if (changelog) {
+      // Create a temp HTML file and open it in the default browser
+      const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <title>MCED Changelog</title>
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      padding: 20px;
+      line-height: 1.6;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1, h2, h3 { color: #fff; }
+    code { background: #2a2a2a; padding: 2px 6px; border-radius: 3px; }
+    pre { background: #2a2a2a; padding: 10px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <pre>${changelog}</pre>
+</body>
+</html>`;
+      
+      try {
+        const tempPath = await window.api.getAppPath('temp');
+        if (tempPath.success && tempPath.path) {
+          const changelogPath = `${tempPath.path}/mced-changelog.html`;
+          await window.api.writeFile(changelogPath, htmlContent);
+          await window.api.openExternal(`file:///${changelogPath.replace(/\\/g, '/')}`);
+        }
+      } catch (error) {
+        alert('Failed to open changelog: ' + error);
+      }
+    }
+  }, [changelog]);
+
   const handleResetSettings = useCallback(() => {
     if (confirm("Are you sure you want to reset all settings to default?")) {
       resetSettings();
@@ -95,6 +173,90 @@ export function Settings({ onClose }: { onClose: () => void }) {
       applySettings(newSettings);
     }
   }, [resetSettings, applySettings]);
+
+  const handleBulkMigrateServerConfigs = useCallback(async () => {
+    if (!confirm("This will migrate all server configs to defaultconfigs folder for all loaded mods. Continue?")) {
+      return;
+    }
+    
+    try {
+      // Get the current instance path
+      const currentInstancePath = (window as any).currentInstancePath;
+      if (!currentInstancePath) {
+        alert("No instance is currently loaded.");
+        return;
+      }
+
+      const serverConfigFolder = await window.api.joinPath(
+        currentInstancePath,
+        "saves"
+      );
+      const defaultConfigsFolder = await window.api.joinPath(
+        currentInstancePath,
+        "defaultconfigs"
+      );
+
+      // Check if folders exist
+      const serverExists = await window.api.fileExists(serverConfigFolder);
+      if (!serverExists) {
+        alert("No server configs folder found.");
+        return;
+      }
+
+      // Get all world folders
+      const worldFolders = await window.api.listDirectory(serverConfigFolder);
+      if (!worldFolders || worldFolders.length === 0) {
+        alert("No world folders found in saves directory.");
+        return;
+      }
+
+      let migratedCount = 0;
+      let errors: string[] = [];
+
+      // Process each world folder
+      for (const worldFolder of worldFolders) {
+        const worldPath = await window.api.joinPath(serverConfigFolder, worldFolder);
+        const serverConfigPath = await window.api.joinPath(worldPath, "serverconfig");
+        
+        const serverConfigExists = await window.api.fileExists(serverConfigPath);
+        if (!serverConfigExists) {
+          continue;
+        }
+
+        // Get all config files in serverconfig
+        const configFiles = await window.api.listDirectory(serverConfigPath);
+        if (!configFiles || configFiles.length === 0) {
+          continue;
+        }
+
+        // Migrate each config file
+        for (const configFile of configFiles) {
+          try {
+            const sourcePath = await window.api.joinPath(serverConfigPath, configFile);
+            const destPath = await window.api.joinPath(defaultConfigsFolder, configFile);
+
+            // Read source file
+            const content = await window.api.readFile(sourcePath);
+            
+            // Write to defaultconfigs (will overwrite if exists)
+            await window.api.writeFile(destPath, content);
+            
+            migratedCount++;
+          } catch (error) {
+            errors.push(`Failed to migrate ${configFile}: ${error}`);
+          }
+        }
+      }
+
+      if (errors.length > 0) {
+        alert(`Migration completed with errors:\n- ${migratedCount} files migrated\n- ${errors.length} errors\n\nErrors:\n${errors.join("\n")}`);
+      } else {
+        alert(`Successfully migrated ${migratedCount} server config files to defaultconfigs!`);
+      }
+    } catch (error) {
+      alert(`Failed to migrate configs: ${error}`);
+    }
+  }, []);
 
   const handleRemoveRecentInstance = useCallback(
     (index: number) => {
@@ -344,6 +506,27 @@ export function Settings({ onClose }: { onClose: () => void }) {
             </div>
           </section>
 
+          {/* Config Management Section */}
+          <section className="settings-section">
+            <h3>
+              <Database className="icon" size={20} />
+              Config Management
+            </h3>
+
+            <div className="setting-row">
+              <div className="setting-info">
+                <span className="setting-label">Bulk Migrate Server Configs</span>
+                <span className="setting-description">
+                  Migrate all server configs from world saves to defaultconfigs folder
+                </span>
+              </div>
+              <button onClick={handleBulkMigrateServerConfigs} className="btn-secondary">
+                <ArrowRightLeft className="icon" size={16} />
+                Migrate All
+              </button>
+            </div>
+          </section>
+
           {/* API Integration Section - Advanced */}
           {localSettings.showAdvancedOptions && (
             <section className="settings-section">
@@ -570,25 +753,38 @@ export function Settings({ onClose }: { onClose: () => void }) {
             <div className="about-box">
               <strong>Minecraft Config Editor Desktop</strong>
               <span className="version-badge">v{appVersion}</span>
+              {latestVersion && latestVersion !== appVersion && (
+                <span className="update-badge">Update Available: v{latestVersion}</span>
+              )}
               <p>
                 A modern desktop application for editing Minecraft modpack
                 configurations.
               </p>
               <div className="about-links">
-                <a
-                  href="https://github.com/MinecraftEvolve/MCED"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => window.api.openExternal("https://github.com/MinecraftEvolve/MCED")}
+                  className="link-button"
                 >
                   GitHub
-                </a>
-                <a
-                  href="https://github.com/MinecraftEvolve/MCED/issues"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                </button>
+                <button
+                  onClick={() => window.api.openExternal("https://github.com/MinecraftEvolve/MCED/issues")}
+                  className="link-button"
                 >
                   Report Issue
-                </a>
+                </button>
+              </div>
+              <div className="setting-row" style={{ marginTop: '12px' }}>
+                <button onClick={handleCheckForUpdates} className="btn-secondary">
+                  <Download className="icon" size={16} />
+                  Check for Updates
+                </button>
+                {changelog && (
+                  <button onClick={handleViewChangelog} className="btn-secondary">
+                    <FileText className="icon" size={16} />
+                    View Changelog
+                  </button>
+                )}
               </div>
             </div>
           </section>

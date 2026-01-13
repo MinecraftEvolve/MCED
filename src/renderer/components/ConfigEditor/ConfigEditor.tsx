@@ -40,7 +40,7 @@ export function ConfigEditor({ modId, instancePath, viewMode, onViewModeChange }
     }
   };
 
-  const { setHasUnsavedChanges, mods, selectedMod } = useAppStore();
+  const { setHasUnsavedChanges, mods, selectedMod, currentInstance } = useAppStore();
   const { recordEdit } = useStatsStore();
   const { logChange } = useChangelogStore();
   const { trackChange } = useChangeTrackingStore();
@@ -132,9 +132,14 @@ export function ConfigEditor({ modId, instancePath, viewMode, onViewModeChange }
   const loadConfigs = async () => {
     setIsLoading(true);
     try {
+      const defaultConfigsFolder = `${instancePath}/defaultconfigs`;
+      const serverConfigFolder = await window.api.getServerConfigFolder(instancePath);
+      
       const loadedConfigs = await configService.loadModConfigs(
         instancePath,
         modId,
+        defaultConfigsFolder,
+        serverConfigFolder,
       );
       setConfigs(loadedConfigs);
       setOriginalConfigs(JSON.parse(JSON.stringify(loadedConfigs)));
@@ -304,27 +309,18 @@ export function ConfigEditor({ modId, instancePath, viewMode, onViewModeChange }
       {/* Config Tabs with View Mode Toggle */}
       <div className="flex items-center border-b border-border bg-muted/30">
         {configs.length > 1 && (
-          <div className="flex flex-1">
+          <div className="flex flex-1 overflow-x-auto scrollbar-thin">
             {configs.map((config) => (
               <button
                 key={config.path}
                 onClick={() => handleConfigSelect(config)}
-                className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
+                className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
                   selectedConfig?.path === config.path
                     ? "bg-background text-foreground border-b-2 border-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 <span>{config.name}</span>
-                {config.configType && config.configType !== 'client' && (
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                    config.configType === 'server' 
-                      ? 'bg-blue-500/20 text-blue-400' 
-                      : 'bg-purple-500/20 text-purple-400'
-                  }`}>
-                    {config.configType === 'server' ? 'SERVER' : 'DEFAULT'}
-                  </span>
-                )}
               </button>
             ))}
           </div>
@@ -332,7 +328,7 @@ export function ConfigEditor({ modId, instancePath, viewMode, onViewModeChange }
         
         {/* View Mode Toggle - Right Side */}
         {selectedConfig && (
-          <div className="flex items-center gap-1 px-4 py-1.5">
+          <div className="flex items-center gap-2 px-4 py-1.5 flex-shrink-0">
             <button
               onClick={() => handleViewModeToggle('visual')}
               className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
@@ -407,7 +403,7 @@ export function ConfigEditor({ modId, instancePath, viewMode, onViewModeChange }
                 // Auto-save on Ctrl+S
                 editor.addCommand(2097, async () => {
                   if (!selectedConfig) {
-                    console.error('No config selected');
+
                     return;
                   }
                   setIsSaving(true);

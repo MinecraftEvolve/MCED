@@ -58,6 +58,9 @@ interface AppState {
   setHasUnsavedChanges: (hasChanges: boolean) => void;
   saveConfigs: () => Promise<void>;
   discardChanges: () => void;
+
+  // Reload mods
+  reloadMods: () => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -154,5 +157,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   discardChanges: () => {
     // Discard will be handled by StatusBar component
     // This is just a placeholder for the hook
+  },
+
+  reloadMods: async () => {
+    // This will be set by App.tsx
   },
 }));

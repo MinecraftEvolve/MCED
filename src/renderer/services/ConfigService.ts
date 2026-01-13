@@ -1,5 +1,6 @@
 import { ConfigFile, ConfigSetting, UserComment } from "../types/config.types";
 import { TomlParser } from "./parsers/TomlParser";
+import JSON5 from 'json5';
 
 export class ConfigService {
   private tomlParser = new TomlParser();
@@ -15,106 +16,107 @@ export class ConfigService {
     try {
       const configs: ConfigFile[] = [];
       
-      // Load from main config folder
-      const mainResult = await window.api.readdir(`${instancePath}/config`);
+      // Track which config files we've already loaded to avoid duplicates
+      const loadedConfigNames = new Set<string>();
+      
+      // Load from main config folder (recursively)
+      const mainResult = await window.api.readdirRecursive(`${instancePath}/config`, {
+        extensions: ['.toml', '.json', '.json5', '.yml', '.yaml', '.cfg', '.properties', '.txt']
+      });
+      
       if (mainResult.success && mainResult.files) {
-        const configFiles = mainResult.files.filter((file: string) => {
-          if (
-            !(
-              file.endsWith(".toml") ||
-              file.endsWith(".json") ||
-              file.endsWith(".json5")
-            )
-          ) {
-            return false;
-          }
-          return this.matchesModId(file, modId);
-        });
-
-        for (const fileName of configFiles) {
-          const filePath = `${instancePath}/config/${fileName}`;
-          const fileResult = await window.api.readFile(filePath);
-
-          if (fileResult.success && fileResult.content) {
-            const config = await this.parseConfig(
-              fileName,
-              fileResult.content,
-              filePath,
-              "client",
-            );
-            if (config) {
-              configs.push(config);
-            }
-          }
-        }
-      }
-
-      // Load from defaultconfigs folder (server defaults)
-      if (defaultConfigsFolder) {
-        const defaultResult = await window.api.readdir(defaultConfigsFolder);
-        if (defaultResult.success && defaultResult.files) {
-          const configFiles = defaultResult.files.filter((file: string) => {
-            if (
-              !(
-                file.endsWith(".toml") ||
-                file.endsWith(".json") ||
-                file.endsWith(".json5")
-              )
-            ) {
-              return false;
-            }
-            return this.matchesModId(file, modId);
-          });
-
-          for (const fileName of configFiles) {
-            const filePath = `${defaultConfigsFolder}/${fileName}`;
-            const fileResult = await window.api.readFile(filePath);
+        for (const file of mainResult.files) {
+          const fileName = file.relativePath.split('/').pop() || file.relativePath;
+          
+          // Pass full relative path for better mod matching (supports subfolders)
+          if (this.matchesModId(file.relativePath, modId)) {
+            const fileResult = await window.api.readFile(file.path);
 
             if (fileResult.success && fileResult.content) {
               const config = await this.parseConfig(
-                fileName,
+                file.relativePath, // Use relative path to show folder structure
                 fileResult.content,
-                filePath,
-                "server-default",
+                file.path,
+                "client",
               );
               if (config) {
                 configs.push(config);
+                loadedConfigNames.add(fileName.toLowerCase());
               }
             }
           }
         }
       }
 
-      // Load from serverconfig folder (world-specific server configs)
-      if (serverConfigFolder) {
-        const serverResult = await window.api.readdir(serverConfigFolder);
-        if (serverResult.success && serverResult.files) {
-          const configFiles = serverResult.files.filter((file: string) => {
-            if (
-              !(
-                file.endsWith(".toml") ||
-                file.endsWith(".json") ||
-                file.endsWith(".json5")
-              )
-            ) {
-              return false;
+      // Load from defaultconfigs folder FIRST (highest priority) - recursively
+      if (defaultConfigsFolder) {
+        const defaultResult = await window.api.readdirRecursive(defaultConfigsFolder, {
+          extensions: ['.toml', '.json', '.json5', '.yml', '.yaml', '.cfg', '.properties']
+        });
+        
+        if (defaultResult.success && defaultResult.files) {
+          for (const file of defaultResult.files) {
+            const fileName = file.relativePath.split('/').pop() || file.relativePath;
+            
+            // Skip if already loaded from main config folder
+            if (loadedConfigNames.has(fileName.toLowerCase())) {
+              continue;
             }
-            return this.matchesModId(file, modId);
-          });
+            
+            // Pass full relative path for better mod matching (supports subfolders)
+            if (this.matchesModId(file.relativePath, modId)) {
+              const fileResult = await window.api.readFile(file.path);
 
-          for (const fileName of configFiles) {
-            const filePath = `${serverConfigFolder}/${fileName}`;
-            const fileResult = await window.api.readFile(filePath);
+              if (fileResult.success && fileResult.content) {
+                const config = await this.parseConfig(
+                  file.relativePath,
+                  fileResult.content,
+                  file.path,
+                  "server-default",
+                );
+                if (config) {
+                  configs.push(config);
+                  loadedConfigNames.add(fileName.toLowerCase());
+                }
+              }
+            }
+          }
+        }
+      }
 
-            if (fileResult.success && fileResult.content) {
-              const config = await this.parseConfig(
-                fileName,
-                fileResult.content,
-                filePath,
-                "server",
-              );
-              if (config) {
-                configs.push(config);
+      // Load from serverconfig folder (world-specific server configs) - recursively
+      // Only load if NOT already loaded from defaultconfigs or main config
+      if (serverConfigFolder) {
+        const serverResult = await window.api.readdirRecursive(serverConfigFolder, {
+          extensions: ['.toml', '.json', '.json5', '.yml', '.yaml', '.cfg', '.properties']
+        });
+        
+        if (serverResult.success && serverResult.files) {
+          for (const file of serverResult.files) {
+            const fileName = file.relativePath.split('/').pop() || file.relativePath;
+            
+            // Skip if already loaded
+            if (loadedConfigNames.has(fileName.toLowerCase())) {
+              continue;
+            }
+
+            // Pass full relative path for better mod matching (supports subfolders)
+            const matches = this.matchesModId(file.relativePath, modId);
+            
+            if (matches) {
+              const fileResult = await window.api.readFile(file.path);
+
+              if (fileResult.success && fileResult.content) {
+                const config = await this.parseConfig(
+                  file.relativePath,
+                  fileResult.content,
+                  file.path,
+                  "server",
+                );
+                if (config) {
+                  configs.push(config);
+                  loadedConfigNames.add(fileName.toLowerCase());
+                }
               }
             }
           }
@@ -129,25 +131,80 @@ export class ConfigService {
 
   /**
    * Match config file to mod ID with smart matching
+   * @param filePathOrName - Can be just filename or full relative path like "kubejs/myconfig.json"
+   * @param modId - The mod ID to match against
    */
-  private matchesModId(fileName: string, modId: string): boolean {
+  // Map for mods that share a parent config folder
+  // Key: parent folder name, Value: mapping of subfolder -> modId
+  private sharedFolderMappings: Record<string, Record<string, string>> = {
+    'xaero': {
+      'minimap': 'xaerominimap',
+      'world-map': 'xaeroworldmap',
+      'lib': 'xaerominimap' // Shared library, assign to minimap
+    }
+  };
+
+  private matchesModId(filePathOrName: string, modId: string): boolean {
+    const modIdLower = modId.toLowerCase();
+    
+    // Extract both filename and folder path
+    const parts = filePathOrName.split('/');
+    const fileName = parts[parts.length - 1];
+    
+    // Remove file extension for matching
     const fileNameLower = fileName
       .toLowerCase()
-      .replace(/\.(toml|json|json5)$/, "");
-    const modIdLower = modId.toLowerCase();
+      .replace(/\.(toml|json|json5|properties|cfg|yaml|yml|txt)$/, "");
 
-    // Normalize both by replacing underscores and hyphens
+    // Normalize by replacing underscores and hyphens
     const normalizedFileName = fileNameLower.replace(/[-_]/g, "");
     const normalizedModId = modIdLower.replace(/[-_]/g, "");
+    
+    // Check for shared folder mappings (e.g., xaero/minimap -> xaerominimap)
+    // This needs to be checked before general folder matching
+    for (let i = 0; i < parts.length - 1; i++) {
+      const parentFolder = parts[i].toLowerCase();
+      if (this.sharedFolderMappings[parentFolder]) {
+        // We found a parent folder with shared mappings
+        // Check if the next part matches a mapped subfolder
+        if (i + 1 < parts.length) {
+          const subfolder = parts[i + 1].toLowerCase();
+          const mappedModId = this.sharedFolderMappings[parentFolder][subfolder];
+          if (mappedModId && mappedModId.toLowerCase() === modIdLower) {
+            return true;
+          }
+        }
+      }
+    }
+    
+    // Check all folder parts in the path (for nested structures like "betterdeserttemples/forge-1_20/config.toml")
+    const folderParts = parts.slice(0, -1); // All parts except the filename
+    
+    // 1. Check if any folder in the path matches the mod ID
+    for (const folder of folderParts) {
+      const normalizedFolder = folder.toLowerCase().replace(/[-_]/g, "");
+      
+      // Exact folder match
+      if (normalizedFolder === normalizedModId) {
+        return true;
+      }
+      
+      // Folder might contain version info like "forge-1_20", "fabric-1.19", etc.
+      // Strip version patterns: forge-X_XX, fabric-X.XX, etc.
+      const folderWithoutVersion = normalizedFolder.replace(/(?:forge|fabric|neoforge|quilt)?[-_]?\d+[-_.]\d+(?:[-_.]\d+)?/g, '');
+      if (folderWithoutVersion && folderWithoutVersion === normalizedModId) {
+        return true;
+      }
+    }
 
-    // Exact match (e.g., "create.toml" matches "create")
+    // 2. Exact filename match (e.g., "create.toml" matches "create")
     if (normalizedFileName === normalizedModId) {
       return true;
     }
 
-    // Check if starts with mod ID followed by a variant suffix
+    // 3. Check if starts with mod ID followed by a variant suffix
     // e.g., "create-common.toml" or "create_common.toml" matches "create"
-    const validSuffixes = ["client", "common", "server", "forge", "fabric"];
+    const validSuffixes = ["client", "common", "server", "forge", "fabric", "default"];
 
     for (const suffix of validSuffixes) {
       const normalizedSuffix = suffix.replace(/[-_]/g, "");
@@ -184,6 +241,7 @@ export class ConfigService {
         configType,
       };
     } catch (error) {
+      console.error(`[ConfigService] Error parsing ${fileName}:`, error);
       return null;
     }
   }
@@ -199,6 +257,7 @@ export class ConfigService {
     if (lower.endsWith(".yml") || lower.endsWith(".yaml")) return "yaml";
     if (lower.endsWith(".cfg")) return "cfg";
     if (lower.endsWith(".properties")) return "properties";
+    if (lower.endsWith(".txt")) return "properties"; // Treat .txt files as properties format
     return "toml";
   }
 
@@ -213,8 +272,16 @@ export class ConfigService {
 
     if (format === "toml") {
       return this.parseToml(content);
-    } else if (format === "json" || format === "json5") {
+    } else if (format === "json5") {
+      return this.parseJson5(content);
+    } else if (format === "json") {
       return this.parseJson(content);
+    } else if (format === "properties") {
+      return this.parseProperties(content);
+    } else if (format === "cfg") {
+      return this.parseCfg(content);
+    } else if (format === "yaml") {
+      return this.parseYaml(content);
     }
 
     return settings;
@@ -374,12 +441,32 @@ export class ConfigService {
   /**
    * Parse JSON config
    */
+  private parseJson5(content: string): ConfigSetting[] {
+    const settings: ConfigSetting[] = [];
+
+    try {
+      // First, extract comments from the JSON5 content
+      const commentMap = this.extractJsonComments(content);
+      
+      const obj = JSON5.parse(content);
+      this.extractSettings(obj, settings, "", commentMap);
+    } catch (error) {
+      console.error('[ConfigService] Failed to parse JSON5:', error);
+      // Silently fail
+    }
+
+    return settings;
+  }
+
   private parseJson(content: string): ConfigSetting[] {
     const settings: ConfigSetting[] = [];
 
     try {
+      // Try to extract comments from plain JSON (though standard JSON doesn't support them)
+      const commentMap = this.extractJsonComments(content);
+      
       const obj = JSON.parse(content);
-      this.extractSettings(obj, settings, "");
+      this.extractSettings(obj, settings, "", commentMap);
     } catch (error) {
       // Silently fail
     }
@@ -388,9 +475,72 @@ export class ConfigService {
   }
 
   /**
+   * Extract comments from JSON/JSON5 content
+   */
+  private extractJsonComments(content: string): Map<string, string> {
+    const commentMap = new Map<string, string>();
+    const lines = content.split('\n');
+    let lastComment = '';
+    let currentPath: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      // Single-line comment
+      if (line.startsWith('//')) {
+        const comment = line.substring(2).trim();
+        lastComment = lastComment ? `${lastComment} ${comment}` : comment;
+        continue;
+      }
+
+      // Multi-line comment start
+      if (line.includes('/*')) {
+        let commentText = line.substring(line.indexOf('/*') + 2);
+        
+        // Check if comment ends on same line
+        if (commentText.includes('*/')) {
+          const endIndex = commentText.indexOf('*/');
+          lastComment = commentText.substring(0, endIndex).trim();
+          continue;
+        }
+        
+        // Multi-line comment - collect until */
+        let commentLines = [commentText];
+        for (let j = i + 1; j < lines.length; j++) {
+          i = j;
+          const nextLine = lines[j];
+          if (nextLine.includes('*/')) {
+            commentLines.push(nextLine.substring(0, nextLine.indexOf('*/')).trim());
+            break;
+          }
+          commentLines.push(nextLine.trim());
+        }
+        lastComment = commentLines.join(' ').replace(/\*/g, '').trim();
+        continue;
+      }
+
+      // Property line - associate comment with this property
+      if (line.includes(':') && !line.startsWith('{') && !line.startsWith('[')) {
+        const colonIndex = line.indexOf(':');
+        let propertyName = line.substring(0, colonIndex).trim();
+        
+        // Remove quotes from property name
+        propertyName = propertyName.replace(/["']/g, '');
+        
+        if (lastComment && propertyName) {
+          commentMap.set(propertyName, lastComment);
+        }
+        lastComment = '';
+      }
+    }
+
+    return commentMap;
+  }
+
+  /**
    * Recursively extract settings from object
    */
-  private extractSettings(obj: any, settings: ConfigSetting[], path: string) {
+  private extractSettings(obj: any, settings: ConfigSetting[], path: string, commentMap?: Map<string, string>) {
     for (const [key, value] of Object.entries(obj)) {
       const fullKey = path ? `${path}.${key}` : key;
 
@@ -400,10 +550,11 @@ export class ConfigService {
         !Array.isArray(value)
       ) {
         // Nested object - recurse
-        this.extractSettings(value, settings, fullKey);
+        this.extractSettings(value, settings, fullKey, commentMap);
       } else {
-        // Leaf value - create setting
-        settings.push(this.createSetting(fullKey, value, "", ""));
+        // Leaf value - create setting with comment if available
+        const comment = commentMap?.get(key) || "";
+        settings.push(this.createSetting(fullKey, value, comment, path));
       }
     }
   }
@@ -630,6 +781,238 @@ export class ConfigService {
   }
 
   /**
+   * Parse .properties file (Java properties format)
+   */
+  private parseProperties(content: string): ConfigSetting[] {
+    const settings: ConfigSetting[] = [];
+    const lines = content.split('\n');
+    let currentComments: string[] = [];
+    let currentSection = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      // Section marker (e.g., ##[zoom] or ##[gui])
+      if (line.startsWith('##[') && line.endsWith(']')) {
+        currentSection = line.substring(3, line.length - 1);
+        currentComments = [];
+        continue;
+      }
+
+      // Comment line
+      if (line.startsWith('#') || line.startsWith('!')) {
+        const comment = line.substring(1).trim();
+        // Don't add empty comments
+        if (comment) {
+          currentComments.push(comment);
+        }
+        continue;
+      }
+
+      // Property line
+      if (line.includes('=') || line.includes(':')) {
+        const separator = line.includes('=') ? '=' : ':';
+        const parts = line.split(separator);
+        
+        if (parts.length >= 2) {
+          let keyPart = parts[0].trim();
+          let valuePart = parts.slice(1).join(separator).trim();
+          
+          // Handle type prefixes (e.g., B:, F:, I:, S:, D:)
+          // B = Boolean, F = Float, I = Integer, S = String, D = Double
+          let explicitType: ConfigSetting["type"] | null = null;
+          const typeMatch = keyPart.match(/^([BIFSD]):(.*)/);
+          if (typeMatch) {
+            const typePrefix = typeMatch[1];
+            keyPart = typeMatch[2];
+            
+            // Map type prefix to our type system
+            switch (typePrefix) {
+              case 'B':
+                explicitType = 'boolean';
+                break;
+              case 'I':
+                explicitType = 'integer';
+                break;
+              case 'F':
+              case 'D':
+                explicitType = 'float';
+                break;
+              case 'S':
+                explicitType = 'string';
+                break;
+            }
+          }
+          
+          // Remove quotes and semicolons from value
+          valuePart = valuePart.replace(/[;'"]/g, '').trim();
+          
+          const comment = currentComments.join(' ');
+          const parsedValue = this.parseValue(valuePart);
+          
+          // Create setting with explicit type if available
+          const setting = this.createSetting(
+            keyPart,
+            parsedValue,
+            comment,
+            currentSection
+          );
+          
+          // Override type if we detected it from prefix
+          if (explicitType) {
+            setting.type = explicitType;
+          }
+          
+          settings.push(setting);
+        }
+        
+        currentComments = [];
+      } else if (line !== '') {
+        // Reset comments on non-empty non-property lines
+        currentComments = [];
+      }
+    }
+
+    return settings;
+  }
+
+  /**
+   * Parse .cfg file (Forge config format - similar to properties)
+   */
+  private parseCfg(content: string): ConfigSetting[] {
+    const settings: ConfigSetting[] = [];
+    const lines = content.split('\n');
+    let currentSection = '';
+    let currentComments: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      // Section header
+      if (line.match(/^[A-Z_]+\s*{/)) {
+        currentSection = line.replace(/\s*{.*/, '').trim();
+        currentComments = [];
+        continue;
+      }
+
+      // End of section
+      if (line === '}') {
+        currentSection = '';
+        currentComments = [];
+        continue;
+      }
+
+      // Comment line
+      if (line.startsWith('#')) {
+        const comment = line.substring(1).trim();
+        currentComments.push(comment);
+        continue;
+      }
+
+      // Property line
+      if (line.includes('=')) {
+        const parts = line.split('=');
+        
+        if (parts.length >= 2) {
+          const keyPart = parts[0].trim();
+          const valuePart = parts.slice(1).join('=').trim();
+          
+          // Extract type and key (format: "I:settingName=value" or just "settingName=value")
+          let key = keyPart;
+          let value = valuePart;
+          
+          const typeMatch = keyPart.match(/^([IBSFD]):(.*)/);
+          if (typeMatch) {
+            key = typeMatch[2];
+          }
+          
+          const comment = currentComments.join(' ');
+          settings.push(this.createSetting(
+            currentSection ? `${currentSection}.${key}` : key,
+            this.parseValue(value),
+            comment,
+            currentSection
+          ));
+        }
+        
+        currentComments = [];
+      } else if (line !== '') {
+        // Reset comments on non-empty non-property lines
+        currentComments = [];
+      }
+    }
+
+    return settings;
+  }
+
+  /**
+   * Parse YAML file (basic implementation)
+   */
+  private parseYaml(content: string): ConfigSetting[] {
+    const settings: ConfigSetting[] = [];
+    const lines = content.split('\n');
+    let currentComments: string[] = [];
+    let currentPath: string[] = [];
+    let indentStack: number[] = [0];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      // Comment line
+      if (trimmed.startsWith('#')) {
+        const comment = trimmed.substring(1).trim();
+        currentComments.push(comment);
+        continue;
+      }
+
+      if (trimmed === '') {
+        continue;
+      }
+
+      // Calculate indentation
+      const indent = line.search(/\S/);
+      if (indent === -1) continue;
+
+      // Adjust path based on indentation
+      while (indentStack.length > 0 && indent <= indentStack[indentStack.length - 1] && currentPath.length > 0) {
+        indentStack.pop();
+        currentPath.pop();
+      }
+
+      // Key-value pair
+      if (trimmed.includes(':')) {
+        const colonIndex = trimmed.indexOf(':');
+        const key = trimmed.substring(0, colonIndex).trim();
+        const valueStr = trimmed.substring(colonIndex + 1).trim();
+
+        if (valueStr === '' || valueStr === '|' || valueStr === '>') {
+          // This is a section/object
+          currentPath.push(key);
+          indentStack.push(indent);
+        } else {
+          // This is a value
+          const fullKey = currentPath.length > 0 
+            ? `${currentPath.join('.')}.${key}` 
+            : key;
+          
+          const comment = currentComments.join(' ');
+          settings.push(this.createSetting(
+            fullKey,
+            this.parseValue(valueStr),
+            comment,
+            currentPath.join('.')
+          ));
+        }
+
+        currentComments = [];
+      }
+    }
+
+    return settings;
+  }
+
+  /**
    * Match configs to mod
    */
   matchConfigsToMod(configs: ConfigFile[], modId: string): ConfigFile[] {
@@ -646,6 +1029,99 @@ export class ConfigService {
 
       return false;
     });
+  }
+
+  /**
+   * Migrate server configs to default configs
+   * Copies all server config files from serverconfig folder to defaultconfigs folder
+   */
+  async migrateServerToDefaultConfigs(
+    serverConfigFolder: string,
+    defaultConfigsFolder: string,
+  ): Promise<{ success: boolean; message: string; movedCount: number }> {
+    try {
+      // Ensure defaultconfigs folder exists
+      const defaultFolderResult = await window.api.readdir(defaultConfigsFolder);
+      if (!defaultFolderResult.success) {
+        return {
+          success: false,
+          message: "Default configs folder does not exist",
+          movedCount: 0,
+        };
+      }
+
+      // Get all files from serverconfig folder
+      const serverResult = await window.api.readdir(serverConfigFolder);
+      if (!serverResult.success || !serverResult.files) {
+        return {
+          success: false,
+          message: "Could not read server config folder",
+          movedCount: 0,
+        };
+      }
+
+      // Filter for config files
+      const configFiles = serverResult.files.filter((file: string) =>
+        file.endsWith(".toml") ||
+        file.endsWith(".json") ||
+        file.endsWith(".json5")
+      );
+
+      let movedCount = 0;
+      const errors: string[] = [];
+
+      for (const fileName of configFiles) {
+        try {
+          // Read from serverconfig
+          const sourceFile = `${serverConfigFolder}/${fileName}`;
+          const readResult = await window.api.readFile(sourceFile);
+
+          if (!readResult.success || !readResult.content) {
+            errors.push(`Failed to read ${fileName}`);
+            continue;
+          }
+
+          // Write to defaultconfigs (will overwrite if exists)
+          const destFile = `${defaultConfigsFolder}/${fileName}`;
+          const writeResult = await window.api.writeFile(destFile, readResult.content);
+
+          if (!writeResult.success) {
+            errors.push(`Failed to write ${fileName} to defaultconfigs`);
+            continue;
+          }
+
+          // Delete from serverconfig after successful copy
+          const deleteResult = await window.api.deleteFile(sourceFile);
+          if (deleteResult.success) {
+            movedCount++;
+          } else {
+            errors.push(`Copied ${fileName} but failed to delete from serverconfig`);
+          }
+        } catch (error) {
+          errors.push(`Error processing ${fileName}: ${error}`);
+        }
+      }
+
+      if (errors.length > 0) {
+        return {
+          success: false,
+          message: `Moved ${movedCount} files with errors: ${errors.join(", ")}`,
+          movedCount,
+        };
+      }
+
+      return {
+        success: true,
+        message: `Successfully moved ${movedCount} config files to defaultconfigs`,
+        movedCount,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Migration failed: ${error}`,
+        movedCount: 0,
+      };
+    }
   }
 }
 

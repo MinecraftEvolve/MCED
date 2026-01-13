@@ -33,11 +33,39 @@ export class InstanceDetector {
       : (await this.folderExists(altDefaultConfigsFolder))
       ? altDefaultConfigsFolder
       : undefined;
-    const finalServerConfigFolder = (await this.folderExists(serverConfigFolder))
-      ? serverConfigFolder
-      : (await this.folderExists(altServerConfigFolder))
-      ? altServerConfigFolder
-      : undefined;
+    
+    // Try to find serverconfig in world saves folder first
+    let finalServerConfigFolder: string | undefined = undefined;
+    const savesFolder = path.join(instancePath, ".minecraft", "saves");
+    const altSavesFolder = path.join(instancePath, "saves");
+    const actualSavesFolder = (await this.folderExists(savesFolder))
+      ? savesFolder
+      : altSavesFolder;
+    
+    if (await this.folderExists(actualSavesFolder)) {
+      try {
+        const worlds = await fs.readdir(actualSavesFolder);
+        // Find the first world with a serverconfig folder
+        for (const world of worlds) {
+          const worldServerConfigFolder = path.join(actualSavesFolder, world, "serverconfig");
+          if (await this.folderExists(worldServerConfigFolder)) {
+            finalServerConfigFolder = worldServerConfigFolder;
+            break;
+          }
+        }
+      } catch (error) {
+        // Fallback to root serverconfig folders
+      }
+    }
+    
+    // Fallback to root-level serverconfig folders
+    if (!finalServerConfigFolder) {
+      finalServerConfigFolder = (await this.folderExists(serverConfigFolder))
+        ? serverConfigFolder
+        : (await this.folderExists(altServerConfigFolder))
+        ? altServerConfigFolder
+        : undefined;
+    }
 
     // Detect Minecraft version and loader
     const minecraftVersion = await this.detectMinecraftVersion(instancePath);

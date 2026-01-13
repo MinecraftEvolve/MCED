@@ -5,6 +5,38 @@ All notable changes to MCED will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-01-13
+
+### Added
+
+- **Recursive Config Scanning** - Now scans config folders recursively to find configs in subfolders
+- **Properties File Support** - Added support for `.properties` config files
+- **Text File Support** - Added support for `.txt` config files with improved type detection
+- **Bulk Server Config Migration** - New global button to migrate all server configs to default configs at once
+- **Priority System** - Default configs now take priority over server configs to avoid duplicates
+
+### Improved
+
+- Better config detection logic for determining which mods have configs
+- Fixed config list overflow issues - properly scrolls when there are many files
+- Enhanced text file parsing with better type detection for visual editor
+- Better handling of version-specific config folders (e.g., `forge-1_20`)
+- Improved handling of shared config folders (e.g., Xaero's mods)
+
+### Fixed
+
+- Fixed null value warnings in text inputs
+- Fixed Discord RPC connection error handling
+- Fixed navigation issue when migrating server configs
+- Fixed path argument type error in migration functionality
+- Removed debug console logs for cleaner output
+
+### UI/UX
+
+- Removed unnecessary config badges for cleaner interface
+- Better handling of mods with multiple config files
+- Improved visual editor for all config file types
+
 ## [1.0.9] - 2026-01-13
 
 ### Added

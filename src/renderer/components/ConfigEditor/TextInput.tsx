@@ -7,7 +7,8 @@ interface TextInputProps {
 }
 
 export function TextInput({ setting, onChange }: TextInputProps) {
-  const value = setting.value as string;
+  // Ensure we always have a string value, never null/undefined
+  const value = (setting.value ?? "") as string;
   const [inputValue, setInputValue] = useState(value);
 
   const handleBlur = () => {
