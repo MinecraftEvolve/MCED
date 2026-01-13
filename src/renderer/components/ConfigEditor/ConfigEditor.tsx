@@ -18,7 +18,7 @@ interface ConfigEditorProps {
   onViewModeChange?: (mode: 'visual' | 'raw') => void;
 }
 
-export function ConfigEditor({ modId, instancePath, viewMode = 'visual', onViewModeChange }: ConfigEditorProps) {
+export function ConfigEditor({ modId, instancePath, viewMode, onViewModeChange }: ConfigEditorProps) {
   const [configs, setConfigs] = useState<ConfigFile[]>([]);
   const [originalConfigs, setOriginalConfigs] = useState<ConfigFile[]>([]);
   const [selectedConfig, setSelectedConfig] = useState<ConfigFile | null>(null);
@@ -27,7 +27,7 @@ export function ConfigEditor({ modId, instancePath, viewMode = 'visual', onViewM
   const [internalViewMode, setInternalViewMode] = useState<'visual' | 'raw'>('visual');
   const [rawContent, setRawContent] = useState<string>('');
 
-  const currentViewMode = viewMode || internalViewMode;
+  const currentViewMode = viewMode ?? internalViewMode;
   
   const handleViewModeToggle = (mode: 'visual' | 'raw') => {
     if (onViewModeChange) {
