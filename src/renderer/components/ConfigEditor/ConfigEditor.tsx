@@ -396,8 +396,23 @@ export function ConfigEditor({ modId, instancePath, viewMode, onViewModeChange }
               }}
               onMount={(editor) => {
                 // Auto-save on Ctrl+S
-                editor.addCommand(2097, () => {
-                  saveRawContent();
+                editor.addCommand(2097, async () => {
+                  if (!selectedConfig) {
+                    console.error('No config selected');
+                    return;
+                  }
+                  setIsSaving(true);
+                  try {
+                    const result = await window.api.writeFile(selectedConfig.path, editor.getValue());
+                    if (result.success) {
+                      await loadConfigs();
+                      setHasUnsavedChanges(false);
+                    }
+                  } catch (error) {
+                    console.error('Failed to save raw content:', error);
+                  } finally {
+                    setIsSaving(false);
+                  }
                 });
               }}
             />
