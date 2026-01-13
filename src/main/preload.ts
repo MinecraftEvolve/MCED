@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import { UpdateInfo } from "../shared/types/api.types";
 
 contextBridge.exposeInMainWorld("electron", {
   openDirectory: () => ipcRenderer.invoke("dialog:openDirectory"),
@@ -48,6 +49,22 @@ contextBridge.exposeInMainWorld("api", {
 
   // Cache
   clearApiCache: () => ipcRenderer.invoke("clear-api-cache"),
+
+  // Discord RPC
+  discordSetEnabled: (enabled: boolean) =>
+    ipcRenderer.invoke("discord:set-enabled", enabled),
+  discordSetInstance: (instanceName: string) =>
+    ipcRenderer.invoke("discord:set-instance", instanceName),
+  discordSetMod: (modName: string, modCount: number, configFileName?: string) =>
+    ipcRenderer.invoke("discord:set-mod", modName, modCount, configFileName),
+  discordClearMod: () => ipcRenderer.invoke("discord:clear-mod"),
+  discordClearInstance: () => ipcRenderer.invoke("discord:clear-instance"),
+
+  // Update Checker
+  checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
+  onUpdateAvailable: (callback: (updateInfo: UpdateInfo) => void) => {
+    ipcRenderer.on('update-available', (_event, updateInfo: UpdateInfo) => callback(updateInfo));
+  },
 });
 
 declare global {
@@ -111,6 +128,13 @@ declare global {
         editorCommand?: string,
       ) => Promise<{ success: boolean; error?: string }>;
       clearApiCache: () => Promise<void>;
+      discordSetEnabled: (enabled: boolean) => Promise<{ success: boolean; error?: string }>;
+      discordSetInstance: (instanceName: string) => Promise<{ success: boolean; error?: string }>;
+      discordSetMod: (modName: string, modCount: number, configFileName?: string) => Promise<{ success: boolean; error?: string }>;
+      discordClearMod: () => Promise<{ success: boolean; error?: string }>;
+      discordClearInstance: () => Promise<{ success: boolean; error?: string }>;
+      checkForUpdates: () => Promise<{ success: boolean; updateInfo?: UpdateInfo; error?: string }>;
+      onUpdateAvailable: (callback: (updateInfo: UpdateInfo) => void) => void;
     };
   }
 }

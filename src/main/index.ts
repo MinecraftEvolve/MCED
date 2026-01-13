@@ -5,6 +5,8 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { JarScanner } from "./jar-scanner";
 import { InstanceDetector } from "./instance-detector";
+import { discordRPC } from "./DiscordRPC";
+import { updateChecker } from "./UpdateChecker";
 
 const execAsync = promisify(exec);
 
@@ -45,6 +47,7 @@ const createWindow = () => {
 
   mainWindow.on("closed", () => {
     mainWindow = null;
+    discordRPC.disconnect();
   });
 };
 
@@ -166,6 +169,14 @@ ipcMain.handle(
 
 app.whenReady().then(() => {
   createWindow();
+  discordRPC.initialize();
+  
+  // Start checking for updates
+  updateChecker.startAutoCheck((updateInfo) => {
+    if (updateInfo.available && mainWindow) {
+      mainWindow.webContents.send('update-available', updateInfo);
+    }
+  });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -175,6 +186,8 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
+  discordRPC.disconnect();
+  updateChecker.stopAutoCheck();
   if (process.platform !== "darwin") {
     app.quit();
   }
@@ -613,3 +626,59 @@ ipcMain.handle(
     }
   },
 );
+
+// Discord RPC Handlers
+ipcMain.handle("discord:set-enabled", async (_event, enabled: boolean) => {
+  try {
+    discordRPC.setEnabled(enabled);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("discord:set-instance", async (_event, instanceName: string) => {
+  try {
+    discordRPC.setInstanceName(instanceName);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("discord:set-mod", async (_event, modName: string, modCount: number, configFileName?: string) => {
+  try {
+    discordRPC.setModInfo(modName, modCount, configFileName);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("discord:clear-mod", async () => {
+  try {
+    discordRPC.clearModInfo();
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("discord:clear-instance", async () => {
+  try {
+    discordRPC.clearInstance();
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// Update Checker Handler
+ipcMain.handle("check-for-updates", async () => {
+  try {
+    const updateInfo = await updateChecker.checkForUpdates();
+    return { success: true, updateInfo };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});

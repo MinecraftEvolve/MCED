@@ -95,11 +95,29 @@ export class JsonParser {
       metadata.range = [parseFloat(rangeMatch[1]), parseFloat(rangeMatch[2])];
     }
 
-    // Allowed Values
-    const allowedMatch = comment.match(/Allowed Values?:\s*(.+?)(?:\.|$)/i);
-    if (allowedMatch) {
-      const values = allowedMatch[1].split(",").map((v) => v.trim());
-      metadata.allowedValues = values;
+    // Allowed Values / Enum - improved patterns
+    const allowedPatterns = [
+      /Allowed\s*Values?:\s*([A-Z_][A-Z0-9_,\s]+)/i,
+      /Valid\s*Options?:\s*([A-Z_][A-Z0-9_,\s]+)/i,
+      /Options?:\s*([A-Z_][A-Z0-9_,\s]+)/i,
+      /Enum:\s*([A-Z_][A-Z0-9_,\s]+)/i,
+      /Values?:\s*([A-Z_][A-Z0-9_,\s]+)/i,
+    ];
+
+    for (const pattern of allowedPatterns) {
+      const match = comment.match(pattern);
+      if (match) {
+        const valuesStr = match[1].trim();
+        const values = valuesStr
+          .split(/[,\s]+/)
+          .map((v) => v.trim())
+          .filter((v) => v && v.length > 0 && /^[A-Z][A-Z0-9_]*$/.test(v));
+        
+        if (values.length > 0) {
+          metadata.allowedValues = values;
+          break;
+        }
+      }
     }
 
     // Default

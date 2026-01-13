@@ -20,6 +20,12 @@ interface SearchResult {
   matches?: unknown[];
 }
 
+interface SearchFilters {
+  types: string[];
+  searchInValues: boolean;
+  modifiedOnly: boolean;
+}
+
 interface SmartSearchProps {
   onClose: () => void;
 }
@@ -28,9 +34,27 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [filters, setFilters] = useState<SearchFilters>({
+    types: [],
+    searchInValues: false,
+    modifiedOnly: false,
+  });
   const inputRef = useRef<HTMLInputElement>(null);
   const { mods } = useAppStore();
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('mced-recent-searches');
+    if (saved) {
+      try {
+        setRecentSearches(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to load recent searches:', e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     inputRef.current?.focus();

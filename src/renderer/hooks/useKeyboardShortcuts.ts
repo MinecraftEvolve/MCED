@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useAppStore } from "@/store";
+import { useHistoryStore } from "@/store/historyStore";
 
 export function useKeyboardShortcuts(callbacks?: {
   onOpenSettings?: () => void;
@@ -18,21 +19,56 @@ export function useKeyboardShortcuts(callbacks?: {
     currentInstance
   } = useAppStore();
 
+  const { undo, redo, canUndo, canRedo } = useHistoryStore();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+S - Save
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      // Ignore shortcuts when typing in inputs
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        // Allow Ctrl+S and Ctrl+Shift+S in inputs
+        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+          // Let these pass through
+        } else {
+          return;
+        }
+      }
+
+      // Ctrl+S - Save current config
+      if ((e.ctrlKey || e.metaKey) && e.key === "s" && !e.shiftKey) {
         e.preventDefault();
         if (hasUnsavedChanges) {
           saveConfigs();
         }
       }
 
-      // Ctrl+Z - Undo/Discard
+      // Ctrl+Shift+S - Save All (trigger save-all event)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "S") {
+        e.preventDefault();
+        const event = new CustomEvent("save-all-configs");
+        window.dispatchEvent(event);
+      }
+
+      // Ctrl+Z - Undo
       if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
         e.preventDefault();
-        if (hasUnsavedChanges) {
-          discardChanges();
+        if (canUndo) {
+          undo();
+        }
+      }
+
+      // Ctrl+Y or Ctrl+Shift+Z - Redo
+      if (
+        ((e.ctrlKey || e.metaKey) && e.key === "y") ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "z")
+      ) {
+        e.preventDefault();
+        if (canRedo) {
+          redo();
         }
       }
 
@@ -112,6 +148,10 @@ export function useKeyboardShortcuts(callbacks?: {
     mods,
     selectedMod,
     setSelectedMod,
-    currentInstance
+    currentInstance,
+    canUndo,
+    canRedo,
+    undo,
+    redo
   ]);
 }

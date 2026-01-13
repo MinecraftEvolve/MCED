@@ -197,7 +197,7 @@ export class ConfigService {
           type:
             meta.allowedValues && meta.allowedValues.length > 0
               ? "enum"
-              : this.inferType(value),
+              : this.inferType(value, meta),
           description: meta.description,
           section: path || undefined,
           range: meta.range,
@@ -207,6 +207,7 @@ export class ConfigService {
           enumValues: meta.allowedValues,
           unit: meta.unit,
         };
+        
         settings.push(setting);
       }
     }
@@ -270,11 +271,14 @@ export class ConfigService {
           : key.trim();
         const description = currentComments.join(" ");
 
+        // Create metadata object for type detection
+        const metadata = description ? { description } : undefined;
+
         const setting: ConfigSetting = {
           key: fullKey,
           value: this.parseValue(value),
           defaultValue: this.parseValue(value),
-          type: this.inferType(this.parseValue(value)),
+          type: this.inferType(this.parseValue(value), metadata),
           description: description || undefined,
           section: currentSection || undefined,
           userComments: userComments.length > 0 ? [...userComments] : undefined,
@@ -372,25 +376,66 @@ export class ConfigService {
     comment: string,
     section: string,
   ): ConfigSetting {
+    // Create metadata from comment for better type detection
+    const metadata = comment ? { description: comment } : undefined;
+    
     return {
       key,
       value,
       defaultValue: value,
-      type: this.inferType(value),
+      type: this.inferType(value, metadata),
       description: comment || undefined,
       section: section || undefined,
     };
   }
 
   /**
-   * Infer setting type from value
+   * Infer setting type from value and metadata
    */
-  private inferType(value: any): ConfigSetting["type"] {
+  private inferType(value: any, metadata?: any): ConfigSetting["type"] {
+    // Check for enum based on metadata
+    if (metadata?.allowedValues && Array.isArray(metadata.allowedValues) && metadata.allowedValues.length > 0) {
+      return "enum";
+    }
+
+    // Check value type
     if (typeof value === "boolean") return "boolean";
+    
     if (typeof value === "number") {
+      // Check for range if metadata exists
+      if (metadata?.range && Array.isArray(metadata.range)) {
+        return "range";
+      }
       return Number.isInteger(value) ? "integer" : "float";
     }
-    if (Array.isArray(value)) return "array";
+    
+    if (Array.isArray(value)) {
+      // Check if it's a list of specific values
+      if (value.length > 0) {
+        // All booleans?
+        if (value.every(v => typeof v === "boolean")) return "array";
+        // All numbers?
+        if (value.every(v => typeof v === "number")) return "array";
+        // All strings?
+        if (value.every(v => typeof v === "string")) return "array";
+      }
+      return "array";
+    }
+
+    // String could be enum if it matches common patterns
+    if (typeof value === "string") {
+      // Common enum patterns: UPPERCASE_WITH_UNDERSCORES
+      if (/^[A-Z][A-Z0-9_]*$/.test(value)) {
+        return "enum"; // Likely enum
+      }
+      // If metadata has description mentioning "Allowed Values" or similar
+      if (metadata?.description && 
+          (/allowed\s*values?/i.test(metadata.description) || 
+           /valid\s*options?/i.test(metadata.description))) {
+        return "enum";
+      }
+    }
+    
     return "string";
   }
 

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAppStore } from "./store";
 import { useSettingsStore } from "./store/settingsStore";
+import { useStatsStore } from "./store/statsStore";
+import { useChangelogStore } from "./store/changelogStore";
 import { Loader2, Settings as SettingsIcon, FolderOpen } from "lucide-react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
@@ -8,6 +10,9 @@ import { MainPanel } from "./components/MainPanel";
 import { StatusBar } from "./components/StatusBar";
 import { SmartSearch } from "./components/SmartSearch";
 import { Settings } from "./components/Settings";
+import { UpdateNotification } from "./components/UpdateNotification";
+import { StatsModal } from "./components/StatsModal";
+import { ChangelogViewer } from "./components/ChangelogViewer";
 import { smartSearchService } from "./services/SmartSearchService";
 import { configService } from "./services/ConfigService";
 import modrinthAPI from "./services/api/ModrinthAPI";
@@ -98,15 +103,26 @@ function App() {
     addRecentInstance,
   } = useAppStore();
   const { settings } = useSettingsStore();
+  const { startSession, endSession } = useStatsStore();
+  const { startSession: startChangelogSession } = useChangelogStore();
   const [error, setError] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
 
   useEffect(() => {
     if (settings.curseForgeApiKey) {
       curseForgeAPI.setApiKey(settings.curseForgeApiKey);
     }
   }, [settings.curseForgeApiKey]);
+
+  // Initialize Discord RPC when settings load
+  useEffect(() => {
+    if (settings.discordRpcEnabled !== undefined) {
+      window.api.discordSetEnabled(settings.discordRpcEnabled);
+    }
+  }, [settings.discordRpcEnabled]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -160,6 +176,17 @@ function App() {
       setCurrentInstance(instanceInfo);
       addRecentInstance(String(instanceInfo.path));
 
+      // Start tracking sessions
+      const sessionId = `session_${Date.now()}`;
+      startSession();
+      startChangelogSession(sessionId);
+
+      // Update Discord RPC with instance name and loading state
+      if (settings.discordRpcEnabled) {
+        window.api.discordSetInstance(instanceInfo.name || 'Minecraft Instance');
+        window.api.discordSetMod('Loading mods...', 0);
+      }
+
       const modsResult = await window.api.scanMods(instanceInfo.modsFolder);
 
       const modsList =
@@ -173,6 +200,11 @@ function App() {
       );
       setMods(modsWithConfigs);
       setIsLoading(false);
+
+      // Update Discord RPC - show total mod count (not just mods with configs)
+      if (settings.discordRpcEnabled && modsList.length > 0) {
+        window.api.discordSetMod(`${modsList.length} mods installed`, modsList.length);
+      }
 
       if (modsWithConfigs.length > 0) {
         const preferCurseForge = settings.curseForgeApiKey ? true : false;
@@ -190,9 +222,17 @@ function App() {
   };
 
   const handleCloseInstance = () => {
+    // End tracking sessions
+    endSession();
+    
     setCurrentInstance(null);
     setMods([]);
     setError(null);
+
+    // Clear Discord RPC
+    if (settings.discordRpcEnabled) {
+      window.api.discordClearInstance();
+    }
   };
 
   useKeyboardShortcuts({
@@ -334,6 +374,8 @@ function App() {
           onSearchClick={() => setShowSearch(true)}
           onOpenInstance={handleOpenInstance}
           onCloseInstance={handleCloseInstance}
+          onStatsClick={() => setShowStats(true)}
+          onChangelogClick={() => setShowChangelog(true)}
         />
         <div className="flex-1 flex overflow-hidden">
           <Sidebar />
@@ -345,6 +387,9 @@ function App() {
       </div>
 
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+      {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+      {showChangelog && <ChangelogViewer onClose={() => setShowChangelog(false)} />}
+      <UpdateNotification />
     </>
   );
 }

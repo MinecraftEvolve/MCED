@@ -3,10 +3,20 @@ import { useAppStore } from "@/store";
 import { useSettingsStore } from "@/store/settingsStore";
 import { ModSearch } from "./ModSearch";
 import { ModListItem } from "./ModListItem";
+import { ModInfo } from "../../shared/types/mod.types";
 
 export function ModList() {
   const { mods, searchQuery, selectedMod, setSelectedMod } = useAppStore();
   const { settings } = useSettingsStore();
+
+  const handleModSelect = (mod: ModInfo) => {
+    setSelectedMod(mod);
+    
+    // Update Discord RPC with selected mod
+    if (settings.discordRpcEnabled) {
+      window.api.discordSetMod(mod.name, mods.length);
+    }
+  };
 
   const filteredMods = useMemo(() => {
     let filtered = mods;
@@ -53,7 +63,7 @@ export function ModList() {
               key={mod.modId}
               mod={mod}
               isSelected={selectedMod?.modId === mod.modId}
-              onClick={() => setSelectedMod(mod)}
+              onClick={() => handleModSelect(mod)}
             />
           ))
         )}

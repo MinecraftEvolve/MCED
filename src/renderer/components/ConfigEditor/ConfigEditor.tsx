@@ -3,6 +3,10 @@ import { Settings, FileText, Code } from "lucide-react";
 import { ConfigFile, ConfigSetting } from "@/types/config.types";
 import { configService } from "@/services/ConfigService";
 import { useAppStore } from "@/store";
+import { useStatsStore } from "@/store/statsStore";
+import { useChangelogStore } from "@/store/changelogStore";
+import { useChangeTrackingStore } from "@/store/changeTrackingStore";
+import { useSettingsStore } from "@/store/settingsStore";
 import { SettingWrapper } from "./SettingWrapper";
 import "./ConfigEditor.css";
 
@@ -18,7 +22,21 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { setHasUnsavedChanges } = useAppStore();
+  const { setHasUnsavedChanges, mods, selectedMod } = useAppStore();
+  const { recordEdit } = useStatsStore();
+  const { logChange } = useChangelogStore();
+  const { trackChange } = useChangeTrackingStore();
+  const { settings } = useSettingsStore();
+
+  // Handler to update Discord RPC when config changes
+  const handleConfigSelect = (config: ConfigFile) => {
+    setSelectedConfig(config);
+    
+    // Update Discord RPC with config file name
+    if (settings.discordRpcEnabled && selectedMod) {
+      window.api.discordSetMod(selectedMod.name, mods.length, config.name);
+    }
+  };
 
   useEffect(() => {
     loadConfigs();
@@ -62,7 +80,13 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
       setConfigs(loadedConfigs);
       setOriginalConfigs(JSON.parse(JSON.stringify(loadedConfigs)));
       if (loadedConfigs.length > 0) {
-        setSelectedConfig(loadedConfigs[0]);
+        const firstConfig = loadedConfigs[0];
+        setSelectedConfig(firstConfig);
+        
+        // Update Discord RPC with first config file
+        if (settings.discordRpcEnabled && selectedMod) {
+          window.api.discordSetMod(selectedMod.name, mods.length, firstConfig.name);
+        }
       }
     } catch (error) {
       console.error("Failed to load configs:", error);
@@ -72,12 +96,25 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
   };
 
   const handleSettingChange = (settingKey: string, newValue: unknown) => {
-    if (!selectedConfig) return;
+    if (!selectedConfig || !selectedMod) return;
 
-    const oldValue = selectedConfig.settings.find((s) => s.key === settingKey)?.value;
+    const setting = selectedConfig.settings.find((s) => s.key === settingKey);
+    const oldValue = setting?.value;
 
-    const updatedSettings = selectedConfig.settings.map((setting) =>
-      setting.key === settingKey ? { ...setting, value: newValue } : setting,
+    // Track the change
+    if (oldValue !== undefined) {
+      const modName = selectedMod.name;
+      const configFile = selectedConfig.name;
+      const valueType = typeof newValue;
+
+      // Record in all tracking systems
+      trackChange(modId, settingKey, oldValue, newValue);
+      recordEdit(modId, modName, settingKey);
+      logChange(modId, modName, settingKey, configFile, oldValue, newValue, valueType);
+    }
+
+    const updatedSettings = selectedConfig.settings.map((s) =>
+      s.key === settingKey ? { ...s, value: newValue } : s,
     );
 
     const updatedConfig = {
@@ -210,7 +247,7 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
           {configs.map((config) => (
             <button
               key={config.path}
-              onClick={() => setSelectedConfig(config)}
+              onClick={() => handleConfigSelect(config)}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 selectedConfig?.path === config.path
                   ? "bg-background text-foreground border-b-2 border-primary"

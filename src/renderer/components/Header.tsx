@@ -8,18 +8,24 @@ import {
   FolderOpen,
   X,
   Database,
+  BarChart3,
+  History,
 } from "lucide-react";
 
 interface HeaderProps {
   onSearchClick: () => void;
   onOpenInstance?: () => void;
   onCloseInstance?: () => void;
+  onStatsClick?: () => void;
+  onChangelogClick?: () => void;
 }
 
 export function Header({
   onSearchClick,
   onOpenInstance,
   onCloseInstance,
+  onStatsClick,
+  onChangelogClick,
 }: HeaderProps) {
   const { currentInstance } = useAppStore();
   const [showSettings, setShowSettings] = useState(false);
@@ -109,6 +115,26 @@ export function Header({
           >
             <Database className="w-4 h-4 group-hover:scale-110 transition-transform" />
           </button>
+
+          {onStatsClick && (
+            <button
+              onClick={() => onStatsClick()}
+              className="px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-sm"
+              title="Statistics"
+            >
+              <BarChart3 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            </button>
+          )}
+
+          {onChangelogClick && (
+            <button
+              onClick={() => onChangelogClick()}
+              className="px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-sm"
+              title="Change History"
+            >
+              <History className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            </button>
+          )}
 
           {onOpenInstance && (
             <button

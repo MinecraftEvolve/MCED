@@ -46,6 +46,7 @@ export class SmartSearchService {
         { name: "setting.description", weight: 0.3 },
         { name: "modName", weight: 0.2 },
         { name: "setting.section", weight: 0.1 },
+        { name: "setting.value", weight: 0.25 }, // Add value searching
       ],
       threshold: 0.4,
       includeScore: true,

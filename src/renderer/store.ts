@@ -69,7 +69,25 @@ export const useAppStore = create<AppState>((set, get) => ({
   mods: [],
   setMods: (mods) => set({ mods }),
   selectedMod: null,
-  setSelectedMod: (mod) => set({ selectedMod: mod }),
+  setSelectedMod: (mod) => {
+    set({ selectedMod: mod });
+    
+    // Update Discord RPC when a mod is selected
+    if (mod) {
+      const totalMods = get().mods.length;
+      window.api?.discordSetMod?.(
+        `Configuring ${mod.name}`,
+        totalMods
+      );
+    } else {
+      // No mod selected, show total count
+      const totalMods = get().mods.length;
+      window.api?.discordSetMod?.(
+        `${totalMods} mods installed`,
+        totalMods
+      );
+    }
+  },
 
   // Configs
   configFiles: [],

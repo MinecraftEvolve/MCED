@@ -128,17 +128,34 @@ export class TomlParser {
       }
     }
 
-    // Extract allowed values
-    const allowedMatch = fullText.match(
-      /Allowed Values?:\s*([A-Z_,\s]+?)(?=\.|$)/i,
-    );
-    if (allowedMatch) {
-      const valuesStr = allowedMatch[1].trim();
-      // Split by comma or space
-      parsed.allowedValues = valuesStr
-        .split(/[,\s]+/)
-        .map((v) => v.trim())
-        .filter((v) => v && v.length > 0);
+    // Extract allowed values / enum values - improved patterns
+    const allowedPatterns = [
+      // Allowed Values: VALUE1, VALUE2, VALUE3
+      /Allowed\s*Values?:\s*([A-Z_][A-Z0-9_,\s]+)/i,
+      // Valid Options: VALUE1, VALUE2
+      /Valid\s*Options?:\s*([A-Z_][A-Z0-9_,\s]+)/i,
+      // Options: VALUE1, VALUE2
+      /Options?:\s*([A-Z_][A-Z0-9_,\s]+)/i,
+      // Enum: VALUE1, VALUE2
+      /Enum:\s*([A-Z_][A-Z0-9_,\s]+)/i,
+      // Values: VALUE1, VALUE2
+      /Values?:\s*([A-Z_][A-Z0-9_,\s]+)/i,
+    ];
+
+    for (const pattern of allowedPatterns) {
+      const match = fullText.match(pattern);
+      if (match) {
+        const valuesStr = match[1].trim();
+        // Split by comma and/or whitespace, filter valid enum names
+        parsed.allowedValues = valuesStr
+          .split(/[,\s]+/)
+          .map((v) => v.trim())
+          .filter((v) => v && v.length > 0 && /^[A-Z][A-Z0-9_]*$/.test(v));
+        
+        if (parsed.allowedValues.length > 0) {
+          break;
+        }
+      }
     }
 
     // Extract unit

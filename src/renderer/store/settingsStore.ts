@@ -26,6 +26,9 @@ export interface AppSettings {
 
   // Mod List
   modsWithoutConfigsAtEnd: boolean;
+
+  // Discord Rich Presence
+  discordRpcEnabled: boolean;
 }
 
 interface SettingsStore {
@@ -49,6 +52,7 @@ const defaultSettings: AppSettings = {
   recentInstances: [],
   maxRecentInstances: 10,
   modsWithoutConfigsAtEnd: true,
+  discordRpcEnabled: true,
 };
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -69,6 +73,11 @@ export const useSettingsStore = create<SettingsStore>()(
         // Apply compact mode
         if (updates.compactMode !== undefined) {
           document.body.classList.toggle("compact-mode", updates.compactMode);
+        }
+
+        // Apply Discord RPC enabled/disabled
+        if (updates.discordRpcEnabled !== undefined) {
+          window.api?.discordSetEnabled?.(updates.discordRpcEnabled);
         }
       },
 
@@ -117,6 +126,14 @@ export const useSettingsStore = create<SettingsStore>()(
             "compact-mode",
             state.settings.compactMode,
           );
+          
+          // Ensure discordRpcEnabled has a default value
+          if (state.settings.discordRpcEnabled === undefined) {
+            state.settings.discordRpcEnabled = true;
+          }
+          
+          // Initialize Discord RPC state
+          window.api?.discordSetEnabled?.(state.settings.discordRpcEnabled);
         }
       },
     },

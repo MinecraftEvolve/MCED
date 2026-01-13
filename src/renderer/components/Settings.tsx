@@ -406,6 +406,40 @@ export function Settings({ onClose }: { onClose: () => void }) {
             </section>
           )}
 
+          {/* Discord Rich Presence Section */}
+          <section className="settings-section">
+            <h3>
+              <Zap className="icon" size={20} />
+              Discord Integration
+            </h3>
+
+            <div className="setting-row">
+              <div className="setting-info">
+                <span className="setting-label">Discord Rich Presence</span>
+                <span className="setting-description">
+                  Show what you're editing in Discord
+                </span>
+              </div>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={localSettings.discordRpcEnabled}
+                  onChange={(e) => {
+                    const newSettings = {
+                      ...localSettings,
+                      discordRpcEnabled: e.target.checked,
+                    };
+                    setLocalSettings(newSettings);
+                    applySettings(newSettings);
+                    // Enable/disable Discord RPC immediately
+                    window.api.discordSetEnabled(e.target.checked);
+                  }}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </section>
+
           {/* Recent Instances Section - Advanced */}
           {localSettings.showAdvancedOptions && (
             <section className="settings-section">
@@ -481,8 +515,16 @@ export function Settings({ onClose }: { onClose: () => void }) {
                 <Kbd>Ctrl+S</Kbd>
               </div>
               <div className="shortcut-item">
-                <span>Discard changes</span>
+                <span>Save all</span>
+                <Kbd>Ctrl+Shift+S</Kbd>
+              </div>
+              <div className="shortcut-item">
+                <span>Undo</span>
                 <Kbd>Ctrl+Z</Kbd>
+              </div>
+              <div className="shortcut-item">
+                <span>Redo</span>
+                <Kbd>Ctrl+Y</Kbd>
               </div>
               <div className="shortcut-item">
                 <span>Search mods</span>

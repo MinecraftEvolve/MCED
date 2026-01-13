@@ -31,7 +31,7 @@ export function SettingWrapper({
         return <SliderInput setting={setting} onChange={onChange as (value: number) => void} />;
 
       case "enum":
-        if (setting.allowedValues && setting.allowedValues.length > 0) {
+        if ((setting.enumValues && setting.enumValues.length > 0) || (setting.options && setting.options.length > 0)) {
           return <DropdownInput setting={setting} onChange={onChange as (value: string) => void} />;
         }
         return <TextInput setting={setting} onChange={onChange as (value: string) => void} />;
