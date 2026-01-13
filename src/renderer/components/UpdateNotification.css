@@ -95,6 +95,42 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+.update-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 150px;
+}
+
+.update-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.update-progress-fill {
+  height: 100%;
+  background: white;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.update-progress-text {
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
+}
+
+.update-installing {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 :root.light .update-notification {
   background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
   box-shadow: 0 8px 32px rgba(147, 51, 234, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);

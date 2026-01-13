@@ -1,6 +1,6 @@
 {
   "name": "minecraft-config-editor-desktop",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Minecraft Config Editor (MCED) - A modern desktop application for editing Minecraft modpack configuration files",
   "main": "dist/main/index.js",
   "scripts": {
@@ -45,6 +45,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "discord-rpc": "^4.0.1",
+    "electron-updater": "^6.7.3",
     "framer-motion": "^10.18.0",
     "fuse.js": "^7.1.0",
     "js-yaml": "^4.1.0",
@@ -92,6 +93,11 @@
     "appId": "com.mced.app",
     "productName": "Minecraft Config Editor",
     "icon": "assets/icon.png",
+    "publish": {
+      "provider": "github",
+      "owner": "MinecraftEvolve",
+      "repo": "MCED"
+    },
     "directories": {
       "output": "release",
       "buildResources": "assets"
@@ -127,7 +133,8 @@
         }
       ],
       "publisherName": "MCED Team",
-      "verifyUpdateCodeSignature": false
+      "verifyUpdateCodeSignature": false,
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,

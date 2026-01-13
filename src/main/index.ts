@@ -171,12 +171,12 @@ app.whenReady().then(() => {
   createWindow();
   discordRPC.initialize();
   
-  // Start checking for updates
-  updateChecker.startAutoCheck((updateInfo) => {
-    if (updateInfo.available && mainWindow) {
-      mainWindow.webContents.send('update-available', updateInfo);
-    }
-  });
+  // Initialize auto-updater
+  if (mainWindow) {
+    updateChecker.initialize(mainWindow);
+    // Check for updates on startup
+    updateChecker.checkForUpdates();
+  }
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -187,7 +187,6 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
   discordRPC.disconnect();
-  updateChecker.stopAutoCheck();
   if (process.platform !== "darwin") {
     app.quit();
   }
@@ -678,6 +677,24 @@ ipcMain.handle("check-for-updates", async () => {
   try {
     const updateInfo = await updateChecker.checkForUpdates();
     return { success: true, updateInfo };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("download-update", async () => {
+  try {
+    await updateChecker.downloadUpdate();
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("install-update", async () => {
+  try {
+    updateChecker.quitAndInstall();
+    return { success: true };
   } catch (error) {
     return { success: false, error: (error instanceof Error ? error.message : String(error)) };
   }

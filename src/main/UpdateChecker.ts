@@ -1,69 +1,106 @@
-import { app } from 'electron';
-import axios from 'axios';
+import { app, BrowserWindow } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import { UpdateInfo } from '../shared/types/api.types';
 
-const GITHUB_REPO = 'MinecraftEvolve/MCED';
-const CHECK_INTERVAL = 1000 * 60 * 60; // Check every hour
-
-interface GitHubRelease {
-  tag_name: string;
-  name: string;
-  body: string;
-  html_url: string;
-  published_at: string;
-  prerelease: boolean;
-}
-
 class UpdateCheckerService {
-  private checkInterval: NodeJS.Timeout | null = null;
-  private lastCheck: Date | null = null;
-  private cachedUpdate: UpdateInfo | null = null;
+  private mainWindow: BrowserWindow | null = null;
+  private updateDownloaded = false;
+
+  initialize(window: BrowserWindow) {
+    this.mainWindow = window;
+
+    // Configure auto-updater
+    autoUpdater.autoDownload = false; // Don't auto-download, let user decide
+    autoUpdater.autoInstallOnAppQuit = true;
+
+    // Set up event handlers
+    autoUpdater.on('checking-for-update', () => {
+      console.log('[Auto Updater] Checking for updates...');
+    });
+
+    autoUpdater.on('update-available', (info) => {
+      console.log('[Auto Updater] Update available:', info.version);
+      this.notifyRenderer({
+        available: true,
+        currentVersion: app.getVersion(),
+        latestVersion: info.version,
+        releaseNotes: info.releaseNotes as string,
+        downloadUrl: `https://github.com/MinecraftEvolve/MCED/releases/tag/v${info.version}`,
+        publishedAt: info.releaseDate,
+      });
+    });
+
+    autoUpdater.on('update-not-available', () => {
+      console.log('[Auto Updater] No updates available');
+    });
+
+    autoUpdater.on('error', (err) => {
+      console.error('[Auto Updater] Error:', err);
+    });
+
+    autoUpdater.on('download-progress', (progress) => {
+      console.log(`[Auto Updater] Download progress: ${progress.percent.toFixed(2)}%`);
+      if (this.mainWindow) {
+        this.mainWindow.webContents.send('update-download-progress', {
+          percent: progress.percent,
+          transferred: progress.transferred,
+          total: progress.total,
+        });
+      }
+    });
+
+    autoUpdater.on('update-downloaded', () => {
+      console.log('[Auto Updater] Update downloaded');
+      this.updateDownloaded = true;
+      if (this.mainWindow) {
+        this.mainWindow.webContents.send('update-downloaded');
+      }
+    });
+  }
 
   async checkForUpdates(): Promise<UpdateInfo> {
-    const currentVersion = app.getVersion();
-    
-    // Return cached result if checked recently (within 10 minutes)
-    if (this.cachedUpdate && this.lastCheck) {
-      const timeSinceCheck = Date.now() - this.lastCheck.getTime();
-      if (timeSinceCheck < 10 * 60 * 1000) {
-        return this.cachedUpdate;
-      }
-    }
-
     try {
-      const response = await axios.get<GitHubRelease>(
-        `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
-        {
-          headers: {
-            'Accept': 'application/vnd.github.v3+json',
-          },
-          timeout: 10000,
-        }
-      );
+      const result = await autoUpdater.checkForUpdates();
+      
+      if (!result || !result.updateInfo) {
+        return {
+          available: false,
+          currentVersion: app.getVersion(),
+        };
+      }
 
-      const latestRelease = response.data;
-      const latestVersion = latestRelease.tag_name.replace(/^v/, '');
-      const isNewer = this.compareVersions(latestVersion, currentVersion) > 0;
+      const isNewer = this.compareVersions(result.updateInfo.version, app.getVersion()) > 0;
 
-      const updateInfo: UpdateInfo = {
-        available: isNewer && !latestRelease.prerelease,
-        currentVersion,
-        latestVersion,
-        releaseNotes: latestRelease.body,
-        downloadUrl: latestRelease.html_url,
-        publishedAt: latestRelease.published_at,
+      return {
+        available: isNewer,
+        currentVersion: app.getVersion(),
+        latestVersion: result.updateInfo.version,
+        releaseNotes: result.updateInfo.releaseNotes as string,
+        downloadUrl: `https://github.com/MinecraftEvolve/MCED/releases/tag/v${result.updateInfo.version}`,
+        publishedAt: result.updateInfo.releaseDate,
       };
-
-      this.cachedUpdate = updateInfo;
-      this.lastCheck = new Date();
-
-      return updateInfo;
     } catch (error) {
-      console.error('[Update Checker] Failed to check for updates:', error);
+      console.error('[Auto Updater] Failed to check for updates:', error);
       return {
         available: false,
-        currentVersion,
+        currentVersion: app.getVersion(),
       };
+    }
+  }
+
+  async downloadUpdate(): Promise<void> {
+    try {
+      console.log('[Auto Updater] Starting download...');
+      await autoUpdater.downloadUpdate();
+    } catch (error) {
+      console.error('[Auto Updater] Failed to download update:', error);
+      throw error;
+    }
+  }
+
+  quitAndInstall(): void {
+    if (this.updateDownloaded) {
+      autoUpdater.quitAndInstall(false, true);
     }
   }
 
@@ -82,20 +119,9 @@ class UpdateCheckerService {
     return 0;
   }
 
-  startAutoCheck(callback: (update: UpdateInfo) => void) {
-    // Check immediately on start
-    this.checkForUpdates().then(callback);
-
-    // Then check periodically
-    this.checkInterval = setInterval(() => {
-      this.checkForUpdates().then(callback);
-    }, CHECK_INTERVAL);
-  }
-
-  stopAutoCheck() {
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval);
-      this.checkInterval = null;
+  private notifyRenderer(updateInfo: UpdateInfo) {
+    if (this.mainWindow) {
+      this.mainWindow.webContents.send('update-available', updateInfo);
     }
   }
 }

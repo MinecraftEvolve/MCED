@@ -62,8 +62,16 @@ contextBridge.exposeInMainWorld("api", {
 
   // Update Checker
   checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
+  downloadUpdate: () => ipcRenderer.invoke("download-update"),
+  installUpdate: () => ipcRenderer.invoke("install-update"),
   onUpdateAvailable: (callback: (updateInfo: UpdateInfo) => void) => {
     ipcRenderer.on('update-available', (_event, updateInfo: UpdateInfo) => callback(updateInfo));
+  },
+  onUpdateDownloadProgress: (callback: (progress: { percent: number; transferred: number; total: number }) => void) => {
+    ipcRenderer.on('update-download-progress', (_event, progress) => callback(progress));
+  },
+  onUpdateDownloaded: (callback: () => void) => {
+    ipcRenderer.on('update-downloaded', () => callback());
   },
 });
 
@@ -134,7 +142,11 @@ declare global {
       discordClearMod: () => Promise<{ success: boolean; error?: string }>;
       discordClearInstance: () => Promise<{ success: boolean; error?: string }>;
       checkForUpdates: () => Promise<{ success: boolean; updateInfo?: UpdateInfo; error?: string }>;
+      downloadUpdate: () => Promise<{ success: boolean; error?: string }>;
+      installUpdate: () => Promise<{ success: boolean; error?: string }>;
       onUpdateAvailable: (callback: (updateInfo: UpdateInfo) => void) => void;
+      onUpdateDownloadProgress: (callback: (progress: { percent: number; transferred: number; total: number }) => void) => void;
+      onUpdateDownloaded: (callback: () => void) => void;
     };
   }
 }
