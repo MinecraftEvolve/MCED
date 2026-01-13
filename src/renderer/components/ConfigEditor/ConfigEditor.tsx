@@ -21,6 +21,8 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
   const [selectedConfig, setSelectedConfig] = useState<ConfigFile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual');
+  const [rawContent, setRawContent] = useState<string>('');
 
   const { setHasUnsavedChanges, mods, selectedMod } = useAppStore();
   const { recordEdit } = useStatsStore();
@@ -29,12 +31,58 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
   const { settings } = useSettingsStore();
 
   // Handler to update Discord RPC when config changes
-  const handleConfigSelect = (config: ConfigFile) => {
+  const handleConfigSelect = async (config: ConfigFile) => {
     setSelectedConfig(config);
+    
+    // Load raw content when switching configs
+    if (viewMode === 'raw') {
+      await loadRawContent(config.path);
+    }
     
     // Update Discord RPC with config file name
     if (settings.discordRpcEnabled && selectedMod) {
       window.api.discordSetMod(selectedMod.name, mods.length, config.name);
+    }
+  };
+
+  const loadRawContent = async (configPath: string) => {
+    try {
+      const result = await window.api.readFile(configPath);
+      if (result.success && result.content) {
+        setRawContent(result.content);
+      }
+    } catch (error) {
+      console.error('Failed to load raw content:', error);
+    }
+  };
+
+  const handleViewModeToggle = async (mode: 'visual' | 'raw') => {
+    setViewMode(mode);
+    if (mode === 'raw' && selectedConfig) {
+      await loadRawContent(selectedConfig.path);
+    }
+  };
+
+  const handleRawContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setRawContent(e.target.value);
+    setHasUnsavedChanges(true);
+  };
+
+  const saveRawContent = async () => {
+    if (!selectedConfig) return;
+
+    setIsSaving(true);
+    try {
+      const result = await window.api.writeFile(selectedConfig.path, rawContent);
+      if (result.success) {
+        // Reload configs to update the visual editor
+        await loadConfigs();
+        setHasUnsavedChanges(false);
+      }
+    } catch (error) {
+      console.error('Failed to save raw content:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -242,6 +290,7 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
 
   return (
     <div className="flex flex-col h-full bg-background">
+      {/* Config Tabs */}
       {configs.length > 1 && (
         <div className="flex border-b border-border bg-muted/30">
           {configs.map((config) => (
@@ -260,7 +309,45 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
         </div>
       )}
 
+      {/* View Mode Toggle */}
       {selectedConfig && (
+        <div className="flex items-center gap-2 px-6 py-3 border-b border-border bg-muted/20">
+          <button
+            onClick={() => handleViewModeToggle('visual')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              viewMode === 'visual'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            <Settings size={16} />
+            Visual Editor
+          </button>
+          <button
+            onClick={() => handleViewModeToggle('raw')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              viewMode === 'raw'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            <Code size={16} />
+            Raw Editor
+          </button>
+          {viewMode === 'raw' && (
+            <button
+              onClick={saveRawContent}
+              disabled={isSaving}
+              className="ml-auto px-4 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+            >
+              {isSaving ? 'Saving...' : 'Save'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Content Area */}
+      {selectedConfig && viewMode === 'visual' && (
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {Object.entries(groupedSettings).map(([category, settings]) => (
             <div key={category} className="space-y-4">
@@ -280,6 +367,18 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
               ))}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Raw Editor View */}
+      {selectedConfig && viewMode === 'raw' && (
+        <div className="flex-1 overflow-hidden p-6">
+          <textarea
+            value={rawContent}
+            onChange={handleRawContentChange}
+            className="w-full h-full p-4 bg-muted/50 text-foreground font-mono text-sm rounded-lg border border-border resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+            spellCheck={false}
+          />
         </div>
       )}
     </div>
