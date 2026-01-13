@@ -28,6 +28,7 @@ export function SettingWrapper({
       case "integer":
       case "float":
       case "number":
+      case "range":
         return <SliderInput setting={setting} onChange={onChange as (value: number) => void} />;
 
       case "enum":
