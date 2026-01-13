@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Settings, FileText, Code } from "lucide-react";
+import { Settings, FileText } from "lucide-react";
+import Editor from '@monaco-editor/react';
 import { ConfigFile, ConfigSetting } from "@/types/config.types";
 import { configService } from "@/services/ConfigService";
 import { useAppStore } from "@/store";
@@ -13,16 +14,31 @@ import "./ConfigEditor.css";
 interface ConfigEditorProps {
   modId: string;
   instancePath: string;
+  viewMode?: 'visual' | 'raw';
+  onViewModeChange?: (mode: 'visual' | 'raw') => void;
 }
 
-export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
+export function ConfigEditor({ modId, instancePath, viewMode = 'visual', onViewModeChange }: ConfigEditorProps) {
   const [configs, setConfigs] = useState<ConfigFile[]>([]);
   const [originalConfigs, setOriginalConfigs] = useState<ConfigFile[]>([]);
   const [selectedConfig, setSelectedConfig] = useState<ConfigFile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual');
+  const [internalViewMode, setInternalViewMode] = useState<'visual' | 'raw'>('visual');
   const [rawContent, setRawContent] = useState<string>('');
+
+  const currentViewMode = viewMode || internalViewMode;
+  
+  const handleViewModeToggle = (mode: 'visual' | 'raw') => {
+    if (onViewModeChange) {
+      onViewModeChange(mode);
+    } else {
+      setInternalViewMode(mode);
+    }
+    if (mode === 'raw' && selectedConfig) {
+      loadRawContent(selectedConfig.path);
+    }
+  };
 
   const { setHasUnsavedChanges, mods, selectedMod } = useAppStore();
   const { recordEdit } = useStatsStore();
@@ -34,8 +50,8 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
   const handleConfigSelect = async (config: ConfigFile) => {
     setSelectedConfig(config);
     
-    // Load raw content when switching configs
-    if (viewMode === 'raw') {
+    // Load raw content when switching configs in raw mode
+    if (currentViewMode === 'raw') {
       await loadRawContent(config.path);
     }
     
@@ -56,16 +72,11 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
     }
   };
 
-  const handleViewModeToggle = async (mode: 'visual' | 'raw') => {
-    setViewMode(mode);
-    if (mode === 'raw' && selectedConfig) {
-      await loadRawContent(selectedConfig.path);
+  const handleRawContentChange = (value: string | undefined) => {
+    if (value !== undefined) {
+      setRawContent(value);
+      setHasUnsavedChanges(true);
     }
-  };
-
-  const handleRawContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setRawContent(e.target.value);
-    setHasUnsavedChanges(true);
   };
 
   const saveRawContent = async () => {
@@ -290,64 +301,59 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Config Tabs */}
-      {configs.length > 1 && (
-        <div className="flex border-b border-border bg-muted/30">
-          {configs.map((config) => (
+      {/* Config Tabs with View Mode Toggle */}
+      <div className="flex items-center border-b border-border bg-muted/30">
+        {configs.length > 1 && (
+          <div className="flex flex-1">
+            {configs.map((config) => (
+              <button
+                key={config.path}
+                onClick={() => handleConfigSelect(config)}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  selectedConfig?.path === config.path
+                    ? "bg-background text-foreground border-b-2 border-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                {config.name}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {/* View Mode Toggle - Right Side */}
+        {selectedConfig && (
+          <div className="flex items-center gap-1 px-4 py-1.5">
             <button
-              key={config.path}
-              onClick={() => handleConfigSelect(config)}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                selectedConfig?.path === config.path
-                  ? "bg-background text-foreground border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              onClick={() => handleViewModeToggle('visual')}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                currentViewMode === 'visual'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
+              title="Visual Editor"
             >
-              {config.name}
+              <Settings size={14} className="inline mr-1" />
+              Visual
             </button>
-          ))}
-        </div>
-      )}
-
-      {/* View Mode Toggle */}
-      {selectedConfig && (
-        <div className="flex items-center gap-2 px-6 py-3 border-b border-border bg-muted/20">
-          <button
-            onClick={() => handleViewModeToggle('visual')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              viewMode === 'visual'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            <Settings size={16} />
-            Visual Editor
-          </button>
-          <button
-            onClick={() => handleViewModeToggle('raw')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              viewMode === 'raw'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            <Code size={16} />
-            Raw Editor
-          </button>
-          {viewMode === 'raw' && (
             <button
-              onClick={saveRawContent}
-              disabled={isSaving}
-              className="ml-auto px-4 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+              onClick={() => handleViewModeToggle('raw')}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                currentViewMode === 'raw'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+              title="Raw Editor (Monaco)"
             >
-              {isSaving ? 'Saving...' : 'Save'}
+              <FileText size={14} className="inline mr-1" />
+              Raw
             </button>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       {/* Content Area */}
-      {selectedConfig && viewMode === 'visual' && (
+      {selectedConfig && currentViewMode === 'visual' && (
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {Object.entries(groupedSettings).map(([category, settings]) => (
             <div key={category} className="space-y-4">
@@ -371,13 +377,28 @@ export function ConfigEditor({ modId, instancePath }: ConfigEditorProps) {
       )}
 
       {/* Raw Editor View */}
-      {selectedConfig && viewMode === 'raw' && (
-        <div className="flex-1 overflow-hidden p-6">
-          <textarea
+      {selectedConfig && currentViewMode === 'raw' && (
+        <div className="flex-1 overflow-hidden">
+          <Editor
+            height="100%"
+            defaultLanguage="properties"
             value={rawContent}
             onChange={handleRawContentChange}
-            className="w-full h-full p-4 bg-muted/50 text-foreground font-mono text-sm rounded-lg border border-border resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-            spellCheck={false}
+            theme="vs-dark"
+            options={{
+              minimap: { enabled: false },
+              fontSize: 14,
+              lineNumbers: 'on',
+              scrollBeyondLastLine: false,
+              wordWrap: 'on',
+              automaticLayout: true,
+            }}
+            onMount={(editor) => {
+              // Auto-save on Ctrl+S
+              editor.addCommand(2097, () => {
+                saveRawContent();
+              });
+            }}
           />
         </div>
       )}
