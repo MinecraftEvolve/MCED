@@ -5,6 +5,7 @@ export interface ConfigFile {
   content: string;
   rawContent?: string;
   settings: ConfigSetting[];
+  configType?: "client" | "server" | "server-default";
 }
 
 export type ConfigValue =

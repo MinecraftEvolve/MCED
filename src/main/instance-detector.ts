@@ -13,10 +13,14 @@ export class InstanceDetector {
     // Detect folders
     const modsFolder = path.join(instancePath, ".minecraft", "mods");
     const configFolder = path.join(instancePath, ".minecraft", "config");
+    const defaultConfigsFolder = path.join(instancePath, ".minecraft", "defaultconfigs");
+    const serverConfigFolder = path.join(instancePath, ".minecraft", "serverconfig");
 
     // Try alternate paths if .minecraft doesn't exist
     const altModsFolder = path.join(instancePath, "mods");
     const altConfigFolder = path.join(instancePath, "config");
+    const altDefaultConfigsFolder = path.join(instancePath, "defaultconfigs");
+    const altServerConfigFolder = path.join(instancePath, "serverconfig");
 
     const finalModsFolder = (await this.folderExists(modsFolder))
       ? modsFolder
@@ -24,6 +28,16 @@ export class InstanceDetector {
     const finalConfigFolder = (await this.folderExists(configFolder))
       ? configFolder
       : altConfigFolder;
+    const finalDefaultConfigsFolder = (await this.folderExists(defaultConfigsFolder))
+      ? defaultConfigsFolder
+      : (await this.folderExists(altDefaultConfigsFolder))
+      ? altDefaultConfigsFolder
+      : undefined;
+    const finalServerConfigFolder = (await this.folderExists(serverConfigFolder))
+      ? serverConfigFolder
+      : (await this.folderExists(altServerConfigFolder))
+      ? altServerConfigFolder
+      : undefined;
 
     // Detect Minecraft version and loader
     const minecraftVersion = await this.detectMinecraftVersion(instancePath);
@@ -47,6 +61,8 @@ export class InstanceDetector {
       modpack,
       modsFolder: finalModsFolder,
       configFolder: finalConfigFolder,
+      defaultConfigsFolder: finalDefaultConfigsFolder,
+      serverConfigFolder: finalServerConfigFolder,
       totalMods,
       lastAccessed: Date.now(),
     };

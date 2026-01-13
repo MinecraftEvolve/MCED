@@ -9,42 +9,114 @@ export class ConfigService {
   async loadModConfigs(
     instancePath: string,
     modId: string,
+    defaultConfigsFolder?: string,
+    serverConfigFolder?: string,
   ): Promise<ConfigFile[]> {
     try {
-      const result = await window.api.readdir(`${instancePath}/config`);
-      if (!result.success || !result.files) {
-        return [];
+      const configs: ConfigFile[] = [];
+      
+      // Load from main config folder
+      const mainResult = await window.api.readdir(`${instancePath}/config`);
+      if (mainResult.success && mainResult.files) {
+        const configFiles = mainResult.files.filter((file: string) => {
+          if (
+            !(
+              file.endsWith(".toml") ||
+              file.endsWith(".json") ||
+              file.endsWith(".json5")
+            )
+          ) {
+            return false;
+          }
+          return this.matchesModId(file, modId);
+        });
+
+        for (const fileName of configFiles) {
+          const filePath = `${instancePath}/config/${fileName}`;
+          const fileResult = await window.api.readFile(filePath);
+
+          if (fileResult.success && fileResult.content) {
+            const config = await this.parseConfig(
+              fileName,
+              fileResult.content,
+              filePath,
+              "client",
+            );
+            if (config) {
+              configs.push(config);
+            }
+          }
+        }
       }
 
-      // Find config files that match the mod
-      const configFiles = result.files.filter((file: string) => {
-        if (
-          !(
-            file.endsWith(".toml") ||
-            file.endsWith(".json") ||
-            file.endsWith(".json5")
-          )
-        ) {
-          return false;
+      // Load from defaultconfigs folder (server defaults)
+      if (defaultConfigsFolder) {
+        const defaultResult = await window.api.readdir(defaultConfigsFolder);
+        if (defaultResult.success && defaultResult.files) {
+          const configFiles = defaultResult.files.filter((file: string) => {
+            if (
+              !(
+                file.endsWith(".toml") ||
+                file.endsWith(".json") ||
+                file.endsWith(".json5")
+              )
+            ) {
+              return false;
+            }
+            return this.matchesModId(file, modId);
+          });
+
+          for (const fileName of configFiles) {
+            const filePath = `${defaultConfigsFolder}/${fileName}`;
+            const fileResult = await window.api.readFile(filePath);
+
+            if (fileResult.success && fileResult.content) {
+              const config = await this.parseConfig(
+                fileName,
+                fileResult.content,
+                filePath,
+                "server-default",
+              );
+              if (config) {
+                configs.push(config);
+              }
+            }
+          }
         }
+      }
 
-        return this.matchesModId(file, modId);
-      });
+      // Load from serverconfig folder (world-specific server configs)
+      if (serverConfigFolder) {
+        const serverResult = await window.api.readdir(serverConfigFolder);
+        if (serverResult.success && serverResult.files) {
+          const configFiles = serverResult.files.filter((file: string) => {
+            if (
+              !(
+                file.endsWith(".toml") ||
+                file.endsWith(".json") ||
+                file.endsWith(".json5")
+              )
+            ) {
+              return false;
+            }
+            return this.matchesModId(file, modId);
+          });
 
-      const configs: ConfigFile[] = [];
+          for (const fileName of configFiles) {
+            const filePath = `${serverConfigFolder}/${fileName}`;
+            const fileResult = await window.api.readFile(filePath);
 
-      for (const fileName of configFiles) {
-        const filePath = `${instancePath}/config/${fileName}`;
-        const fileResult = await window.api.readFile(filePath);
-
-        if (fileResult.success && fileResult.content) {
-          const config = await this.parseConfig(
-            fileName,
-            fileResult.content,
-            filePath,
-          );
-          if (config) {
-            configs.push(config);
+            if (fileResult.success && fileResult.content) {
+              const config = await this.parseConfig(
+                fileName,
+                fileResult.content,
+                filePath,
+                "server",
+              );
+              if (config) {
+                configs.push(config);
+              }
+            }
           }
         }
       }
@@ -95,6 +167,7 @@ export class ConfigService {
     fileName: string,
     content: string,
     filePath: string,
+    configType: "client" | "server" | "server-default" = "client",
   ): Promise<ConfigFile | null> {
     const format = this.detectFormat(fileName);
 
@@ -108,6 +181,7 @@ export class ConfigService {
         content, // ConfigContent type
         rawContent: content, // Store raw string content
         settings,
+        configType,
       };
     } catch (error) {
       return null;

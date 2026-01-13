@@ -6,6 +6,8 @@ export interface MinecraftInstance {
   modpack?: ModpackInfo;
   modsFolder: string;
   configFolder: string;
+  defaultConfigsFolder?: string;
+  serverConfigFolder?: string;
   totalMods: number;
   lastAccessed?: number; // Timestamp in milliseconds
 }

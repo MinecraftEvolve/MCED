@@ -309,13 +309,22 @@ export function ConfigEditor({ modId, instancePath, viewMode, onViewModeChange }
               <button
                 key={config.path}
                 onClick={() => handleConfigSelect(config)}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
                   selectedConfig?.path === config.path
                     ? "bg-background text-foreground border-b-2 border-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
-                {config.name}
+                <span>{config.name}</span>
+                {config.configType && config.configType !== 'client' && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                    config.configType === 'server' 
+                      ? 'bg-blue-500/20 text-blue-400' 
+                      : 'bg-purple-500/20 text-purple-400'
+                  }`}>
+                    {config.configType === 'server' ? 'SERVER' : 'DEFAULT'}
+                  </span>
+                )}
               </button>
             ))}
           </div>

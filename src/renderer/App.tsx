@@ -23,6 +23,8 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 async function associateConfigsWithMods(
   mods: ModInfo[],
   instancePath: string,
+  defaultConfigsFolder?: string,
+  serverConfigFolder?: string,
 ): Promise<ModInfo[]> {
   try {
     const modsWithConfigs = await Promise.all(
@@ -31,6 +33,8 @@ async function associateConfigsWithMods(
           const configFiles = await configService.loadModConfigs(
             instancePath,
             mod.modId,
+            defaultConfigsFolder,
+            serverConfigFolder,
           );
           return { ...mod, configFiles };
         } catch (error) {
@@ -197,6 +201,8 @@ function App() {
       const modsWithConfigs = await associateConfigsWithMods(
         modsList,
         instanceInfo.path,
+        instanceInfo.defaultConfigsFolder,
+        instanceInfo.serverConfigFolder,
       );
       setMods(modsWithConfigs);
       setIsLoading(false);

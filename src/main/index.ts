@@ -95,6 +95,8 @@ ipcMain.handle("detect-instance", async (_event, instancePath) => {
           : undefined,
         modsFolder: String(instance.modsFolder || ""),
         configFolder: String(instance.configFolder || ""),
+        defaultConfigsFolder: instance.defaultConfigsFolder ? String(instance.defaultConfigsFolder) : undefined,
+        serverConfigFolder: instance.serverConfigFolder ? String(instance.serverConfigFolder) : undefined,
         totalMods: Number(instance.totalMods || 0),
         lastAccessed: Number(instance.lastAccessed || Date.now()),
       },
