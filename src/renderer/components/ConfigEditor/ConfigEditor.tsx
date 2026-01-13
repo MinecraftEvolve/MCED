@@ -378,7 +378,7 @@ export function ConfigEditor({ modId, instancePath, viewMode, onViewModeChange }
 
       {/* Raw Editor View */}
       {selectedConfig && currentViewMode === 'raw' && (
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0">
           <Editor
             height="100%"
             defaultLanguage="properties"
