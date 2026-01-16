@@ -8,11 +8,13 @@ import {
   Github,
   Heart,
 } from "lucide-react";
+import { RecentInstance } from "../../../shared/types/instance.types";
+import { LauncherIcon } from "../LauncherIcon";
 import "./LandingPage.css";
 
 interface LandingPageProps {
   onSelectInstance: () => void;
-  recentInstances?: string[];
+  recentInstances?: RecentInstance[];
 }
 
 export function LandingPage({
@@ -20,11 +22,29 @@ export function LandingPage({
   recentInstances = [],
 }: LandingPageProps) {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  
+  console.log('LandingPage recentInstances:', recentInstances);
 
-  const handleRecentInstance = (path: string) => {
+  const handleRecentInstance = (instance: RecentInstance) => {
     // Pass path via event or some other method if needed
     // For now, just call without argument
     onSelectInstance();
+  };
+
+  const getLauncherIcon = (launcher?: string) => {
+    return <LauncherIcon launcher={launcher || 'generic'} className="w-4 h-4" />;
+  };
+
+  const getLauncherName = (launcher?: string) => {
+    switch (launcher) {
+      case 'modrinth': return 'Modrinth App';
+      case 'curseforge': return 'CurseForge';
+      case 'prism': return 'Prism Launcher';
+      case 'multimc': return 'MultiMC';
+      case 'atlauncher': return 'ATLauncher';
+      case 'packwiz': return 'Packwiz';
+      default: return 'Generic Launcher';
+    }
   };
 
   return (
@@ -98,16 +118,32 @@ export function LandingPage({
           </div>
           <div className="recent-instances">
             {recentInstances.slice(0, 5).map((instance, index) => {
-              const instanceName = instance.split(/[\\/]/).pop() || instance;
+              const instanceName = instance.name || instance.path.split(/[\\/]/).pop() || instance.path;
               return (
                 <button
                   key={index}
                   className="recent-instance-card"
                   onClick={() => handleRecentInstance(instance)}
                 >
-                  <FolderOpen size={18} />
-                  <span className="instance-name">{instanceName}</span>
-                  <span className="instance-path">{instance}</span>
+                  <div className="instance-header">
+                    {instance.launcher && (
+                      <LauncherIcon launcher={instance.launcher} className="w-5 h-5" />
+                    )}
+                    <span className="instance-name">{instanceName}</span>
+                  </div>
+                  <div className="instance-info">
+                    {instance.minecraftVersion && (
+                      <span className="instance-version px-2 py-0.5 bg-green-500/10 text-green-400 rounded text-xs font-medium">
+                        MC {instance.minecraftVersion}
+                      </span>
+                    )}
+                    {instance.loader && (
+                      <span className="instance-loader px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded text-xs font-medium">
+                        {instance.loader.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      </span>
+                    )}
+                  </div>
+                  <span className="instance-path">{instance.path}</span>
                 </button>
               );
             })}

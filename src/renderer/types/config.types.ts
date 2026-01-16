@@ -1,6 +1,7 @@
 export interface ConfigFile {
   name: string;
   path: string;
+  filename: string;
   format: "toml" | "json" | "json5" | "yaml" | "cfg" | "properties";
   content: string;
   rawContent?: string;
@@ -25,6 +26,7 @@ export interface ConfigSetting {
     | "string"
     | "integer"
     | "float"
+    | "number"
     | "boolean"
     | "array"
     | "enum"
@@ -38,6 +40,11 @@ export interface ConfigSetting {
   min?: number;
   max?: number;
   userComments?: UserComment[];
+  options?: string[];
+  enumValues?: string[];
+  allowedValues?: string[];
+  unit?: string;
+  step?: number;
 }
 
 export interface UserComment {

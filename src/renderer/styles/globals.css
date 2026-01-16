@@ -208,3 +208,11 @@ body.compact-mode h2 {
 body.compact-mode h3 {
   font-size: 1.1rem;
 }
+
+/* Pixelated image rendering for Minecraft textures */
+.pixelated {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}

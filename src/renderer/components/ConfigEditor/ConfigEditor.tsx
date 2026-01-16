@@ -139,7 +139,7 @@ export function ConfigEditor({ modId, instancePath, viewMode, onViewModeChange }
         instancePath,
         modId,
         defaultConfigsFolder,
-        serverConfigFolder,
+        serverConfigFolder || undefined,
       );
       setConfigs(loadedConfigs);
       setOriginalConfigs(JSON.parse(JSON.stringify(loadedConfigs)));

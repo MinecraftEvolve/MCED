@@ -2,11 +2,21 @@ import React from "react";
 import { useAppStore } from "@/store";
 import { ModCard } from "./ModCard";
 import { ConfigEditor } from "./ConfigEditor/ConfigEditor";
+import { KubeJSEditor } from "./KubeJS/KubeJSEditor";
 
 export function MainPanel() {
-  const { selectedMod, currentInstance } = useAppStore();
+  const { selectedMod, currentInstance, viewMode } = useAppStore();
 
   if (!currentInstance) return null;
+
+  // Show KubeJS Editor when in KubeJS mode
+  if (viewMode === 'kubejs') {
+    return (
+      <main className="flex-1 overflow-auto bg-background">
+        <KubeJSEditor instancePath={currentInstance.path} />
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 overflow-auto bg-background">

@@ -1,11 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppStore } from "@/store";
 import { AlertTriangle } from "lucide-react";
 
 export function StatusBar() {
-  const { hasUnsavedChanges, setHasUnsavedChanges, currentInstance } =
+  const { hasUnsavedChanges, setHasUnsavedChanges, currentInstance, launcherType, setLauncherType } =
     useAppStore();
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+
+  useEffect(() => {
+    if (currentInstance?.path) {
+      window.api.detectLauncher(currentInstance.path).then((result) => {
+        console.log('Detected launcher:', result);
+        if (result.success) {
+          console.log('Setting launcher type to:', result.launcher);
+          setLauncherType(result.launcher);
+        }
+      });
+    } else {
+      setLauncherType(null);
+    }
+  }, [currentInstance, setLauncherType]);
 
   const handleSaveAll = () => {
     // Trigger save event - components will handle their own saves
@@ -29,7 +43,8 @@ export function StatusBar() {
   return (
     <>
       <footer className="border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-12 items-center justify-end px-6">
+        <div className="flex h-12 items-center justify-between px-6">
+          {/* Actions */}
           <div className="flex items-center gap-3">
             {hasUnsavedChanges && (
               <>

@@ -15,9 +15,13 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("fs:readdirRecursive", path, options),
   stat: (path: string) => ipcRenderer.invoke("fs:stat", path),
   deleteFile: (path: string) => ipcRenderer.invoke("fs:deleteFile", path),
+  joinPath: (...paths: string[]) => ipcRenderer.invoke("fs:joinPath", ...paths),
+  fileExists: (path: string) => ipcRenderer.invoke("fs:fileExists", path),
+  listDirectory: (path: string) => ipcRenderer.invoke("fs:listDirectory", path),
 
   // Instance
   detectInstance: (path: string) => ipcRenderer.invoke("instance:detect", path),
+  detectLauncher: (instancePath: string) => ipcRenderer.invoke("detect-launcher", instancePath),
   getServerConfigFolder: (instancePath: string) => ipcRenderer.invoke("get-server-config-folder", instancePath),
   migrateAllServerConfigs: (instancePath: string) => ipcRenderer.invoke("instance:migrateAllServerConfigs", instancePath),
 
@@ -81,6 +85,53 @@ contextBridge.exposeInMainWorld("api", {
 
   // External Links
   openExternal: (url: string) => ipcRenderer.invoke("shell:openExternal", url),
+
+  // KubeJS
+  kubeJSDetect: (instancePath: string) => ipcRenderer.invoke("kubejs:detect", instancePath),
+  kubeJSGetScriptFiles: (instancePath: string) => ipcRenderer.invoke("kubejs:getScriptFiles", instancePath),
+  kubeJSListScripts: (instancePath: string) => ipcRenderer.invoke("kubejs:listScripts", instancePath),
+  kubeJSReadScript: (filePath: string) => ipcRenderer.invoke("kubejs:readScript", filePath),
+  kubeJSWriteScript: (filePath: string, content: string) => ipcRenderer.invoke("kubejs:writeScript", filePath, content),
+  kubeJSCreateScript: (instancePath: string, relativePath: string, content: string) => ipcRenderer.invoke("kubejs:createScript", instancePath, relativePath, content),
+  kubeJSDeleteScript: (filePath: string) => ipcRenderer.invoke("kubejs:deleteScript", filePath),
+  kubeJSSaveRecipe: (instancePath: string, recipe: any) => ipcRenderer.invoke("kubejs:saveRecipe", instancePath, recipe),
+  kubeJSGetRecipeTemplates: (instancePath: string) => ipcRenderer.invoke("kubejs:getRecipeTemplates", instancePath),
+  kubeJSOrganizeScripts: (instancePath: string) => ipcRenderer.invoke("kubejs:organizeScripts", instancePath),
+  kubeJSBackupScripts: (instancePath: string) => ipcRenderer.invoke("kubejs:backupScripts", instancePath),
+  kubeJSExportScripts: (instancePath: string) => ipcRenderer.invoke("kubejs:exportScripts", instancePath),
+  kubeJSImportScripts: (instancePath: string) => ipcRenderer.invoke("kubejs:importScripts", instancePath),
+  kubeJSSaveTag: (instancePath: string, tagData: any) => ipcRenderer.invoke("kubejs:saveTag", instancePath, tagData),
+  kubeJSLoadTags: (instancePath: string) => ipcRenderer.invoke("kubejs:loadTags", instancePath),
+  kubeJSLookupItem: (instancePath: string, itemId: string) => ipcRenderer.invoke("kubejs:lookupItem", instancePath, itemId),
+  kubeJSLoadItems: (instancePath: string) => ipcRenderer.invoke("kubejs:loadItems", instancePath),
+  kubeJSGetTagItems: (instancePath: string, tag: string) => ipcRenderer.invoke("kubejs:getTagItems", instancePath, tag),
+  kubeJSSaveEventHandler: (instancePath: string, eventHandler: any) => ipcRenderer.invoke("kubejs:saveEventHandler", instancePath, eventHandler),
+  kubeJSSaveItemMod: (instancePath: string, itemMod: any) => ipcRenderer.invoke("kubejs:saveItemMod", instancePath, itemMod),
+  kubeJSSaveLootTable: (instancePath: string, lootTable: any) => ipcRenderer.invoke("kubejs:saveLootTable", instancePath, lootTable),
+  kubeJSSaveWorldgen: (instancePath: string, worldgen: any) => ipcRenderer.invoke("kubejs:saveWorldgen", instancePath, worldgen),
+  kubeJSSaveDimension: (instancePath: string, dimension: any) => ipcRenderer.invoke("kubejs:saveDimension", instancePath, dimension),
+  kubeJSValidateScript: (code: string) => ipcRenderer.invoke("kubejs:validateScript", code),
+
+  // Item Registry
+  itemRegistryInitialize: (instancePath: string, modsFolder: string) => ipcRenderer.invoke("itemRegistry:initialize", instancePath, modsFolder),
+  itemRegistryGetAllItems: (instancePath: string) => ipcRenderer.invoke("itemRegistry:getAllItems", instancePath),
+  itemRegistrySearchItems: (instancePath: string, query: string) => ipcRenderer.invoke("itemRegistry:searchItems", instancePath, query),
+  itemRegistryGetItemById: (instancePath: string, itemId: string) => ipcRenderer.invoke("itemRegistry:getItemById", instancePath, itemId),
+  itemRegistryRebuildCache: (instancePath: string, modsFolder: string) => ipcRenderer.invoke("itemRegistry:rebuildCache", instancePath, modsFolder),
+
+  // Fluid Registry
+  fluidRegistryInitialize: (instancePath: string, modsFolder: string) => ipcRenderer.invoke("fluidRegistry:initialize", instancePath, modsFolder),
+  fluidRegistryGetAllFluids: (instancePath: string) => ipcRenderer.invoke("fluidRegistry:getAllFluids", instancePath),
+  fluidRegistrySearchFluids: (instancePath: string, query: string) => ipcRenderer.invoke("fluidRegistry:searchFluids", instancePath, query),
+  fluidRegistryGetFluidById: (instancePath: string, fluidId: string) => ipcRenderer.invoke("fluidRegistry:getFluidById", instancePath, fluidId),
+  fluidRegistryRebuildCache: (instancePath: string, modsFolder: string) => ipcRenderer.invoke("fluidRegistry:rebuildCache", instancePath, modsFolder),
+
+  // Recipe Service
+  recipeParseFile: (instancePath: string, filePath: string) => ipcRenderer.invoke("recipe:parseFile", instancePath, filePath),
+  recipeGetTemplates: (instancePath: string) => ipcRenderer.invoke("recipe:getTemplates", instancePath),
+  recipeCreate: (instancePath: string, scriptPath: string, recipe: string) => ipcRenderer.invoke("recipe:create", instancePath, scriptPath, recipe),
+  recipeDelete: (instancePath: string, scriptPath: string, recipeId: string) => ipcRenderer.invoke("recipe:delete", instancePath, scriptPath, recipeId),
+  recipeSearch: (instancePath: string, query: string) => ipcRenderer.invoke("recipe:search", instancePath, query),
 });
 
 declare global {
@@ -109,6 +160,9 @@ declare global {
       deleteFile: (
         path: string,
       ) => Promise<{ success: boolean; error?: string }>;
+      joinPath: (...paths: string[]) => Promise<string>;
+      fileExists: (path: string) => Promise<boolean>;
+      listDirectory: (path: string) => Promise<string[]>;
       detectInstance: (
         path: string,
       ) => Promise<{ success: boolean; instance?: any; error?: string }>;
@@ -165,7 +219,61 @@ declare global {
       onUpdateDownloaded: (callback: () => void) => void;
       openExternal: (url: string) => Promise<{ success: boolean; error?: string }>;
       getAppVersion: () => Promise<string>;
+      detectLauncher: (instancePath: string) => Promise<{ success: boolean; launcher: 'modrinth' | 'curseforge' | 'generic' | 'packwiz' | 'unknown' }>;
       migrateAllServerConfigs: (instancePath: string) => Promise<{ success: boolean; migratedCount?: number; errors?: string[]; error?: string }>;
+      
+      // KubeJS
+      kubeJSDetect: (instancePath: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+      kubeJSGetScriptFiles: (instancePath: string) => Promise<{ success: boolean; data?: string[]; error?: string }>;
+      kubeJSListScripts: (instancePath: string) => Promise<{ success: boolean; data?: Array<{
+        name: string;
+        path: string;
+        type: 'server' | 'client' | 'startup';
+        size: number;
+        modified: Date;
+      }>; error?: string }>;
+      kubeJSReadScript: (filePath: string) => Promise<{ success: boolean; data?: string; error?: string }>;
+      kubeJSWriteScript: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
+      kubeJSCreateScript: (instancePath: string, relativePath: string, content: string) => Promise<{ success: boolean; data?: string; error?: string }>;
+      kubeJSDeleteScript: (filePath: string) => Promise<{ success: boolean; error?: string }>;
+      kubeJSSaveRecipe: (instancePath: string, recipe: any) => Promise<{ success: boolean; error?: string }>;
+      kubeJSGetRecipeTemplates: (instancePath: string) => Promise<{ success: boolean; data: any[]; error?: string }>;
+      kubeJSOrganizeScripts: (instancePath: string) => Promise<{ success: boolean; data?: { backupPath: string }; error?: string }>;
+      kubeJSBackupScripts: (instancePath: string) => Promise<{ success: boolean; data?: { backupPath: string; backupName: string }; error?: string }>;
+      kubeJSExportScripts: (instancePath: string) => Promise<{ success: boolean; data?: { exportPath: string }; error?: string }>;
+      kubeJSImportScripts: (instancePath: string) => Promise<{ success: boolean; data?: { imported: boolean }; error?: string }>;
+      kubeJSSaveTag: (instancePath: string, tagData: any) => Promise<{ success: boolean; data?: string; error?: string }>;
+      kubeJSLoadTags: (instancePath: string) => Promise<{ success: boolean; data?: any[]; error?: string }>;
+      kubeJSLookupItem: (instancePath: string, itemId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+      kubeJSLoadItems: (instancePath: string) => Promise<{ success: boolean; data?: any[]; error?: string }>;
+      kubeJSGetTagItems: (instancePath: string, tag: string) => Promise<{ success: boolean; items?: any[]; error?: string }>;
+      kubeJSSaveEventHandler: (instancePath: string, eventHandler: any) => Promise<{ success: boolean; data?: string; error?: string }>;
+      kubeJSSaveItemMod: (instancePath: string, itemMod: any) => Promise<{ success: boolean; data?: string; error?: string }>;
+      kubeJSSaveLootTable: (instancePath: string, lootTable: any) => Promise<{ success: boolean; data?: string; error?: string }>;
+      kubeJSSaveWorldgen: (instancePath: string, worldgen: any) => Promise<{ success: boolean; data?: string; error?: string }>;
+      kubeJSSaveDimension: (instancePath: string, dimension: any) => Promise<{ success: boolean; data?: string; error?: string }>;
+      kubeJSValidateScript: (code: string) => Promise<{ success: boolean; data?: { isValid: boolean; errors: Array<{ line: number; column: number; message: string; severity: 'error' | 'warning' }> }; error?: string }>;
+
+      // Item Registry
+      itemRegistryInitialize: (instancePath: string, modsFolder: string) => Promise<{ success: boolean; error?: string }>;
+      itemRegistryGetAllItems: (instancePath: string) => Promise<{ success: boolean; data: any[]; error?: string }>;
+      itemRegistrySearchItems: (instancePath: string, query: string) => Promise<{ success: boolean; data: any[]; error?: string }>;
+      itemRegistryGetItemById: (instancePath: string, itemId: string) => Promise<{ success: boolean; data: any | null; error?: string }>;
+      itemRegistryRebuildCache: (instancePath: string, modsFolder: string) => Promise<{ success: boolean; error?: string }>;
+
+      // Fluid Registry
+      fluidRegistryInitialize: (instancePath: string, modsFolder: string) => Promise<{ success: boolean; error?: string }>;
+      fluidRegistryGetAllFluids: (instancePath: string) => Promise<{ success: boolean; data: any[]; error?: string }>;
+      fluidRegistrySearchFluids: (instancePath: string, query: string) => Promise<{ success: boolean; data: any[]; error?: string }>;
+      fluidRegistryGetFluidById: (instancePath: string, fluidId: string) => Promise<{ success: boolean; data: any | null; error?: string }>;
+      fluidRegistryRebuildCache: (instancePath: string, modsFolder: string) => Promise<{ success: boolean; error?: string }>;
+
+      // Recipe Service
+      recipeParseFile: (instancePath: string, filePath: string) => Promise<{ success: boolean; data: any[]; error?: string }>;
+      recipeGetTemplates: (instancePath: string) => Promise<{ success: boolean; data: any[]; error?: string }>;
+      recipeCreate: (instancePath: string, scriptPath: string, recipe: string) => Promise<{ success: boolean; error?: string }>;
+      recipeDelete: (instancePath: string, scriptPath: string, recipeId: string) => Promise<{ success: boolean; error?: string }>;
+      recipeSearch: (instancePath: string, query: string) => Promise<{ success: boolean; data: any[]; error?: string }>;
     };
   }
 }

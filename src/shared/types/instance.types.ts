@@ -3,6 +3,7 @@ export interface MinecraftInstance {
   name: string;
   minecraftVersion: string;
   loader: LoaderInfo;
+  launcher?: string; // Detected launcher: 'modrinth', 'curseforge', 'prism', etc.
   modpack?: ModpackInfo;
   modsFolder: string;
   configFolder: string;
@@ -73,4 +74,7 @@ export interface RecentInstance {
   name: string;
   lastOpened: number; // Timestamp in milliseconds
   thumbnail?: string;
+  minecraftVersion?: string;
+  loader?: string;
+  launcher?: string;
 }

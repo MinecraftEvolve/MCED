@@ -233,6 +233,7 @@ export class ConfigService {
 
       return {
         name: fileName,
+        filename: fileName,
         path: filePath,
         format,
         content, // ConfigContent type

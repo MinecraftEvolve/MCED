@@ -7,6 +7,11 @@ import { JarScanner } from "./jar-scanner";
 import { InstanceDetector } from "./instance-detector";
 import { discordRPC } from "./DiscordRPC";
 import { updateChecker } from "./UpdateChecker";
+import { KubeJSService } from "./services/KubeJSService";
+import { ItemRegistryService } from "./services/ItemRegistryService";
+import { FluidRegistryService } from "./services/FluidRegistryService";
+import { RecipeService } from "./services/RecipeService";
+import { JarLoaderService } from "./services/JarLoaderService";
 
 const execAsync = promisify(exec);
 
@@ -80,6 +85,7 @@ ipcMain.handle("detect-instance", async (_event, instancePath) => {
           type: String(instance.loader?.type || "vanilla"),
           version: String(instance.loader?.version || "Unknown"),
         },
+        launcher: instance.launcher ? String(instance.launcher) : undefined,
         modpack: instance.modpack
           ? {
               source: String(instance.modpack.source || "custom"),
@@ -232,6 +238,17 @@ ipcMain.handle("scan-mods", async (_event, instancePath) => {
       error: (error instanceof Error ? error.message : String(error)),
       mods: [],
     };
+  }
+});
+
+ipcMain.handle("detect-launcher", async (_event, instancePath: string) => {
+  try {
+    const jarLoader = JarLoaderService.getInstance();
+    const launcherType = await jarLoader.detectLauncher(instancePath);
+    return { success: true, launcher: launcherType };
+  } catch (error) {
+    console.error("Error detecting launcher:", error);
+    return { success: false, launcher: 'unknown' };
   }
 });
 
@@ -487,10 +504,42 @@ ipcMain.handle("fs:deleteFile", async (_event, filePath: string) => {
   }
 });
 
+ipcMain.handle("fs:joinPath", async (_event, ...paths: string[]) => {
+  try {
+    return path.join(...paths);
+  } catch (error) {
+    throw new Error(`Failed to join paths: ${error instanceof Error ? error.message : String(error)}`);
+  }
+});
+
+ipcMain.handle("fs:fileExists", async (_event, filePath: string) => {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+});
+
+ipcMain.handle("fs:listDirectory", async (_event, dirPath: string) => {
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    return entries
+      .filter(entry => entry.isFile() || entry.isDirectory())
+      .map(entry => entry.name);
+  } catch (error) {
+    throw new Error(`Failed to list directory: ${error instanceof Error ? error.message : String(error)}`);
+  }
+});
+
 ipcMain.handle("instance:detect", async (_event, instancePath: string) => {
   try {
     const detector = new InstanceDetector();
     const instance = await detector.detectInstance(instancePath);
+
+    // Detect launcher type
+    const jarService = JarLoaderService.getInstance();
+    const launcherType = await jarService.detectLauncher(instancePath);
 
     // Create completely new plain object with strict serialization
     const plainInstance = {
@@ -529,7 +578,7 @@ ipcMain.handle("instance:detect", async (_event, instancePath: string) => {
       throw new Error("Instance data contains non-serializable objects");
     }
 
-    return { success: true, instance: plainInstance };
+    return { success: true, instance: plainInstance, launcherType };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
@@ -939,6 +988,712 @@ ipcMain.handle("install-update", async () => {
   try {
     updateChecker.quitAndInstall();
     return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// KubeJS IPC Handlers
+ipcMain.handle("kubejs:detect", async (_event, instancePath: string) => {
+  try {
+    const kubeJSService = new KubeJSService(instancePath);
+    const info = await kubeJSService.detectKubeJS();
+    
+    // Preload all tags when KubeJS is detected
+    if (info.isInstalled) {
+      console.log("KubeJS detected, preloading all tags...");
+      const itemRegistry = new ItemRegistryService(instancePath);
+      await itemRegistry.preloadAllTags(instancePath);
+      console.log("All tags preloaded successfully");
+    }
+    
+    return { success: true, data: info };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:getScriptFiles", async (_event, instancePath: string) => {
+  try {
+    const kubeJSService = new KubeJSService(instancePath);
+    const files = await kubeJSService.getScriptFiles();
+    return { success: true, data: files };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:listScripts", async (_event, instancePath: string) => {
+  try {
+    const kubeJSService = new KubeJSService(instancePath);
+    const scripts = await kubeJSService.listScripts();
+    return { success: true, data: scripts };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:readScript", async (_event, filePath: string) => {
+  try {
+    const kubeJSService = new KubeJSService(path.dirname(filePath));
+    const content = await kubeJSService.readScriptFile(filePath);
+    return { success: true, data: content };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:writeScript", async (_event, filePath: string, content: string) => {
+  try {
+    const kubeJSService = new KubeJSService(path.dirname(filePath));
+    await kubeJSService.writeScriptFile(filePath, content);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:createScript", async (_event, instancePath: string, relativePath: string, content: string) => {
+  try {
+    const kubeJSService = new KubeJSService(instancePath);
+    const fullPath = await kubeJSService.createScriptFile(relativePath, content);
+    return { success: true, data: fullPath };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:deleteScript", async (_event, filePath: string) => {
+  try {
+    const kubeJSService = new KubeJSService(path.dirname(filePath));
+    await kubeJSService.deleteScriptFile(filePath);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// KubeJS Tag Handlers
+ipcMain.handle("kubejs:saveTag", async (_event, instancePath: string, tagData: {
+  id: string;
+  type: 'items' | 'blocks' | 'fluids' | 'entity_types';
+  values: string[];
+  replace?: boolean;
+}) => {
+  try {
+    const kubeJSService = new KubeJSService(instancePath);
+    const filePath = await kubeJSService.saveTag(tagData);
+    return { success: true, data: filePath };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:loadTags", async (_event, instancePath: string) => {
+  try {
+    const kubeJSService = new KubeJSService(instancePath);
+    const tags = await kubeJSService.loadTags();
+    return { success: true, data: tags };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:organizeScripts", async (_event, instancePath: string) => {
+  try {
+    const kubeJSService = new KubeJSService(instancePath);
+    await kubeJSService.organizeScripts(instancePath);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to organize scripts:', error);
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:lookupItem", async (_event, instancePath: string, itemId: string) => {
+  try {
+    const itemRegistry = new ItemRegistryService(instancePath);
+    const item = await itemRegistry.getItemById(itemId);
+    return { success: true, data: item };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:loadItems", async (_event, instancePath: string) => {
+  try {
+    const itemRegistry = new ItemRegistryService(instancePath);
+    // Load all tags when items are loaded
+    await itemRegistry.preloadAllTags(instancePath);
+    const items = await itemRegistry.getAllItems();
+    return { success: true, data: items };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:getTagItems", async (_event, instancePath: string, tag: string) => {
+  try {
+    const itemRegistry = new ItemRegistryService(instancePath);
+    await itemRegistry.loadCache();
+    const items = await itemRegistry.getItemsByTag(tag);
+    return { success: true, items };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), items: [] };
+  }
+});
+
+// Item Registry Handlers
+ipcMain.handle("itemRegistry:initialize", async (_event, instancePath: string, modsFolder: string) => {
+  try {
+    const itemRegistry = new ItemRegistryService(instancePath);
+    await itemRegistry.initialize(modsFolder);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("itemRegistry:getAllItems", async (_event, instancePath: string) => {
+  try {
+    const itemRegistry = new ItemRegistryService(instancePath);
+    await itemRegistry.loadCache();
+    const items = await itemRegistry.getAllItems();
+    return { success: true, data: items };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), data: [] };
+  }
+});
+
+ipcMain.handle("itemRegistry:searchItems", async (_event, instancePath: string, query: string) => {
+  try {
+    const itemRegistry = new ItemRegistryService(instancePath);
+    await itemRegistry.loadCache();
+    const items = await itemRegistry.searchItems(query);
+    return { success: true, data: items };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), data: [] };
+  }
+});
+
+ipcMain.handle("itemRegistry:getItemById", async (_event, instancePath: string, itemId: string) => {
+  try {
+    const itemRegistry = new ItemRegistryService(instancePath);
+    await itemRegistry.loadCache();
+    const item = await itemRegistry.getItemById(itemId);
+    return { success: true, data: item };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), data: null };
+  }
+});
+
+ipcMain.handle("itemRegistry:rebuildCache", async (_event, instancePath: string, modsFolder: string) => {
+  try {
+    const itemRegistry = new ItemRegistryService(instancePath);
+    await itemRegistry.rebuildCache(modsFolder);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// Fluid Registry Handlers
+ipcMain.handle("fluidRegistry:initialize", async (_event, instancePath: string, modsFolder: string) => {
+  try {
+    const fluidRegistry = new FluidRegistryService(instancePath);
+    await fluidRegistry.initialize(modsFolder);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("fluidRegistry:getAllFluids", async (_event, instancePath: string) => {
+  try {
+    const fluidRegistry = new FluidRegistryService(instancePath);
+    await fluidRegistry.loadCache();
+    const fluids = await fluidRegistry.getAllFluids();
+    return { success: true, data: fluids };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), data: [] };
+  }
+});
+
+ipcMain.handle("fluidRegistry:searchFluids", async (_event, instancePath: string, query: string) => {
+  try {
+    const fluidRegistry = new FluidRegistryService(instancePath);
+    await fluidRegistry.loadCache();
+    const fluids = await fluidRegistry.searchFluids(query);
+    return { success: true, data: fluids };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), data: [] };
+  }
+});
+
+ipcMain.handle("fluidRegistry:getFluidById", async (_event, instancePath: string, fluidId: string) => {
+  try {
+    const fluidRegistry = new FluidRegistryService(instancePath);
+    await fluidRegistry.loadCache();
+    const fluid = await fluidRegistry.getFluidById(fluidId);
+    return { success: true, data: fluid };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), data: null };
+  }
+});
+
+ipcMain.handle("fluidRegistry:rebuildCache", async (_event, instancePath: string, modsFolder: string) => {
+  try {
+    const fluidRegistry = new FluidRegistryService(instancePath);
+    await fluidRegistry.rebuildCache(modsFolder);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// Recipe Service Handlers
+ipcMain.handle("recipe:parseFile", async (_event, instancePath: string, filePath: string) => {
+  try {
+    const recipeService = new RecipeService(instancePath);
+    const recipes = await recipeService.parseRecipeFile(filePath);
+    return { success: true, data: recipes };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), data: [] };
+  }
+});
+
+ipcMain.handle("recipe:getTemplates", async (_event, instancePath: string) => {
+  try {
+    const recipeService = new RecipeService(instancePath);
+    const templates = recipeService.getRecipeTemplates();
+    return { success: true, data: templates };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), data: [] };
+  }
+});
+
+ipcMain.handle("recipe:create", async (_event, instancePath: string, scriptPath: string, recipe: string) => {
+  try {
+    const recipeService = new RecipeService(instancePath);
+    await recipeService.createRecipe(scriptPath, recipe);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("recipe:delete", async (_event, instancePath: string, scriptPath: string, recipeId: string) => {
+  try {
+    const recipeService = new RecipeService(instancePath);
+    await recipeService.deleteRecipe(scriptPath, recipeId);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("recipe:search", async (_event, instancePath: string, query: string) => {
+  try {
+    const recipeService = new RecipeService(instancePath);
+    const recipes = await recipeService.searchRecipes(query);
+    return { success: true, data: recipes };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), data: [] };
+  }
+});
+
+ipcMain.handle("kubejs:saveRecipe", async (_event, instancePath: string, recipe: any) => {
+  try {
+    const recipeService = new RecipeService(instancePath);
+    await recipeService.saveRecipeFromObject(recipe);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:getRecipeTemplates", async (_event, instancePath: string) => {
+  try {
+    const recipeService = new RecipeService(instancePath);
+    const templates = recipeService.getRecipeTemplates();
+    return { success: true, data: templates };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)), data: [] };
+  }
+});
+
+ipcMain.handle("kubejs:backupScripts", async (_event, instancePath: string) => {
+  try {
+    const kubeJSPath = path.join(instancePath, 'kubejs');
+    const backupDir = path.join(kubeJSPath, 'backups');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupName = `backup_${timestamp}`;
+    const backupPath = path.join(backupDir, backupName);
+    
+    await fs.mkdir(backupPath, { recursive: true });
+    
+    // Copy all scripts to backup
+    for (const scriptType of ['server_scripts', 'client_scripts', 'startup_scripts']) {
+      const scriptPath = path.join(kubeJSPath, scriptType);
+      try {
+        await fs.access(scriptPath);
+        await fs.cp(scriptPath, path.join(backupPath, scriptType), { recursive: true });
+      } catch (error) {
+        // Script type doesn't exist, skip
+      }
+    }
+    
+    return { success: true, data: { backupPath, backupName } };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:exportScripts", async (_event, instancePath: string) => {
+  try {
+    const { dialog } = require('electron');
+    const result = await dialog.showSaveDialog({
+      title: 'Export KubeJS Scripts',
+      defaultPath: 'kubejs_scripts.zip',
+      filters: [{ name: 'Zip Files', extensions: ['zip'] }]
+    });
+    
+    if (result.canceled || !result.filePath) {
+      return { success: false, error: 'Export cancelled' };
+    }
+    
+    const AdmZip = require('adm-zip');
+    const zip = new AdmZip();
+    const kubeJSPath = path.join(instancePath, 'kubejs');
+    
+    // Add all script directories to zip
+    for (const scriptType of ['server_scripts', 'client_scripts', 'startup_scripts']) {
+      const scriptPath = path.join(kubeJSPath, scriptType);
+      try {
+        await fs.access(scriptPath);
+        zip.addLocalFolder(scriptPath, scriptType);
+      } catch (error) {
+        // Script type doesn't exist, skip
+      }
+    }
+    
+    zip.writeZip(result.filePath);
+    
+    return { success: true, data: { exportPath: result.filePath } };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+ipcMain.handle("kubejs:importScripts", async (_event, instancePath: string) => {
+  try {
+    const { dialog } = require('electron');
+    const result = await dialog.showOpenDialog({
+      title: 'Import KubeJS Scripts',
+      filters: [{ name: 'Zip Files', extensions: ['zip'] }],
+      properties: ['openFile']
+    });
+    
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false, error: 'Import cancelled' };
+    }
+    
+    const AdmZip = require('adm-zip');
+    const zip = new AdmZip(result.filePaths[0]);
+    const kubeJSPath = path.join(instancePath, 'kubejs');
+    
+    // Extract to kubejs folder
+    zip.extractAllTo(kubeJSPath, true);
+    
+    return { success: true, data: { imported: true } };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// ===== KubeJS Event Handler API =====
+ipcMain.handle("kubejs:saveEventHandler", async (_event, instancePath: string, eventHandler: {
+  id: string;
+  eventType: string;
+  conditions: Array<{ type: string; value: string }>;
+  actions: Array<{ type: string; value: string; count?: number }>;
+}) => {
+  try {
+    const kubeJSPath = path.join(instancePath, 'kubejs', 'server_scripts', 'events');
+    await fs.mkdir(kubeJSPath, { recursive: true });
+    
+    const fileName = `${eventHandler.id.replace(/[:/\s]/g, '_')}.js`;
+    const filePath = path.join(kubeJSPath, fileName);
+    
+    // Generate conditions code
+    const conditionsCode = eventHandler.conditions.map(c => {
+      switch (c.type) {
+        case 'block': return `event.block.id === '${c.value}'`;
+        case 'item': return `event.item.id === '${c.value}'`;
+        case 'entity': return `event.entity.type === '${c.value}'`;
+        case 'player': return `event.player.username === '${c.value}'`;
+        case 'dimension': return `event.level.dimension === '${c.value}'`;
+        default: return '';
+      }
+    }).filter(Boolean).join(' && ');
+    
+    // Generate actions code
+    const actionsCode = eventHandler.actions.map(a => {
+      switch (a.type) {
+        case 'give_item': return `  event.player.give('${a.value}'${a.count ? `, ${a.count}` : ''});`;
+        case 'remove_item': return `  event.player.inventory.clear('${a.value}');`;
+        case 'send_message': return `  event.player.tell('${a.value}');`;
+        case 'spawn_entity': return `  event.level.spawnEntity('${a.value}', event.player.blockPosition());`;
+        case 'set_block': return `  event.level.setBlock(event.blockPosition, '${a.value}', 3);`;
+        case 'run_command': return `  event.server.runCommandSilent('${a.value}');`;
+        case 'potion_effect': return `  event.player.potionEffects.add('${a.value}', 200, 0);`;
+        default: return '';
+      }
+    }).filter(Boolean).join('\n');
+    
+    const code = `// Event Handler: ${eventHandler.id}
+${eventHandler.eventType}(event => {
+${conditionsCode ? `  if (${conditionsCode}) {` : ''}
+${actionsCode}
+${conditionsCode ? '  }' : ''}
+});
+`;
+    
+    await fs.writeFile(filePath, code, 'utf-8');
+    return { success: true, data: filePath };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// ===== KubeJS Item Modification API =====
+ipcMain.handle("kubejs:saveItemMod", async (_event, instancePath: string, itemMod: {
+  itemId: string;
+  modifications: {
+    tags?: string[];
+    tooltips?: string[];
+    rarity?: string;
+    maxStackSize?: number;
+    burnTime?: number;
+  };
+}) => {
+  try {
+    const kubeJSPath = path.join(instancePath, 'kubejs', 'startup_scripts', 'item_modifications');
+    await fs.mkdir(kubeJSPath, { recursive: true });
+    
+    const fileName = `${itemMod.itemId.replace(/[:/]/g, '_')}_mod.js`;
+    const filePath = path.join(kubeJSPath, fileName);
+    
+    let code = `// Item Modification: ${itemMod.itemId}\n`;
+    code += `ItemEvents.modification(event => {\n`;
+    code += `  event.modify('${itemMod.itemId}', item => {\n`;
+    
+    if (itemMod.modifications.maxStackSize) {
+      code += `    item.maxStackSize = ${itemMod.modifications.maxStackSize};\n`;
+    }
+    
+    if (itemMod.modifications.burnTime) {
+      code += `    item.burnTime = ${itemMod.modifications.burnTime};\n`;
+    }
+    
+    if (itemMod.modifications.rarity) {
+      code += `    item.rarity = '${itemMod.modifications.rarity}';\n`;
+    }
+    
+    code += `  });\n`;
+    code += `});\n\n`;
+    
+    if (itemMod.modifications.tags && itemMod.modifications.tags.length > 0) {
+      code += `ServerEvents.tags('item', event => {\n`;
+      for (const tag of itemMod.modifications.tags) {
+        code += `  event.add('${tag}', '${itemMod.itemId}');\n`;
+      }
+      code += `});\n\n`;
+    }
+    
+    if (itemMod.modifications.tooltips && itemMod.modifications.tooltips.length > 0) {
+      code += `ItemEvents.tooltip(event => {\n`;
+      code += `  event.add('${itemMod.itemId}', [\n`;
+      for (const tooltip of itemMod.modifications.tooltips) {
+        code += `    '${tooltip}',\n`;
+      }
+      code += `  ]);\n`;
+      code += `});\n`;
+    }
+    
+    await fs.writeFile(filePath, code, 'utf-8');
+    return { success: true, data: filePath };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// ===== KubeJS Loot Table API =====
+ipcMain.handle("kubejs:saveLootTable", async (_event, instancePath: string, lootTable: {
+  id: string;
+  type: 'block' | 'entity' | 'chest';
+  target: string;
+  pools: Array<{
+    rolls: { min: number; max: number };
+    entries: Array<{
+      item: string;
+      weight: number;
+      count?: { min: number; max: number };
+    }>;
+  }>;
+}) => {
+  try {
+    const kubeJSPath = path.join(instancePath, 'kubejs', 'server_scripts', 'loot_tables');
+    await fs.mkdir(kubeJSPath, { recursive: true });
+    
+    const fileName = `${lootTable.id.replace(/[:/\s]/g, '_')}.js`;
+    const filePath = path.join(kubeJSPath, fileName);
+    
+    let code = `// Loot Table: ${lootTable.id}\n`;
+    code += `LootJS.modifiers(event => {\n`;
+    
+    if (lootTable.type === 'block') {
+      code += `  event.addBlockLootModifier('${lootTable.target}').replaceLoot([\n`;
+    } else if (lootTable.type === 'entity') {
+      code += `  event.addEntityLootModifier('${lootTable.target}').replaceLoot([\n`;
+    } else {
+      code += `  event.addLootTableModifier('${lootTable.target}').replaceLoot([\n`;
+    }
+    
+    for (const pool of lootTable.pools) {
+      code += `    // Pool with ${pool.rolls.min}-${pool.rolls.max} rolls\n`;
+      for (const entry of pool.entries) {
+        if (entry.count) {
+          code += `    LootEntry.of('${entry.item}').withCount([${entry.count.min}, ${entry.count.max}]),\n`;
+        } else {
+          code += `    LootEntry.of('${entry.item}'),\n`;
+        }
+      }
+    }
+    
+    code += `  ]);\n`;
+    code += `});\n`;
+    
+    await fs.writeFile(filePath, code, 'utf-8');
+    return { success: true, data: filePath };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// ===== KubeJS Worldgen API =====
+ipcMain.handle("kubejs:saveWorldgen", async (_event, instancePath: string, worldgen: {
+  id: string;
+  type: 'ore' | 'feature';
+  config: any;
+}) => {
+  try {
+    const kubeJSPath = path.join(instancePath, 'kubejs', 'server_scripts', 'worldgen');
+    await fs.mkdir(kubeJSPath, { recursive: true });
+    
+    const fileName = `${worldgen.id.replace(/[:/\s]/g, '_')}.js`;
+    const filePath = path.join(kubeJSPath, fileName);
+    
+    let code = `// Worldgen: ${worldgen.id}\n`;
+    code += `WorldgenEvents.add(event => {\n`;
+    
+    if (worldgen.type === 'ore') {
+      code += `  event.addOre(ore => {\n`;
+      code += `    ore.id = '${worldgen.id}';\n`;
+      code += `    ore.addTarget('${worldgen.config.target || 'minecraft:stone'}', '${worldgen.config.ore || 'minecraft:iron_ore'}');\n`;
+      code += `    ore.count([${worldgen.config.minCount || 4}, ${worldgen.config.maxCount || 8}]);\n`;
+      code += `    ore.squared();\n`;
+      code += `    ore.triangleHeight(${worldgen.config.minHeight || -64}, ${worldgen.config.maxHeight || 320});\n`;
+      code += `    ore.biomes('${worldgen.config.biome || '#minecraft:is_overworld'}');\n`;
+      code += `  });\n`;
+    } else {
+      code += `  // Custom feature configuration\n`;
+      code += `  // TODO: Add feature-specific code\n`;
+    }
+    
+    code += `});\n`;
+    
+    await fs.writeFile(filePath, code, 'utf-8');
+    return { success: true, data: filePath };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// ===== KubeJS Dimension API =====
+ipcMain.handle("kubejs:saveDimension", async (_event, instancePath: string, dimension: {
+  id: string;
+  type: string;
+  effects: string;
+  generator: any;
+}) => {
+  try {
+    const kubeJSPath = path.join(instancePath, 'kubejs', 'server_scripts', 'dimensions');
+    await fs.mkdir(kubeJSPath, { recursive: true });
+    
+    const fileName = `${dimension.id.replace(/[:/\s]/g, '_')}.js`;
+    const filePath = path.join(kubeJSPath, fileName);
+    
+    const code = `// Dimension: ${dimension.id}
+// Note: Custom dimensions require data pack JSON files
+// This script adds dimension-specific events and modifications
+
+ServerEvents.loaded(event => {
+  console.log('Dimension ${dimension.id} configuration loaded');
+  // Add dimension-specific logic here
+});
+`;
+    
+    await fs.writeFile(filePath, code, 'utf-8');
+    return { success: true, data: filePath };
+  } catch (error) {
+    return { success: false, error: (error instanceof Error ? error.message : String(error)) };
+  }
+});
+
+// ===== KubeJS Script Validation API =====
+ipcMain.handle("kubejs:validateScript", async (_event, code: string) => {
+  try {
+    // Basic JavaScript syntax validation
+    const errors: Array<{ line: number; column: number; message: string; severity: 'error' | 'warning' }> = [];
+    
+    try {
+      new Function(code);
+    } catch (error: any) {
+      const match = error.message.match(/line (\d+)/i);
+      errors.push({
+        line: match ? parseInt(match[1]) : 1,
+        column: 0,
+        message: error.message,
+        severity: 'error'
+      });
+    }
+    
+    // Check for common KubeJS patterns
+    const lines = code.split('\n');
+    lines.forEach((line, index) => {
+      // Warn about missing semicolons
+      if (line.trim() && !line.trim().endsWith(';') && !line.trim().endsWith('{') && !line.trim().endsWith('}') && !line.trim().startsWith('//')) {
+        errors.push({
+          line: index + 1,
+          column: line.length,
+          message: 'Consider adding semicolon',
+          severity: 'warning'
+        });
+      }
+      
+      // Warn about console.log in production
+      if (line.includes('console.log')) {
+        errors.push({
+          line: index + 1,
+          column: line.indexOf('console.log'),
+          message: 'Avoid console.log in production scripts',
+          severity: 'warning'
+        });
+      }
+    });
+    
+    return { success: true, data: { isValid: errors.filter(e => e.severity === 'error').length === 0, errors } };
   } catch (error) {
     return { success: false, error: (error instanceof Error ? error.message : String(error)) };
   }

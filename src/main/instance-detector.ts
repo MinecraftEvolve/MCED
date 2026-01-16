@@ -71,6 +71,7 @@ export class InstanceDetector {
     const minecraftVersion = await this.detectMinecraftVersion(instancePath);
     const loader = await this.detectLoader(instancePath);
     const modpack = await this.detectModpack(instancePath);
+    const launcher = await this.detectLauncher(instancePath);
 
     // Count mods
     let totalMods = 0;
@@ -86,6 +87,7 @@ export class InstanceDetector {
       name,
       minecraftVersion,
       loader,
+      launcher,
       modpack,
       modsFolder: finalModsFolder,
       configFolder: finalConfigFolder,
@@ -362,19 +364,19 @@ export class InstanceDetector {
           if (loaderName.includes("forge")) {
             return {
               type: "forge",
-              version: json.baseModLoader.minecraftVersion || "Unknown",
+              version: json.baseModLoader.forgeVersion || "Unknown",
             };
           }
           if (loaderName.includes("fabric")) {
             return {
               type: "fabric",
-              version: json.baseModLoader.minecraftVersion || "Unknown",
+              version: json.baseModLoader.fabricVersion || "Unknown",
             };
           }
           if (loaderName.includes("neoforge")) {
             return {
               type: "neoforge",
-              version: json.baseModLoader.minecraftVersion || "Unknown",
+              version: json.baseModLoader.neoForgeVersion || "Unknown",
             };
           }
         }
@@ -791,6 +793,55 @@ export class InstanceDetector {
         source: "technic",
         name: instanceName,
       };
+    }
+
+    return undefined;
+  }
+
+  private async detectLauncher(instancePath: string): Promise<string | undefined> {
+    // Check for .curseclient file (CurseForge)
+    const curseclientFile = path.join(instancePath, ".curseclient");
+    if (await this.fileExists(curseclientFile)) {
+      return "curseforge";
+    }
+
+    // Check for Modrinth database in parent directories
+    try {
+      const parentPath = path.dirname(instancePath);
+      const grandParentPath = path.dirname(parentPath);
+      const modrinthDb = path.join(grandParentPath, "app.db");
+      if (await this.fileExists(modrinthDb)) {
+        return "modrinth";
+      }
+    } catch (error) {}
+
+    // Check for mmc-pack.json (MultiMC/Prism)
+    const mmcPack = path.join(instancePath, "mmc-pack.json");
+    if (await this.fileExists(mmcPack)) {
+      // Check if it's Prism or MultiMC by looking at parent path
+      const parentPath = path.dirname(instancePath);
+      if (parentPath.toLowerCase().includes("prism")) {
+        return "prism";
+      }
+      return "multimc";
+    }
+
+    // Check for instance.json (ATLauncher)
+    const atlauncherInstance = path.join(instancePath, "instance.json");
+    if (await this.fileExists(atlauncherInstance)) {
+      return "atlauncher";
+    }
+
+    // Check for config.json (GDLauncher)
+    const gdlauncherConfig = path.join(instancePath, "config.json");
+    if (await this.fileExists(gdlauncherConfig)) {
+      return "gdlauncher";
+    }
+
+    // Check for pack.toml (Packwiz)
+    const packwizToml = path.join(instancePath, "pack.toml");
+    if (await this.fileExists(packwizToml)) {
+      return "packwiz";
     }
 
     return undefined;

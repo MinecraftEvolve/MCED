@@ -11,6 +11,7 @@ import {
   BarChart3,
   History,
 } from "lucide-react";
+import { LauncherIcon } from "./LauncherIcon";
 
 interface HeaderProps {
   onSearchClick: () => void;
@@ -27,7 +28,7 @@ export function Header({
   onStatsClick,
   onChangelogClick,
 }: HeaderProps) {
-  const { currentInstance } = useAppStore();
+  const { currentInstance, launcherType } = useAppStore();
   const [showSettings, setShowSettings] = useState(false);
   const [showBackups, setShowBackups] = useState(false);
 
@@ -84,6 +85,22 @@ export function Header({
             {currentInstance.name}
           </h1>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {launcherType && launcherType !== 'unknown' && (
+              <div 
+                className="flex items-center"
+                title={`Launcher: ${
+                  launcherType === 'modrinth' ? 'Modrinth App' : 
+                  launcherType === 'curseforge' ? 'CurseForge' : 
+                  launcherType === 'packwiz' ? 'Packwiz' :
+                  launcherType === 'prism' ? 'Prism Launcher' : 
+                  launcherType === 'multimc' ? 'MultiMC' : 
+                  launcherType === 'atlauncher' ? 'ATLauncher' : 
+                  'Generic Launcher'
+                }`}
+              >
+                <LauncherIcon launcher={launcherType} className="w-5 h-5" />
+              </div>
+            )}
             <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded font-medium">
               MC {currentInstance.minecraftVersion}
             </span>

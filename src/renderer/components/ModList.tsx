@@ -1,23 +1,47 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useAppStore } from "@/store";
 import { useSettingsStore } from "@/store/settingsStore";
 import { ModSearch } from "./ModSearch";
 import { ModListItem } from "./ModListItem";
 import { ModInfo } from "../../shared/types/mod.types";
-import { FolderSync } from "lucide-react";
+import { FolderSync, FileCode } from "lucide-react";
 
 export function ModList() {
-  const { mods, searchQuery, selectedMod, setSelectedMod, currentInstance, reloadMods } = useAppStore();
+  const { mods, searchQuery, selectedMod, setSelectedMod, currentInstance, reloadMods, viewMode, setViewMode, kubeJSDetected, setKubeJSDetected } = useAppStore();
   const { settings } = useSettingsStore();
   const [isMigrating, setIsMigrating] = useState(false);
 
+  // Detect KubeJS on instance load
+  useEffect(() => {
+    const detectKubeJS = async () => {
+      if (!currentInstance) return;
+      
+      try {
+        const result = await window.api.kubeJSDetect(currentInstance.path);
+        if (result.success && result.data) {
+          setKubeJSDetected(result.data.isInstalled);
+        }
+      } catch (error) {
+        setKubeJSDetected(false);
+      }
+    };
+
+    detectKubeJS();
+  }, [currentInstance, setKubeJSDetected]);
+
   const handleModSelect = (mod: ModInfo) => {
+    setViewMode('mods'); // Switch to mods view when selecting a mod
     setSelectedMod(mod);
     
     // Update Discord RPC with selected mod
     if (settings.discordRpcEnabled) {
       window.api.discordSetMod(mod.name, mods.length);
     }
+  };
+
+  const handleKubeJSClick = () => {
+    setViewMode('kubejs');
+    setSelectedMod(null);
   };
 
   const handleMigrateAll = async () => {
@@ -91,6 +115,20 @@ export function ModList() {
       </div>
 
       <div className="p-3 border-t border-border space-y-2">
+        {kubeJSDetected && (
+          <button
+            onClick={handleKubeJSClick}
+            className={`w-full px-3 py-2 text-xs font-medium rounded-md transition-colors flex items-center justify-center gap-2 ${
+              viewMode === 'kubejs'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-blue-600/10 hover:bg-blue-600/20 text-blue-400'
+            }`}
+            title="Open KubeJS Editor"
+          >
+            <FileCode size={14} />
+            KubeJS Editor
+          </button>
+        )}
         <button
           onClick={handleMigrateAll}
           disabled={isMigrating || !currentInstance}

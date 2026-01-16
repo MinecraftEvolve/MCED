@@ -179,8 +179,8 @@
 
 .recent-instance-card {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 8px;
   padding: 16px 20px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -197,10 +197,43 @@
   transform: translateX(4px);
 }
 
+.instance-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .instance-name {
   font-weight: 600;
   font-size: 16px;
-  flex-shrink: 0;
+  flex: 1;
+}
+
+.instance-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin-left: 30px;
+}
+
+.instance-version {
+  padding: 2px 8px;
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border-radius: 4px;
+}
+
+.instance-loader {
+  padding: 2px 8px;
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border-radius: 4px;
+}
+
+.instance-launcher {
+  font-size: 16px;
+  cursor: help;
 }
 
 .instance-path {
@@ -209,6 +242,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-left: 30px;
 }
 
 /* Quick Actions */

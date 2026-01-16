@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { MinecraftInstance } from "../shared/types/instance.types";
+import { MinecraftInstance, RecentInstance } from "../shared/types/instance.types";
 import { ModInfo } from "../shared/types/mod.types";
 import { ConfigFile } from "../shared/types/config.types";
 
@@ -20,6 +20,8 @@ interface AppState {
   // Instance
   currentInstance: MinecraftInstance | null;
   setCurrentInstance: (instance: MinecraftInstance | null) => void;
+  launcherType: 'modrinth' | 'curseforge' | 'generic' | 'packwiz' | 'unknown' | null;
+  setLauncherType: (type: 'modrinth' | 'curseforge' | 'generic' | 'packwiz' | 'unknown' | null) => void;
 
   // Mods
   mods: ModInfo[];
@@ -30,6 +32,12 @@ interface AppState {
   // Configs
   configFiles: ConfigFile[];
   setConfigFiles: (files: ConfigFile[]) => void;
+
+  // KubeJS
+  viewMode: 'mods' | 'kubejs';
+  setViewMode: (mode: 'mods' | 'kubejs') => void;
+  kubeJSDetected: boolean;
+  setKubeJSDetected: (detected: boolean) => void;
 
   // UI State
   isLoading: boolean;
@@ -44,8 +52,8 @@ interface AppState {
   updateSettings: (settings: Partial<AppSettings>) => void;
 
   // Recent Instances
-  recentInstances: string[];
-  addRecentInstance: (path: string) => void;
+  recentInstances: RecentInstance[];
+  addRecentInstance: (instance: string | RecentInstance) => void;
 
   // Filters
   showOnlyConfigured: boolean;
@@ -67,6 +75,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Instance
   currentInstance: null,
   setCurrentInstance: (instance) => set({ currentInstance: instance }),
+  launcherType: null,
+  setLauncherType: (type) => set({ launcherType: type }),
 
   // Mods
   mods: [],
@@ -96,6 +106,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   configFiles: [],
   setConfigFiles: (files) => set({ configFiles: files }),
 
+  // KubeJS
+  viewMode: 'mods',
+  setViewMode: (mode) => set({ viewMode: mode }),
+  kubeJSDetected: false,
+  setKubeJSDetected: (detected) => set({ kubeJSDetected: detected }),
+
   // UI State
   isLoading: false,
   setIsLoading: (loading) => set({ isLoading: loading }),
@@ -122,14 +138,34 @@ export const useAppStore = create<AppState>((set, get) => ({
       settings: { ...state.settings, ...newSettings },
     })),
 
-  // Recent Instances
-  recentInstances: JSON.parse(localStorage.getItem("recentInstances") || "[]"),
-  addRecentInstance: (path) =>
+  // Recent Instances - migrate old string format to new object format
+  recentInstances: (() => {
+    const stored = JSON.parse(localStorage.getItem("recentInstances") || "[]");
+    const migrated = stored.map((inst: any) => 
+      typeof inst === 'string' 
+        ? { path: inst, name: inst.split(/[/\\]/).pop() || 'Unknown', lastOpened: Date.now() }
+        : inst
+    );
+    // Save migrated format back
+    if (migrated.length > 0) {
+      localStorage.setItem("recentInstances", JSON.stringify(migrated));
+    }
+    return migrated;
+  })(),
+  addRecentInstance: (instance) =>
     set((state) => {
+      const instanceObj: RecentInstance = typeof instance === 'string'
+        ? { path: instance, name: instance.split(/[/\\]/).pop() || 'Unknown', lastOpened: Date.now() }
+        : { ...instance, lastOpened: Date.now() };
+      
+      console.log('[Store] Adding recent instance:', instanceObj);
+      
       const updated = [
-        path,
-        ...state.recentInstances.filter((p) => p !== path),
+        instanceObj,
+        ...state.recentInstances.filter((inst) => inst.path !== instanceObj.path),
       ].slice(0, 5);
+      
+      console.log('[Store] Updated recent instances:', updated);
       localStorage.setItem("recentInstances", JSON.stringify(updated));
       return { recentInstances: updated };
     }),

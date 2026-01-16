@@ -13,6 +13,7 @@ import { Settings } from "./components/Settings";
 import { UpdateNotification } from "./components/UpdateNotification";
 import { StatsModal } from "./components/StatsModal";
 import { ChangelogViewer } from "./components/ChangelogViewer";
+import { LauncherIcon } from "./components/LauncherIcon";
 import { smartSearchService } from "./services/SmartSearchService";
 import { configService } from "./services/ConfigService";
 import modrinthAPI from "./services/api/ModrinthAPI";
@@ -105,6 +106,7 @@ function App() {
     mods,
     recentInstances,
     addRecentInstance,
+    setLauncherType,
   } = useAppStore();
   const { settings } = useSettingsStore();
   const { startSession, endSession } = useStatsStore();
@@ -195,7 +197,14 @@ function App() {
 
       const instanceInfo = result.instance;
       setCurrentInstance(instanceInfo);
-      addRecentInstance(String(instanceInfo.path));
+      setLauncherType(result.launcherType || 'unknown');
+      addRecentInstance({
+        path: String(instanceInfo.path),
+        name: instanceInfo.name,
+        minecraftVersion: instanceInfo.minecraftVersion,
+        loader: instanceInfo.loader ? `${instanceInfo.loader.type} ${instanceInfo.loader.version}`.trim() : 'unknown',
+        launcher: result.launcherType,
+      });
 
       // Start tracking sessions
       const sessionId = `session_${Date.now()}`;
@@ -222,6 +231,21 @@ function App() {
         instanceInfo.serverConfigFolder,
       );
       setMods(modsWithConfigs);
+
+      // Detect KubeJS and load item registry if present
+      const hasKubeJS = modsList.some(mod => 
+        mod.modId === 'kubejs' || mod.name?.toLowerCase().includes('kubejs')
+      );
+      
+      if (hasKubeJS) {
+        try {
+          await window.api.itemRegistryInitialize(instanceInfo.path, instanceInfo.modsFolder);
+          await window.api.fluidRegistryInitialize(instanceInfo.path, instanceInfo.modsFolder);
+        } catch (error) {
+          console.error('Failed to load KubeJS registries:', error);
+        }
+      }
+
       setIsLoading(false);
 
       // Update Discord RPC - show total mod count (not just mods with configs)
@@ -391,9 +415,10 @@ function App() {
                   Recent Instances
                 </h3>
                 <div className="space-y-2">
-                  {recentInstances.slice(0, 3).map((instancePath, idx) => {
+                  {recentInstances.slice(0, 3).map((instance, idx) => {
+                    const instancePath = typeof instance === 'string' ? instance : instance.path;
                     const instanceName =
-                      instancePath.split(/[/\\]/).pop() || instancePath;
+                      (typeof instance === 'object' && instance.name) || instancePath.split(/[/\\]/).pop() || instancePath;
                     return (
                       <button
                         key={idx}
@@ -401,9 +426,24 @@ function App() {
                         className="w-full px-4 py-3 bg-card hover:bg-card/80 rounded-lg text-left
                                  transition-all duration-200 border border-border hover:border-purple-500/50 group"
                       >
-                        <div className="font-medium text-foreground group-hover:text-purple-400 transition-colors">
-                          {instanceName}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="font-medium text-foreground group-hover:text-purple-400 transition-colors">
+                            {instanceName}
+                          </div>
+                          {typeof instance === 'object' && instance.launcher && (
+                            <LauncherIcon launcher={instance.launcher} size={20} />
+                          )}
                         </div>
+                        {typeof instance === 'object' && instance.minecraftVersion && instance.loader && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                            <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded text-xs font-medium">
+                              MC {instance.minecraftVersion}
+                            </span>
+                            <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded text-xs font-medium">
+                              {instance.loader}
+                            </span>
+                          </div>
+                        )}
                         <div className="text-xs text-muted-foreground truncate mt-1">
                           {instancePath}
                         </div>

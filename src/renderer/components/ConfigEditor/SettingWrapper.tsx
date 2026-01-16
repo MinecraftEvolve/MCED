@@ -38,7 +38,7 @@ export function SettingWrapper({
         return <TextInput setting={setting} onChange={onChange as (value: string) => void} />;
 
       case "array":
-        return <ListInput setting={setting} onChange={onChange as (value: string[]) => void} />;
+        return <ListInput setting={setting} onChange={onChange as (value: unknown[]) => void} />;
 
       case "string":
       default:

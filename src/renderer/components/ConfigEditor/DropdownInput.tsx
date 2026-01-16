@@ -8,7 +8,7 @@ interface DropdownInputProps {
 
 export function DropdownInput({ setting, onChange }: DropdownInputProps) {
   const value = setting.value as string;
-  const options = setting.options || setting.enumValues || [];
+  const options: string[] = setting.options || setting.enumValues || [];
 
   return (
     <div className="py-3 border-b border-border">
@@ -25,7 +25,7 @@ export function DropdownInput({ setting, onChange }: DropdownInputProps) {
         onChange={(e) => onChange(e.target.value)}
         className="w-full px-3 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
       >
-        {options.map((option) => (
+        {options.map((option: string) => (
           <option key={option} value={option}>
             {option}
           </option>

@@ -187,14 +187,8 @@ export function Settings({ onClose }: { onClose: () => void }) {
         return;
       }
 
-      const serverConfigFolder = await window.api.joinPath(
-        currentInstancePath,
-        "saves"
-      );
-      const defaultConfigsFolder = await window.api.joinPath(
-        currentInstancePath,
-        "defaultconfigs"
-      );
+      const serverConfigFolder = await window.api.joinPath(currentInstancePath, "saves");
+      const defaultConfigsFolder = await window.api.joinPath(currentInstancePath, "defaultconfigs");
 
       // Check if folders exist
       const serverExists = await window.api.fileExists(serverConfigFolder);
@@ -211,7 +205,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
       }
 
       let migratedCount = 0;
-      let errors: string[] = [];
+      const errors: string[] = [];
 
       // Process each world folder
       for (const worldFolder of worldFolders) {
@@ -236,10 +230,14 @@ export function Settings({ onClose }: { onClose: () => void }) {
             const destPath = await window.api.joinPath(defaultConfigsFolder, configFile);
 
             // Read source file
-            const content = await window.api.readFile(sourcePath);
+            const fileResult = await window.api.readFile(sourcePath);
+            if (!fileResult.success || !fileResult.content) {
+              console.error(`Failed to read ${configFile}`);
+              continue;
+            }
             
             // Write to defaultconfigs (will overwrite if exists)
-            await window.api.writeFile(destPath, content);
+            await window.api.writeFile(destPath, fileResult.content);
             
             migratedCount++;
           } catch (error) {
