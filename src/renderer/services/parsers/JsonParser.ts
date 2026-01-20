@@ -22,10 +22,7 @@ export class JsonParser {
     }
   }
 
-  private extractComments(
-    content: string,
-    commentMap: Map<string, string>,
-  ): void {
+  private extractComments(content: string, commentMap: Map<string, string>): void {
     const lines = content.split("\n");
     let lastComment = "";
 
@@ -88,9 +85,7 @@ export class JsonParser {
     const metadata: any = { description: comment };
 
     // Range: X ~ Y
-    const rangeMatch = comment.match(
-      /Range:\s*(-?\d+(?:\.\d+)?)\s*(?:~|to)\s*(-?\d+(?:\.\d+)?)/i,
-    );
+    const rangeMatch = comment.match(/Range:\s*(-?\d+(?:\.\d+)?)\s*(?:~|to)\s*(-?\d+(?:\.\d+)?)/i);
     if (rangeMatch) {
       metadata.range = [parseFloat(rangeMatch[1]), parseFloat(rangeMatch[2])];
     }
@@ -112,7 +107,7 @@ export class JsonParser {
           .split(/[,\s]+/)
           .map((v) => v.trim())
           .filter((v) => v && v.length > 0 && /^[A-Z][A-Z0-9_]*$/.test(v));
-        
+
         if (values.length > 0) {
           metadata.allowedValues = values;
           break;
@@ -138,18 +133,14 @@ export class JsonParser {
   private flattenObject(
     obj: any,
     prefix: string,
-    commentMap: Map<string, string>,
+    commentMap: Map<string, string>
   ): ConfigSetting[] {
     const settings: ConfigSetting[] = [];
 
     for (const [key, value] of Object.entries(obj)) {
       const fullKey = prefix ? `${prefix}.${key}` : key;
 
-      if (
-        value !== null &&
-        typeof value === "object" &&
-        !Array.isArray(value)
-      ) {
+      if (value !== null && typeof value === "object" && !Array.isArray(value)) {
         settings.push(...this.flattenObject(value, fullKey, commentMap));
       } else {
         const comment = commentMap.get(key) || "";
@@ -179,17 +170,11 @@ export class JsonParser {
     const metadata: any = {};
 
     // Infer from key name
-    if (
-      key.toLowerCase().includes("volume") ||
-      key.toLowerCase().includes("overall")
-    ) {
+    if (key.toLowerCase().includes("volume") || key.toLowerCase().includes("overall")) {
       metadata.range = [0, 1];
       metadata.step = 0.01;
       metadata.description = "Volume level (0 = muted, 1 = full volume)";
-    } else if (
-      key.toLowerCase().includes("enable") ||
-      key.toLowerCase().includes("use")
-    ) {
+    } else if (key.toLowerCase().includes("enable") || key.toLowerCase().includes("use")) {
       metadata.description = `Enable or disable this feature`;
     } else if (typeof value === "number") {
       // Smart range detection based on value

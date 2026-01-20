@@ -8,7 +8,9 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 8px 32px rgba(147, 51, 234, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px rgba(147, 51, 234, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
   z-index: 10000;
   max-width: 450px;
   animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -133,5 +135,7 @@
 
 :root.light .update-notification {
   background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
-  box-shadow: 0 8px 32px rgba(147, 51, 234, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 8px 32px rgba(147, 51, 234, 0.3),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
 }

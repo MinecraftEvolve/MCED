@@ -7,7 +7,18 @@ import { ModInfo } from "../../shared/types/mod.types";
 import { FolderSync, FileCode } from "lucide-react";
 
 export function ModList() {
-  const { mods, searchQuery, selectedMod, setSelectedMod, currentInstance, reloadMods, viewMode, setViewMode, kubeJSDetected, setKubeJSDetected } = useAppStore();
+  const {
+    mods,
+    searchQuery,
+    selectedMod,
+    setSelectedMod,
+    currentInstance,
+    reloadMods,
+    viewMode,
+    setViewMode,
+    kubeJSDetected,
+    setKubeJSDetected,
+  } = useAppStore();
   const { settings } = useSettingsStore();
   const [isMigrating, setIsMigrating] = useState(false);
 
@@ -15,7 +26,7 @@ export function ModList() {
   useEffect(() => {
     const detectKubeJS = async () => {
       if (!currentInstance) return;
-      
+
       try {
         const result = await window.api.kubeJSDetect(currentInstance.path);
         if (result.success && result.data) {
@@ -30,9 +41,9 @@ export function ModList() {
   }, [currentInstance, setKubeJSDetected]);
 
   const handleModSelect = (mod: ModInfo) => {
-    setViewMode('mods'); // Switch to mods view when selecting a mod
+    setViewMode("mods"); // Switch to mods view when selecting a mod
     setSelectedMod(mod);
-    
+
     // Update Discord RPC with selected mod
     if (settings.discordRpcEnabled) {
       window.api.discordSetMod(mod.name, mods.length);
@@ -40,13 +51,13 @@ export function ModList() {
   };
 
   const handleKubeJSClick = () => {
-    setViewMode('kubejs');
+    setViewMode("kubejs");
     setSelectedMod(null);
   };
 
   const handleMigrateAll = async () => {
     if (!currentInstance) return;
-    
+
     setIsMigrating(true);
     try {
       const result = await window.api.migrateAllServerConfigs(currentInstance.path);
@@ -54,10 +65,10 @@ export function ModList() {
         // Reload mods to reflect changes without leaving the page
         await reloadMods();
       } else {
-        console.error('Migration failed:', result.error);
+        console.error("Migration failed:", result.error);
       }
     } catch (error) {
-      console.error('Migration error:', error);
+      console.error("Migration error:", error);
     } finally {
       setIsMigrating(false);
     }
@@ -72,7 +83,7 @@ export function ModList() {
         (mod) =>
           mod.name.toLowerCase().includes(query) ||
           mod.modId.toLowerCase().includes(query) ||
-          mod.description?.toLowerCase().includes(query),
+          mod.description?.toLowerCase().includes(query)
       );
     }
 
@@ -97,7 +108,7 @@ export function ModList() {
     <>
       <ModSearch />
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto outline-none">
         {filteredMods.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
             {searchQuery ? "No mods found" : "No mods loaded"}
@@ -114,31 +125,31 @@ export function ModList() {
         )}
       </div>
 
-      <div className="p-3 border-t border-border space-y-2">
+      <div className="p-4 border-t border-primary/20 bg-card/30 backdrop-blur-sm space-y-3">
         {kubeJSDetected && (
           <button
             onClick={handleKubeJSClick}
-            className={`w-full px-3 py-2 text-xs font-medium rounded-md transition-colors flex items-center justify-center gap-2 ${
-              viewMode === 'kubejs'
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-600/10 hover:bg-blue-600/20 text-blue-400'
+            className={`w-full px-4 py-3 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-md ${
+              viewMode === "kubejs"
+                ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-purple-500/30 scale-105"
+                : "bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border-2 border-purple-500/20 hover:border-purple-500/40 hover:scale-105"
             }`}
             title="Open KubeJS Editor"
           >
-            <FileCode size={14} />
+            <FileCode size={16} />
             KubeJS Editor
           </button>
         )}
         <button
           onClick={handleMigrateAll}
           disabled={isMigrating || !currentInstance}
-          className="w-full px-3 py-2 text-xs font-medium rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full px-4 py-3 text-sm font-semibold rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-2 border-primary/20 hover:border-primary/40 hover:scale-105 shadow-md hover:shadow-primary/20"
           title="Move all server configs to defaultconfigs folder"
         >
-          <FolderSync size={14} />
-          {isMigrating ? 'Migrating...' : 'Migrate All Server Configs'}
+          <FolderSync size={16} />
+          {isMigrating ? "Migrating..." : "Migrate All Configs"}
         </button>
-        <div className="text-xs text-muted-foreground text-center">
+        <div className="text-xs text-muted-foreground text-center font-medium pt-1">
           {filteredMods.length} of {mods.length} mods
         </div>
       </div>

@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-import { Copy, Check, Code } from 'lucide-react';
+import React, { useState } from "react";
+import { Copy, Check, Code } from "lucide-react";
 
 interface CodePreviewProps {
   code: string;
-  language?: 'javascript' | 'json';
+  language?: "javascript" | "json";
   title?: string;
 }
 
-export const CodePreview: React.FC<CodePreviewProps> = ({ 
-  code, 
-  language = 'javascript',
-  title = 'Generated Code'
+export const CodePreview: React.FC<CodePreviewProps> = ({
+  code,
+  language = "javascript",
+  title = "Generated Code",
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -21,17 +21,26 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
   };
 
   const highlightCode = (text: string, lang: string) => {
-    if (lang === 'javascript') {
+    if (lang === "javascript") {
       return text
-        .replace(/(ServerEvents\.|event\.|Item\.|Ingredient\.)/g, '<span class="text-blue-400">$1</span>')
-        .replace(/\b(const|let|var|function|return|if|else|for|while|of)\b/g, '<span class="text-purple-400">$1</span>')
-        .replace(/\b(recipes|shaped|shapeless|smelting|blasting|smoking)\b/g, '<span class="text-green-400">$1</span>')
-        .replace(/'([^']*)'/g, '<span class="text-yellow-400">\'$1\'</span>')
+        .replace(
+          /(ServerEvents\.|event\.|Item\.|Ingredient\.)/g,
+          '<span class="text-blue-400">$1</span>'
+        )
+        .replace(
+          /\b(const|let|var|function|return|if|else|for|while|of)\b/g,
+          '<span class="text-purple-400">$1</span>'
+        )
+        .replace(
+          /\b(recipes|shaped|shapeless|smelting|blasting|smoking)\b/g,
+          '<span class="text-green-400">$1</span>'
+        )
+        .replace(/'([^']*)'/g, "<span class=\"text-yellow-400\">'$1'</span>")
         .replace(/"([^"]*)"/g, '<span class="text-yellow-400">"$1"</span>')
         .replace(/\b(\d+)\b/g, '<span class="text-orange-400">$1</span>')
         .replace(/(\/\/.*$)/gm, '<span class="text-muted-foreground">$1</span>')
         .replace(/\/\*[\s\S]*?\*\//g, '<span class="text-muted-foreground">$&</span>');
-    } else if (lang === 'json') {
+    } else if (lang === "json") {
       return text
         .replace(/"([^"]+)":/g, '<span class="text-blue-400">"$1"</span>:')
         .replace(/: "([^"]*)"/g, ': <span class="text-yellow-400">"$1"</span>')
@@ -42,8 +51,8 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
   };
 
   return (
-    <div className="bg-background rounded-lg border border-border overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 bg-muted border-b border-border">
+    <div className="bg-background rounded-lg border border-primary/20 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 bg-muted border-b border-primary/20">
         <div className="flex items-center gap-2 text-foreground">
           <Code className="w-4 h-4" />
           <span className="text-sm font-medium">{title}</span>
@@ -68,10 +77,10 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
       </div>
       <div className="p-4 overflow-x-auto bg-muted/30">
         <pre className="text-sm font-mono text-foreground">
-          <code 
-            dangerouslySetInnerHTML={{ 
-              __html: highlightCode(code, language) 
-            }} 
+          <code
+            dangerouslySetInnerHTML={{
+              __html: highlightCode(code, language),
+            }}
           />
         </pre>
       </div>

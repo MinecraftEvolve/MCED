@@ -1,0 +1,236 @@
+/* MCED Design System - Theme Variables */
+
+/* MCED Dark Mode Theme - Black & Purple */
+
+:root {
+  /* Background Colors - Pure Black Theme */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #0f0f0f;
+  --bg-tertiary: #1a1a1a;
+  --bg-quaternary: #252525;
+
+  /* Surface Colors - Slightly Elevated Black */
+  --surface: #0f0f0f;
+  --surface-hover: #1a1a1a;
+  --surface-active: #252525;
+
+  /* Border Colors - Subtle Purple Tints */
+  --border: #2d1b69;
+  --border-hover: #3d1b69;
+  --border-focus: #7c3aed;
+
+  /* Text Colors - High Contrast */
+  --text-primary: #fafafa;
+  --text-secondary: #e4e4e7;
+  --text-tertiary: #a1a1aa;
+  --text-muted: #6b7280;
+
+  /* Brand Colors - Purple Accent */
+  --primary: #7c3aed;
+  --primary-hover: #6d28d9;
+  --primary-active: #5b21b6;
+
+  --secondary: #8b5cf6;
+  --secondary-hover: #7c3aed;
+
+  /* State Colors */
+  --destructive: #ef4444;
+  --destructive-hover: #dc2626;
+
+  --warning: #f59e0b;
+  --warning-hover: #d97706;
+
+  --success: #10b981;
+  --success-hover: #059669;
+
+  /* State Colors */
+  --error: #ef4444;
+  --error-bg: rgba(239, 68, 68, 0.1);
+
+  --warning-bg: rgba(245, 158, 11, 0.1);
+
+  /* Shadows - Colored */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --shadow-purple: 0 4px 6px -1px rgba(124, 58, 237, 0.3);
+
+  /* Animations */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 200ms ease-in-out;
+  --transition-slow: 300ms ease-in-out;
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+}
+
+/* Light Theme Support */
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --surface: #ffffff;
+  --surface-hover: #f8fafc;
+  --surface-active: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #1e293b;
+  --text-tertiary: #334155;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --border-focus: #3b82f6;
+}
+
+/* Light Theme Support */
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --surface: #ffffff;
+  --surface-hover: #f8fafc;
+  --surface-active: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #1e293b;
+  --text-tertiary: #334155;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+}
+
+/* Component-Specific Variables */
+:root {
+  /* Dialog/Modal */
+  --dialog-backdrop: rgba(0, 0, 0, 0.8);
+  --dialog-bg: var(--surface);
+  --dialog-border: var(--border);
+  --dialog-shadow: var(--shadow-purple);
+
+  /* Input */
+  --input-bg: var(--surface);
+  --input-border: var(--border);
+  --input-border-focus: var(--border-focus);
+  --input-placeholder: var(--text-muted);
+
+  /* Button */
+  --btn-primary-bg: var(--primary);
+  --btn-primary-hover: var(--primary-hover);
+  --btn-primary-text: var(--text-primary);
+  --btn-primary-shadow: var(--shadow-purple);
+
+  --btn-secondary-bg: var(--surface);
+  --btn-secondary-hover: var(--surface-hover);
+  --btn-secondary-text: var(--text-primary);
+
+  /* List/Grid Items */
+  --item-bg: var(--surface);
+  --item-hover: var(--surface-hover);
+  --item-selected: var(--primary);
+  --item-selected-bg: rgba(124, 58, 237, 0.1);
+  --item-selected-shadow: var(--shadow-purple);
+
+  /* KubeJS Specific */
+  --kubejs-bg: var(--bg-secondary);
+  --kubejs-header: var(--surface);
+  --kubejs-border: var(--border);
+  --kubejs-active: var(--primary);
+
+  /* Recipe Editor */
+  --recipe-slot: var(--surface);
+  --recipe-slot-hover: var(--surface-hover);
+  --recipe-slot-border: var(--border);
+  --recipe-item-bg: var(--bg-tertiary);
+
+  /* Notification */
+  --notification-bg: var(--surface);
+  --notification-border: var(--border);
+  --notification-shadow: var(--shadow-purple);
+
+  /* Scrollbar */
+  --scrollbar-thumb: var(--primary);
+  --scrollbar-thumb-hover: var(--primary-hover);
+  --scrollbar-track: var(--bg-quaternary);
+}
+
+/* Utility Classes */
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+.bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+.bg-surface {
+  background-color: var(--surface);
+}
+.bg-surface-hover {
+  background-color: var(--surface-hover);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+.text-muted {
+  color: var(--text-muted);
+}
+
+.border-primary {
+  border-color: var(--border);
+}
+.border-focus {
+  border-color: var(--border-focus);
+}
+
+.btn-transition {
+  transition: all var(--transition-normal);
+  transition-property: background-color, border-color, color, transform;
+}
+
+.item-transition {
+  transition: all var(--transition-fast);
+  transition-property: background-color, border-color, transform;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Focus Styles */
+* {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}

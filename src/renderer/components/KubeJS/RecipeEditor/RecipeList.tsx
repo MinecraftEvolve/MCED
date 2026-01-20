@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FileCode, Trash2, Copy, Eye, CheckSquare, Square, Edit3 } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { FileCode, Trash2, Copy, Eye, CheckSquare, Square, Edit3 } from "lucide-react";
 
 interface Recipe {
   id: string;
@@ -8,8 +8,8 @@ interface Recipe {
   inputs?: string[];
   filePath: string;
   raw?: string;
-  ingredients?: Array<{item?: string; tag?: string; count?: number}>;
-  results?: Array<{item?: string; count?: number}>;
+  ingredients?: Array<{ item?: string; tag?: string; count?: number }>;
+  results?: Array<{ item?: string; count?: number }>;
 }
 
 interface RecipeListProps {
@@ -24,16 +24,16 @@ interface RecipeListProps {
   onToggleSelection?: (recipeId: string) => void;
 }
 
-export const RecipeList: React.FC<RecipeListProps> = ({ 
-  instancePath, 
+export const RecipeList: React.FC<RecipeListProps> = ({
+  instancePath,
   searchQuery,
-  filterType = 'all',
-  onViewRecipe, 
+  filterType = "all",
+  onViewRecipe,
   onDuplicateRecipe,
   onModifyRecipe,
   selectionMode = false,
   selectedRecipes = new Set(),
-  onToggleSelection
+  onToggleSelection,
 }) => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,26 +41,26 @@ export const RecipeList: React.FC<RecipeListProps> = ({
 
   const extractOutput = (recipe: Recipe): string => {
     // Try direct output first
-    if (recipe.output && recipe.output !== 'Unknown') return recipe.output;
-    
+    if (recipe.output && recipe.output !== "Unknown") return recipe.output;
+
     // Try results array
     if (recipe.results?.[0]?.item) return recipe.results[0].item;
-    
+
     // Parse from raw recipe string
     if (recipe.raw) {
       // Match patterns like .deploying('output', ...) or .crushing(['output'])
       const patterns = [
-        /\.\w+\(\s*['"]([^'"]+)['"]/,  // .method('output'...)
-        /\.\w+\(\s*\[?\s*['"]([^'"]+)['"]/,  // .method(['output']...)
+        /\.\w+\(\s*['"]([^'"]+)['"]/, // .method('output'...)
+        /\.\w+\(\s*\[?\s*['"]([^'"]+)['"]/, // .method(['output']...)
       ];
-      
+
       for (const pattern of patterns) {
         const match = recipe.raw.match(pattern);
         if (match?.[1]) return match[1];
       }
     }
-    
-    return 'Unknown';
+
+    return "Unknown";
   };
 
   useEffect(() => {
@@ -69,22 +69,22 @@ export const RecipeList: React.FC<RecipeListProps> = ({
 
   useEffect(() => {
     // Apply type filter
-    if (filterType === 'all') {
+    if (filterType === "all") {
       setFilteredRecipes(recipes);
     } else {
-      setFilteredRecipes(recipes.filter(r => r.type === filterType));
+      setFilteredRecipes(recipes.filter((r) => r.type === filterType));
     }
   }, [recipes, filterType]);
 
   const loadRecipes = async () => {
     setIsLoading(true);
     try {
-      const result = await window.api.recipeSearch(instancePath, searchQuery || '');
+      const result = await window.api.recipeSearch(instancePath, searchQuery || "");
       if (result.success && result.data) {
         setRecipes(result.data);
       }
     } catch (error) {
-      console.error('Failed to load recipes:', error);
+      console.error("Failed to load recipes:", error);
     } finally {
       setIsLoading(false);
     }
@@ -98,10 +98,10 @@ export const RecipeList: React.FC<RecipeListProps> = ({
     try {
       const result = await window.api.recipeDelete(instancePath, filePath, recipeId);
       if (result.success) {
-        setRecipes(recipes.filter(r => r.id !== recipeId));
+        setRecipes(recipes.filter((r) => r.id !== recipeId));
       }
     } catch (error) {
-      console.error('Failed to delete recipe:', error);
+      console.error("Failed to delete recipe:", error);
     }
   };
 
@@ -131,7 +131,7 @@ export const RecipeList: React.FC<RecipeListProps> = ({
         <FileCode className="w-16 h-16 text-muted-foreground mb-4" />
         <h3 className="text-lg font-semibold text-foreground mb-2">No Recipes Found</h3>
         <p className="text-sm text-muted-foreground">
-          {searchQuery ? 'Try a different search query' : 'Create your first recipe to get started'}
+          {searchQuery ? "Try a different search query" : "Create your first recipe to get started"}
         </p>
       </div>
     );
@@ -144,9 +144,9 @@ export const RecipeList: React.FC<RecipeListProps> = ({
           <div
             key={recipe.id}
             className={`bg-muted/50 border rounded-lg p-3.5 transition-colors ${
-              selectionMode && selectedRecipes.has(recipe.id) 
-                ? 'border-primary bg-primary/5' 
-                : 'border-border hover:border-border/80'
+              selectionMode && selectedRecipes.has(recipe.id)
+                ? "border-primary bg-primary/5"
+                : "border-primary/20 hover:border-primary/20/80"
             }`}
           >
             <div className="flex items-center justify-between">
@@ -172,11 +172,13 @@ export const RecipeList: React.FC<RecipeListProps> = ({
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div>
-                      <span className="text-muted-foreground/70">Output:</span> {extractOutput(recipe)}
+                      <span className="text-muted-foreground/70">Output:</span>{" "}
+                      {extractOutput(recipe)}
                     </div>
                     {recipe.inputs && recipe.inputs.length > 0 && (
                       <div>
-                        <span className="text-muted-foreground/70">Inputs:</span> {recipe.inputs.join(', ')}
+                        <span className="text-muted-foreground/70">Inputs:</span>{" "}
+                        {recipe.inputs.join(", ")}
                       </div>
                     )}
                   </div>
@@ -187,7 +189,7 @@ export const RecipeList: React.FC<RecipeListProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onDuplicateRecipe?.(recipe)}
-                  className="p-2 bg-secondary hover:bg-secondary/80 border border-border rounded transition-colors"
+                  className="p-2 bg-secondary hover:bg-secondary/80 border border-primary/20 rounded transition-colors"
                   title="Duplicate Recipe"
                 >
                   <Copy className="w-4 h-4 text-foreground" />

@@ -7,7 +7,7 @@ interface HistoryState {
   future: ConfigFile[][];
   canUndo: boolean;
   canRedo: boolean;
-  
+
   init: (configs: ConfigFile[]) => void;
   pushState: (configs: ConfigFile[]) => void;
   undo: () => ConfigFile[] | null;
@@ -36,9 +36,9 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
 
   pushState: (configs: ConfigFile[]) => {
     const { present, past } = get();
-    
+
     const newPast = [...past, present].slice(-MAX_HISTORY);
-    
+
     set({
       past: newPast,
       present: JSON.parse(JSON.stringify(configs)),
@@ -50,12 +50,12 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
 
   undo: () => {
     const { past, present, future } = get();
-    
+
     if (past.length === 0) return null;
-    
+
     const previous = past[past.length - 1];
     const newPast = past.slice(0, -1);
-    
+
     set({
       past: newPast,
       present: previous,
@@ -63,18 +63,18 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
       canUndo: newPast.length > 0,
       canRedo: true,
     });
-    
+
     return JSON.parse(JSON.stringify(previous));
   },
 
   redo: () => {
     const { past, present, future } = get();
-    
+
     if (future.length === 0) return null;
-    
+
     const next = future[0];
     const newFuture = future.slice(1);
-    
+
     set({
       past: [...past, present],
       present: next,
@@ -82,7 +82,7 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
       canUndo: true,
       canRedo: newFuture.length > 0,
     });
-    
+
     return JSON.parse(JSON.stringify(next));
   },
 

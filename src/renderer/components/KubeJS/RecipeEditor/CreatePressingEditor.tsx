@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { ArrowRight } from 'lucide-react';
-import { ItemPicker } from '../ItemPicker/ItemPicker';
-import { ItemSlot } from './ItemSlot';
+import React, { useState } from "react";
+import { ArrowRight } from "lucide-react";
+import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { ItemSlot } from "./ItemSlot";
 
 interface Item {
   id: string;
@@ -22,13 +22,13 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
   instancePath,
   onSave,
   onCancel,
-  initialRecipe
+  initialRecipe,
 }) => {
   const [input, setInput] = useState<Item | null>(null);
   const [output, setOutput] = useState<Item | null>(null);
   const [outputCount, setOutputCount] = useState(initialRecipe?.results?.[0]?.count || 1);
   const [showItemPicker, setShowItemPicker] = useState(false);
-  const [pickingSlot, setPickingSlot] = useState<'input' | 'output' | null>(null);
+  const [pickingSlot, setPickingSlot] = useState<"input" | "output" | null>(null);
 
   // Load item data from registry
   const loadItemData = async (itemId: string): Promise<Item> => {
@@ -43,13 +43,13 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
         };
       }
     } catch (error) {
-      console.error('Failed to load item data:', error);
+      console.error("Failed to load item data:", error);
     }
     // Fallback
     return {
       id: itemId,
-      name: itemId.split(':')[1] || itemId,
-      modId: itemId.split(':')[0] || 'minecraft',
+      name: itemId.split(":")[1] || itemId,
+      modId: itemId.split(":")[0] || "minecraft",
     };
   };
 
@@ -75,7 +75,7 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
   const handleItemSelected = async (itemId: string) => {
     try {
       const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-      
+
       let item: Item;
       if (result.success && result.data) {
         item = {
@@ -87,31 +87,31 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
       } else {
         item = {
           id: itemId,
-          name: itemId.split(':')[1] || itemId,
-          modId: itemId.split(':')[0] || 'minecraft',
+          name: itemId.split(":")[1] || itemId,
+          modId: itemId.split(":")[0] || "minecraft",
         };
       }
-      
-      if (pickingSlot === 'input') setInput(item);
-      else if (pickingSlot === 'output') setOutput(item);
-      
+
+      if (pickingSlot === "input") setInput(item);
+      else if (pickingSlot === "output") setOutput(item);
+
       setShowItemPicker(false);
       setPickingSlot(null);
     } catch (error) {
-      console.error('Failed to fetch item data:', error);
+      console.error("Failed to fetch item data:", error);
     }
   };
 
   const handleSave = () => {
     if (!input || !output) {
-      alert('Please provide input and output items');
+      alert("Please provide input and output items");
       return;
     }
 
     const recipe = {
-      type: 'create:pressing',
+      type: "create:pressing",
       ingredients: [{ item: input.id }],
-      results: [{ item: output.id, count: outputCount }]
+      results: [{ item: output.id, count: outputCount }],
     };
 
     onSave(recipe);
@@ -127,7 +127,7 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
             item={input}
             size="large"
             onClick={() => {
-              setPickingSlot('input');
+              setPickingSlot("input");
               setShowItemPicker(true);
             }}
             onClear={() => setInput(null)}
@@ -143,7 +143,7 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
             item={output ? { ...output, count: outputCount } : null}
             size="large"
             onClick={() => {
-              setPickingSlot('output');
+              setPickingSlot("output");
               setShowItemPicker(true);
             }}
             onClear={() => setOutput(null)}
@@ -156,8 +156,10 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
                 min="1"
                 max="64"
                 value={outputCount}
-                onChange={(e) => setOutputCount(Math.max(1, Math.min(64, parseInt(e.target.value) || 1)))}
-                className="w-20 px-2 py-1 bg-secondary border border-border rounded text-sm text-foreground focus:outline-none focus:border-primary"
+                onChange={(e) =>
+                  setOutputCount(Math.max(1, Math.min(64, parseInt(e.target.value) || 1)))
+                }
+                className="w-20 px-2 py-1 bg-secondary border border-primary/20 rounded text-sm text-foreground focus:outline-none focus:border-primary"
               />
             </div>
           )}
@@ -166,25 +168,25 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
 
       {/* Code Preview */}
       {input && output && (
-        <div className="bg-muted/30 border border-border rounded-lg p-4">
+        <div className="bg-muted/30 border border-primary/20 rounded-lg p-4">
           <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-            <span className="text-primary">{'</>'}</span>
+            <span className="text-primary">{"</>"}</span>
             Generated Code
           </h3>
-          <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-border overflow-x-auto">
-{`event.recipes.create.pressing('${output.id}'${outputCount > 1 ? ` * ${outputCount}` : ''}, '${input.id}')`}
+          <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-primary/20 overflow-x-auto">
+            {`event.recipes.create.pressing('${output.id}'${outputCount > 1 ? ` * ${outputCount}` : ""}, '${input.id}')`}
           </pre>
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-primary/20">
         <button
           onClick={() => {
             setInput(null);
             setOutput(null);
             setOutputCount(1);
           }}
-          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-border rounded text-sm text-foreground transition-colors"
+          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-primary/20 rounded text-sm text-foreground transition-colors"
         >
           Clear
         </button>
@@ -205,8 +207,8 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
             setShowItemPicker(false);
             setPickingSlot(null);
           }}
-          selectedItem={pickingSlot === 'input' ? input?.id : output?.id}
-          title={pickingSlot === 'input' ? 'Select Input Item' : 'Select Output Item'}
+          selectedItem={pickingSlot === "input" ? input?.id : output?.id}
+          title={pickingSlot === "input" ? "Select Input Item" : "Select Output Item"}
         />
       )}
     </div>

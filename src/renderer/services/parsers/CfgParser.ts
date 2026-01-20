@@ -18,8 +18,7 @@ export class CfgParser {
 
       // Collect comments
       if (line.startsWith("#")) {
-        currentComment +=
-          (currentComment ? "\n" : "") + line.substring(1).trim();
+        currentComment += (currentComment ? "\n" : "") + line.substring(1).trim();
         continue;
       }
 
@@ -36,8 +35,7 @@ export class CfgParser {
       }
 
       // Key=Value or Key:Value
-      const separatorIndex =
-        line.indexOf("=") !== -1 ? line.indexOf("=") : line.indexOf(":");
+      const separatorIndex = line.indexOf("=") !== -1 ? line.indexOf("=") : line.indexOf(":");
       if (separatorIndex === -1) continue;
 
       const key = line.substring(0, separatorIndex).trim();
@@ -75,10 +73,7 @@ export class CfgParser {
 
   private parseValue(str: string): any {
     // Remove quotes if present
-    if (
-      (str.startsWith('"') && str.endsWith('"')) ||
-      (str.startsWith("'") && str.endsWith("'"))
-    ) {
+    if ((str.startsWith('"') && str.endsWith('"')) || (str.startsWith("'") && str.endsWith("'"))) {
       return str.substring(1, str.length - 1);
     }
 
@@ -116,10 +111,7 @@ export class CfgParser {
 
     // Check comment for type hints
     const lowerComment = comment.toLowerCase();
-    if (
-      lowerComment.includes("enum") ||
-      lowerComment.includes("valid values")
-    ) {
+    if (lowerComment.includes("enum") || lowerComment.includes("valid values")) {
       return "enum";
     }
 
@@ -128,9 +120,7 @@ export class CfgParser {
 
   private parseMetadata(setting: ConfigSetting, comment: string): void {
     // Extract range: "Range: 0-100" or "Min: 0, Max: 100"
-    const rangeMatch = comment.match(
-      /range:\s*(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/i,
-    );
+    const rangeMatch = comment.match(/range:\s*(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/i);
     if (rangeMatch) {
       setting.min = parseFloat(rangeMatch[1]);
       setting.max = parseFloat(rangeMatch[2]);
@@ -177,10 +167,7 @@ export class CfgParser {
         let valueStr: string;
         if (Array.isArray(setting.value)) {
           valueStr = `[${setting.value.join(", ")}]`;
-        } else if (
-          typeof setting.value === "string" &&
-          setting.value.includes(" ")
-        ) {
+        } else if (typeof setting.value === "string" && setting.value.includes(" ")) {
           valueStr = `"${setting.value}"`;
         } else {
           valueStr = String(setting.value);

@@ -99,8 +99,7 @@ export class SmartSearchService {
     return this.searchableItems
       .filter(
         (item) =>
-          item.modName.toLowerCase().includes(modName) ||
-          item.modId.toLowerCase().includes(modName),
+          item.modName.toLowerCase().includes(modName) || item.modId.toLowerCase().includes(modName)
       )
       .map((item) => ({
         item,
@@ -173,10 +172,7 @@ export class SmartSearchService {
     }
 
     // Search for each keyword and combine results
-    const resultMap = new Map<
-      SearchableItem,
-      { score: number; matches: any[] }
-    >();
+    const resultMap = new Map<SearchableItem, { score: number; matches: any[] }>();
 
     for (const keyword of keywords) {
       const results = this.fuse?.search(keyword) || [];

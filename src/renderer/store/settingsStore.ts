@@ -83,10 +83,7 @@ export const useSettingsStore = create<SettingsStore>()(
 
       addRecentInstance: (path) => {
         set((state) => {
-          const recent = [
-            path,
-            ...state.settings.recentInstances.filter((p) => p !== path),
-          ];
+          const recent = [path, ...state.settings.recentInstances.filter((p) => p !== path)];
           const trimmed = recent.slice(0, state.settings.maxRecentInstances);
 
           return {
@@ -110,10 +107,7 @@ export const useSettingsStore = create<SettingsStore>()(
       resetSettings: () => {
         set({ settings: defaultSettings });
         applyTheme(defaultSettings.theme);
-        document.body.classList.toggle(
-          "compact-mode",
-          defaultSettings.compactMode,
-        );
+        document.body.classList.toggle("compact-mode", defaultSettings.compactMode);
       },
     }),
     {
@@ -122,47 +116,34 @@ export const useSettingsStore = create<SettingsStore>()(
         if (state) {
           // Apply settings on load
           applyTheme(state.settings.theme);
-          document.body.classList.toggle(
-            "compact-mode",
-            state.settings.compactMode,
-          );
-          
+          document.body.classList.toggle("compact-mode", state.settings.compactMode);
+
           // Ensure discordRpcEnabled has a default value
           if (state.settings.discordRpcEnabled === undefined) {
             state.settings.discordRpcEnabled = true;
           }
-          
+
           // Initialize Discord RPC state
           window.api?.discordSetEnabled?.(state.settings.discordRpcEnabled);
         }
       },
-    },
-  ),
+    }
+  )
 );
 
 function applyTheme(theme: "dark" | "light" | "auto") {
   if (theme === "auto") {
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    document.documentElement.setAttribute(
-      "data-theme",
-      prefersDark ? "dark" : "light",
-    );
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
   } else {
     document.documentElement.setAttribute("data-theme", theme);
   }
 }
 
 // Listen for system theme changes when in auto mode
-window
-  .matchMedia("(prefers-color-scheme: dark)")
-  .addEventListener("change", (e) => {
-    const settings = useSettingsStore.getState().settings;
-    if (settings.theme === "auto") {
-      document.documentElement.setAttribute(
-        "data-theme",
-        e.matches ? "dark" : "light",
-      );
-    }
-  });
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+  const settings = useSettingsStore.getState().settings;
+  if (settings.theme === "auto") {
+    document.documentElement.setAttribute("data-theme", e.matches ? "dark" : "light");
+  }
+});

@@ -22,11 +22,7 @@ export class JarScanner {
       });
 
       const results = await Promise.all(modPromises);
-      mods.push(
-        ...results.filter(
-          (mod: ModInfo | null): mod is ModInfo => mod !== null,
-        ),
-      );
+      mods.push(...results.filter((mod: ModInfo | null): mod is ModInfo => mod !== null));
     } catch (error) {}
 
     return mods;
@@ -75,37 +71,27 @@ export class JarScanner {
 
   private async tryForgeMetadata(
     zip: AdmZip,
-    entries: AdmZip.IZipEntry[],
+    entries: AdmZip.IZipEntry[]
   ): Promise<ModMetadata | null> {
     // Try mods.toml (modern Forge)
-    const modsTomlEntry = entries.find(
-      (e) => e.entryName === "META-INF/mods.toml",
-    );
+    const modsTomlEntry = entries.find((e) => e.entryName === "META-INF/mods.toml");
     if (modsTomlEntry) {
       try {
         const toml = require("@iarna/toml");
         const content = modsTomlEntry.getData().toString("utf-8");
         const parsed = toml.parse(content);
 
-        if (
-          parsed.mods &&
-          Array.isArray(parsed.mods) &&
-          parsed.mods.length > 0
-        ) {
+        if (parsed.mods && Array.isArray(parsed.mods) && parsed.mods.length > 0) {
           const mod = parsed.mods[0];
 
           // Resolve version placeholders
           let version = mod.version || "0.0.0";
           if (typeof version === "string" && version.includes("${")) {
             // Try to get version from manifest
-            const manifestEntry = entries.find(
-              (e) => e.entryName === "META-INF/MANIFEST.MF",
-            );
+            const manifestEntry = entries.find((e) => e.entryName === "META-INF/MANIFEST.MF");
             if (manifestEntry) {
               const manifestContent = manifestEntry.getData().toString("utf-8");
-              const versionMatch = manifestContent.match(
-                /Implementation-Version:\s*(.+)/,
-              );
+              const versionMatch = manifestContent.match(/Implementation-Version:\s*(.+)/);
               if (versionMatch) {
                 version = versionMatch[1].trim();
               }
@@ -150,8 +136,7 @@ export class JarScanner {
             name: mod.name || mod.modid || "Unknown Mod",
             version: mod.version || "0.0.0",
             description: mod.description,
-            authors:
-              mod.authorList || (mod.authors ? [mod.authors] : undefined),
+            authors: mod.authorList || (mod.authors ? [mod.authors] : undefined),
             homepage: mod.url,
             logoFile: mod.logoFile,
             credits: mod.credits,
@@ -165,11 +150,9 @@ export class JarScanner {
 
   private async tryFabricMetadata(
     zip: AdmZip,
-    entries: AdmZip.IZipEntry[],
+    entries: AdmZip.IZipEntry[]
   ): Promise<ModMetadata | null> {
-    const fabricModJsonEntry = entries.find(
-      (e) => e.entryName === "fabric.mod.json",
-    );
+    const fabricModJsonEntry = entries.find((e) => e.entryName === "fabric.mod.json");
     if (!fabricModJsonEntry) return null;
 
     try {
@@ -199,10 +182,10 @@ export class JarScanner {
 
   private async tryNeoForgeMetadata(
     zip: AdmZip,
-    entries: AdmZip.IZipEntry[],
+    entries: AdmZip.IZipEntry[]
   ): Promise<ModMetadata | null> {
     const neoforgeModsTomlEntry = entries.find(
-      (e) => e.entryName === "META-INF/neoforge.mods.toml",
+      (e) => e.entryName === "META-INF/neoforge.mods.toml"
     );
     if (!neoforgeModsTomlEntry) return null;
 
@@ -218,14 +201,10 @@ export class JarScanner {
         let version = mod.version || "0.0.0";
         if (typeof version === "string" && version.includes("${")) {
           // Try to get version from manifest
-          const manifestEntry = entries.find(
-            (e) => e.entryName === "META-INF/MANIFEST.MF",
-          );
+          const manifestEntry = entries.find((e) => e.entryName === "META-INF/MANIFEST.MF");
           if (manifestEntry) {
             const manifestContent = manifestEntry.getData().toString("utf-8");
-            const versionMatch = manifestContent.match(
-              /Implementation-Version:\s*(.+)/,
-            );
+            const versionMatch = manifestContent.match(/Implementation-Version:\s*(.+)/);
             if (versionMatch) {
               version = versionMatch[1].trim();
             }
@@ -257,9 +236,7 @@ export class JarScanner {
     return null;
   }
 
-  private detectLoader(
-    entries: AdmZip.IZipEntry[],
-  ): "forge" | "fabric" | "neoforge" | "quilt" {
+  private detectLoader(entries: AdmZip.IZipEntry[]): "forge" | "fabric" | "neoforge" | "quilt" {
     if (entries.some((e) => e.entryName === "META-INF/neoforge.mods.toml")) {
       return "neoforge";
     }
@@ -272,10 +249,7 @@ export class JarScanner {
     return "forge";
   }
 
-  private async extractIconFromZip(
-    zip: AdmZip,
-    iconPath: string,
-  ): Promise<string | null> {
+  private async extractIconFromZip(zip: AdmZip, iconPath: string): Promise<string | null> {
     try {
       const entry = zip.getEntry(iconPath);
       if (!entry) return null;

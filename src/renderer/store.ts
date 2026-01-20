@@ -20,8 +20,10 @@ interface AppState {
   // Instance
   currentInstance: MinecraftInstance | null;
   setCurrentInstance: (instance: MinecraftInstance | null) => void;
-  launcherType: 'modrinth' | 'curseforge' | 'generic' | 'packwiz' | 'unknown' | null;
-  setLauncherType: (type: 'modrinth' | 'curseforge' | 'generic' | 'packwiz' | 'unknown' | null) => void;
+  launcherType: "modrinth" | "curseforge" | "generic" | "packwiz" | "unknown" | null;
+  setLauncherType: (
+    type: "modrinth" | "curseforge" | "generic" | "packwiz" | "unknown" | null
+  ) => void;
 
   // Mods
   mods: ModInfo[];
@@ -34,8 +36,8 @@ interface AppState {
   setConfigFiles: (files: ConfigFile[]) => void;
 
   // KubeJS
-  viewMode: 'mods' | 'kubejs';
-  setViewMode: (mode: 'mods' | 'kubejs') => void;
+  viewMode: "mods" | "kubejs";
+  setViewMode: (mode: "mods" | "kubejs") => void;
   kubeJSDetected: boolean;
   setKubeJSDetected: (detected: boolean) => void;
 
@@ -84,21 +86,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedMod: null,
   setSelectedMod: (mod) => {
     set({ selectedMod: mod });
-    
+
     // Update Discord RPC when a mod is selected
     if (mod) {
       const totalMods = get().mods.length;
-      window.api?.discordSetMod?.(
-        `Configuring ${mod.name}`,
-        totalMods
-      );
+      window.api?.discordSetMod?.(`Configuring ${mod.name}`, totalMods);
     } else {
       // No mod selected, show total count
       const totalMods = get().mods.length;
-      window.api?.discordSetMod?.(
-        `${totalMods} mods installed`,
-        totalMods
-      );
+      window.api?.discordSetMod?.(`${totalMods} mods installed`, totalMods);
     }
   },
 
@@ -107,7 +103,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setConfigFiles: (files) => set({ configFiles: files }),
 
   // KubeJS
-  viewMode: 'mods',
+  viewMode: "mods",
   setViewMode: (mode) => set({ viewMode: mode }),
   kubeJSDetected: false,
   setKubeJSDetected: (detected) => set({ kubeJSDetected: detected }),
@@ -141,9 +137,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Recent Instances - migrate old string format to new object format
   recentInstances: (() => {
     const stored = JSON.parse(localStorage.getItem("recentInstances") || "[]");
-    const migrated = stored.map((inst: any) => 
-      typeof inst === 'string' 
-        ? { path: inst, name: inst.split(/[/\\]/).pop() || 'Unknown', lastOpened: Date.now() }
+    const migrated = stored.map((inst: any) =>
+      typeof inst === "string"
+        ? { path: inst, name: inst.split(/[/\\]/).pop() || "Unknown", lastOpened: Date.now() }
         : inst
     );
     // Save migrated format back
@@ -154,18 +150,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   })(),
   addRecentInstance: (instance) =>
     set((state) => {
-      const instanceObj: RecentInstance = typeof instance === 'string'
-        ? { path: instance, name: instance.split(/[/\\]/).pop() || 'Unknown', lastOpened: Date.now() }
-        : { ...instance, lastOpened: Date.now() };
-      
-      console.log('[Store] Adding recent instance:', instanceObj);
-      
+      const instanceObj: RecentInstance =
+        typeof instance === "string"
+          ? {
+              path: instance,
+              name: instance.split(/[/\\]/).pop() || "Unknown",
+              lastOpened: Date.now(),
+            }
+          : { ...instance, lastOpened: Date.now() };
+
+      console.log("[Store] Adding recent instance:", instanceObj);
+
       const updated = [
         instanceObj,
         ...state.recentInstances.filter((inst) => inst.path !== instanceObj.path),
       ].slice(0, 5);
-      
-      console.log('[Store] Updated recent instances:', updated);
+
+      console.log("[Store] Updated recent instances:", updated);
       localStorage.setItem("recentInstances", JSON.stringify(updated));
       return { recentInstances: updated };
     }),

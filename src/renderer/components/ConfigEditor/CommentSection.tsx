@@ -46,35 +46,28 @@ export function CommentSection({
       <div className="flex items-center justify-between mb-2">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <MessageSquare className="w-4 h-4" />
-          <span>
-            Comments {comments.length > 0 && `(${comments.length})`}
-          </span>
+          <span>Comments {comments.length > 0 && `(${comments.length})`}</span>
         </button>
       </div>
 
       {isExpanded && (
         <div className="space-y-2">
           {comments.map((comment) => (
-            <div
-              key={comment.id}
-              className="bg-gray-50 dark:bg-gray-800/50 rounded p-2 group"
-            >
+            <div key={comment.id} className="bg-secondary/50 rounded-lg p-2 group">
               <div className="flex items-start justify-between gap-2">
-                <p className="text-sm text-gray-700 dark:text-gray-300 flex-1">
-                  {comment.text}
-                </p>
+                <p className="text-sm text-foreground flex-1">{comment.text}</p>
                 <button
                   onClick={() => onDeleteComment(comment.id)}
-                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-all"
+                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-secondary rounded-lg transition-all"
                   title="Delete comment"
                 >
-                  <X className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                  <X className="w-3 h-3 text-muted-foreground" />
                 </button>
               </div>
-              <div className="flex items-center gap-1 mt-1 text-xs text-gray-500 dark:text-gray-500">
+              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span>{formatTimestamp(comment.timestamp)}</span>
               </div>
@@ -82,12 +75,12 @@ export function CommentSection({
           ))}
 
           {isAdding && (
-            <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
+            <div className="bg-secondary/50 rounded-lg p-2">
               <textarea
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 placeholder="Add your comment... (e.g., why you changed this value)"
-                className="w-full px-2 py-1 text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-200"
+                className="w-full px-2 py-1 text-sm bg-background border border-primary/20 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                 rows={3}
                 autoFocus
               />
@@ -97,14 +90,14 @@ export function CommentSection({
                     setIsAdding(false);
                     setCommentText("");
                   }}
-                  className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+                  className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAdd}
                   disabled={!commentText.trim()}
-                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Add Comment
                 </button>

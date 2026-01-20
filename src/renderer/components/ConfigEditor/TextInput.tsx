@@ -18,13 +18,11 @@ export function TextInput({ setting, onChange }: TextInputProps) {
   };
 
   return (
-    <div className="py-3 border-b border-border">
+    <div className="py-3 border-b border-primary/20">
       <label className="block font-medium text-sm mb-2">{setting.key}</label>
 
       {setting.description && (
-        <p className="text-xs text-muted-foreground mb-2">
-          {setting.description}
-        </p>
+        <p className="text-xs text-muted-foreground mb-2">{setting.description}</p>
       )}
 
       <input
@@ -32,7 +30,7 @@ export function TextInput({ setting, onChange }: TextInputProps) {
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onBlur={handleBlur}
-        className="w-full px-3 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+        className="w-full px-3 py-2 bg-secondary border border-primary/20 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
       />
 
       {setting.defaultValue !== undefined && value !== setting.defaultValue && (

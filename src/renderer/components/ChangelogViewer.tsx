@@ -1,33 +1,34 @@
-import { createPortal } from 'react-dom';
-import { X, History, Download, RotateCcw } from 'lucide-react';
-import { useChangelogStore, ChangeLogEntry } from '@/store/changelogStore';
-import './ChangelogViewer.css';
+import { createPortal } from "react-dom";
+import { X, History, Download, RotateCcw } from "lucide-react";
+import { useChangelogStore, ChangeLogEntry } from "@/store/changelogStore";
+import "./ChangelogViewer.css";
 
 interface ChangelogViewerProps {
   onClose: () => void;
 }
 
 export function ChangelogViewer({ onClose }: ChangelogViewerProps) {
-  const { getRecentChanges, getAllSessions, getSessionChanges, exportChangelog } = useChangelogStore();
+  const { getRecentChanges, getAllSessions, getSessionChanges, exportChangelog } =
+    useChangelogStore();
 
   const recentChanges = getRecentChanges(50);
   const sessions = getAllSessions();
 
   const handleExport = () => {
     const data = exportChangelog();
-    const blob = new Blob([data], { type: 'application/json' });
+    const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `mced-changelog-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `mced-changelog-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const formatValue = (value: unknown): string => {
-    if (value === null || value === undefined) return 'null';
-    if (typeof value === 'boolean') return value ? 'true' : 'false';
-    if (typeof value === 'object') return JSON.stringify(value);
+    if (value === null || value === undefined) return "null";
+    if (typeof value === "boolean") return value ? "true" : "false";
+    if (typeof value === "object") return JSON.stringify(value);
     return String(value);
   };
 
@@ -75,9 +76,7 @@ export function ChangelogViewer({ onClose }: ChangelogViewerProps) {
                     <span className="changelog-session-id">
                       Session {new Date(entries[0].timestamp).toLocaleString()}
                     </span>
-                    <span className="changelog-session-count">
-                      {entries.length} changes
-                    </span>
+                    <span className="changelog-session-count">{entries.length} changes</span>
                   </div>
                   <div className="changelog-entries">
                     {entries.map((entry) => (

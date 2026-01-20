@@ -1,6 +1,6 @@
-import { app, BrowserWindow } from 'electron';
-import { autoUpdater } from 'electron-updater';
-import { UpdateInfo } from '../shared/types/api.types';
+import { app, BrowserWindow } from "electron";
+import { autoUpdater } from "electron-updater";
+import { UpdateInfo } from "../shared/types/api.types";
 
 class UpdateCheckerService {
   private mainWindow: BrowserWindow | null = null;
@@ -14,12 +14,9 @@ class UpdateCheckerService {
     autoUpdater.autoInstallOnAppQuit = true;
 
     // Set up event handlers
-    autoUpdater.on('checking-for-update', () => {
+    autoUpdater.on("checking-for-update", () => {});
 
-    });
-
-    autoUpdater.on('update-available', (info) => {
-
+    autoUpdater.on("update-available", (info) => {
       this.notifyRenderer({
         available: true,
         currentVersion: app.getVersion(),
@@ -30,18 +27,15 @@ class UpdateCheckerService {
       });
     });
 
-    autoUpdater.on('update-not-available', () => {
+    autoUpdater.on("update-not-available", () => {});
 
+    autoUpdater.on("error", (err) => {
+      console.error("[Auto Updater] Error:", err);
     });
 
-    autoUpdater.on('error', (err) => {
-      console.error('[Auto Updater] Error:', err);
-    });
-
-    autoUpdater.on('download-progress', (progress) => {
-
+    autoUpdater.on("download-progress", (progress) => {
       if (this.mainWindow) {
-        this.mainWindow.webContents.send('update-download-progress', {
+        this.mainWindow.webContents.send("update-download-progress", {
           percent: progress.percent,
           transferred: progress.transferred,
           total: progress.total,
@@ -49,11 +43,10 @@ class UpdateCheckerService {
       }
     });
 
-    autoUpdater.on('update-downloaded', () => {
-
+    autoUpdater.on("update-downloaded", () => {
       this.updateDownloaded = true;
       if (this.mainWindow) {
-        this.mainWindow.webContents.send('update-downloaded');
+        this.mainWindow.webContents.send("update-downloaded");
       }
     });
   }
@@ -61,7 +54,7 @@ class UpdateCheckerService {
   async checkForUpdates(): Promise<UpdateInfo> {
     try {
       const result = await autoUpdater.checkForUpdates();
-      
+
       if (!result || !result.updateInfo) {
         return {
           available: false,
@@ -80,7 +73,7 @@ class UpdateCheckerService {
         publishedAt: result.updateInfo.releaseDate,
       };
     } catch (error) {
-      console.error('[Auto Updater] Failed to check for updates:', error);
+      console.error("[Auto Updater] Failed to check for updates:", error);
       return {
         available: false,
         currentVersion: app.getVersion(),
@@ -90,10 +83,9 @@ class UpdateCheckerService {
 
   async downloadUpdate(): Promise<void> {
     try {
-
       await autoUpdater.downloadUpdate();
     } catch (error) {
-      console.error('[Auto Updater] Failed to download update:', error);
+      console.error("[Auto Updater] Failed to download update:", error);
       throw error;
     }
   }
@@ -105,8 +97,8 @@ class UpdateCheckerService {
   }
 
   private compareVersions(v1: string, v2: string): number {
-    const parts1 = v1.split('.').map(Number);
-    const parts2 = v2.split('.').map(Number);
+    const parts1 = v1.split(".").map(Number);
+    const parts2 = v2.split(".").map(Number);
 
     for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
       const part1 = parts1[i] || 0;
@@ -121,7 +113,7 @@ class UpdateCheckerService {
 
   private notifyRenderer(updateInfo: UpdateInfo) {
     if (this.mainWindow) {
-      this.mainWindow.webContents.send('update-available', updateInfo);
+      this.mainWindow.webContents.send("update-available", updateInfo);
     }
   }
 }

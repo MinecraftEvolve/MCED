@@ -340,7 +340,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, hsl(var(--destructive) / 0.1) 0%, hsl(var(--destructive) / 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--destructive) / 0.1) 0%,
+    hsl(var(--destructive) / 0.05) 100%
+  );
   border: 2px solid hsl(var(--destructive) / 0.2);
   border-radius: 50%;
   color: hsl(var(--destructive));
@@ -348,7 +352,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -371,7 +376,11 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  background: linear-gradient(135deg, hsl(var(--destructive)) 0%, hsl(var(--destructive) / 0.85) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--destructive)) 0%,
+    hsl(var(--destructive) / 0.85) 100%
+  );
   color: hsl(var(--destructive-foreground));
   box-shadow: 0 2px 8px hsl(var(--destructive) / 0.3);
 }

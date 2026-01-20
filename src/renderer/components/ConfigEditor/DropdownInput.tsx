@@ -11,19 +11,17 @@ export function DropdownInput({ setting, onChange }: DropdownInputProps) {
   const options: string[] = setting.options || setting.enumValues || [];
 
   return (
-    <div className="py-3 border-b border-border">
+    <div className="py-3 border-b border-primary/20">
       <label className="block font-medium text-sm mb-2">{setting.key}</label>
 
       {setting.description && (
-        <p className="text-xs text-muted-foreground mb-2">
-          {setting.description}
-        </p>
+        <p className="text-xs text-muted-foreground mb-2">{setting.description}</p>
       )}
 
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+        className="w-full px-3 py-2 bg-secondary border border-primary/20 rounded-md focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
       >
         {options.map((option: string) => (
           <option key={option} value={option}>
@@ -33,9 +31,7 @@ export function DropdownInput({ setting, onChange }: DropdownInputProps) {
       </select>
 
       {options.length > 0 && (
-        <p className="text-xs text-muted-foreground mt-1">
-          Allowed values: {options.join(", ")}
-        </p>
+        <p className="text-xs text-muted-foreground mt-1">Allowed values: {options.join(", ")}</p>
       )}
 
       {setting.defaultValue !== undefined && value !== setting.defaultValue && (

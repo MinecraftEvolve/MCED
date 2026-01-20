@@ -69,7 +69,7 @@ export function BackupManager() {
 
     setIsCreating(true);
     setShowNameDialog(false);
-    
+
     try {
       if (renamingId) {
         // Rename existing backup
@@ -83,7 +83,7 @@ export function BackupManager() {
     } catch (error) {
       setToast({
         isOpen: true,
-        message: `Failed to ${renamingId ? 'rename' : 'create'} backup: ` + error,
+        message: `Failed to ${renamingId ? "rename" : "create"} backup: ` + error,
         type: "error",
       });
     } finally {
@@ -198,8 +198,8 @@ export function BackupManager() {
                 </div>
                 <div className="backup-meta">
                   <Clock size={12} />
-                  {formatDate(backup.timestamp)} • {backup.configCount} configs
-                  • {formatSize(backup.size)}
+                  {formatDate(backup.timestamp)} • {backup.configCount} configs •{" "}
+                  {formatSize(backup.size)}
                 </div>
               </div>
               <div className="backup-actions">
@@ -233,10 +233,7 @@ export function BackupManager() {
 
       {showNameDialog && (
         <div className="backup-dialog-overlay">
-          <div
-            className="backup-dialog"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="backup-dialog" onClick={(e) => e.stopPropagation()}>
             <h3>{(window as any)._renamingBackupId ? "Rename Backup" : "Create Backup"}</h3>
             <p className="dialog-description">
               {(window as any)._renamingBackupId
@@ -309,12 +306,20 @@ export function BackupManager() {
       {showRestoreDialog && (
         <div className="backup-dialog-overlay">
           <div className="backup-dialog delete-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="delete-dialog-icon" style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.05) 100%)', borderColor: 'hsl(var(--primary) / 0.2)' }}>
-              <Download size={32} style={{ color: 'hsl(var(--primary))' }} />
+            <div
+              className="delete-dialog-icon"
+              style={{
+                background:
+                  "linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.05) 100%)",
+                borderColor: "hsl(var(--primary) / 0.2)",
+              }}
+            >
+              <Download size={32} style={{ color: "hsl(var(--primary))" }} />
             </div>
-            <h3 style={{ color: 'hsl(var(--primary))' }}>Restore Backup?</h3>
+            <h3 style={{ color: "hsl(var(--primary))" }}>Restore Backup?</h3>
             <p className="dialog-description">
-              This will overwrite all current config files. Any unsaved changes will be lost. The app will reload after restoration.
+              This will overwrite all current config files. Any unsaved changes will be lost. The
+              app will reload after restoration.
             </p>
             <div className="dialog-actions">
               <button
@@ -326,7 +331,15 @@ export function BackupManager() {
               >
                 Cancel
               </button>
-              <button onClick={confirmRestore} className="btn-delete-confirm" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.85) 100%)', boxShadow: '0 2px 8px hsl(var(--primary) / 0.3)' }}>
+              <button
+                onClick={confirmRestore}
+                className="btn-delete-confirm"
+                style={{
+                  background:
+                    "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.85) 100%)",
+                  boxShadow: "0 2px 8px hsl(var(--primary) / 0.3)",
+                }}
+              >
                 <Download size={14} />
                 Restore Backup
               </button>

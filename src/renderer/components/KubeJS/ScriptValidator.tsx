@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { AlertCircle, CheckCircle, AlertTriangle, Code } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { AlertCircle, CheckCircle, AlertTriangle, Code } from "lucide-react";
 
 interface ValidationError {
   line: number;
   column: number;
   message: string;
-  severity: 'error' | 'warning';
+  severity: "error" | "warning";
 }
 
 interface ScriptValidatorProps {
@@ -22,7 +22,7 @@ export const ScriptValidator: React.FC<ScriptValidatorProps> = ({ code, onValida
   }, [code]);
 
   const validateScript = async (script: string) => {
-    if (!script || script.trim() === '') {
+    if (!script || script.trim() === "") {
       setErrors([]);
       setIsValid(true);
       if (onValidationChange) {
@@ -41,10 +41,10 @@ export const ScriptValidator: React.FC<ScriptValidatorProps> = ({ code, onValida
         }
       }
     } catch (error) {
-      console.error('Validation error:', error);
+      console.error("Validation error:", error);
       // Fallback to local validation
       const validationErrors: ValidationError[] = [];
-      
+
       try {
         new Function(script);
       } catch (e: any) {
@@ -53,22 +53,22 @@ export const ScriptValidator: React.FC<ScriptValidatorProps> = ({ code, onValida
           line: match ? parseInt(match[1]) : 1,
           column: 0,
           message: e.message,
-          severity: 'error'
+          severity: "error",
         });
       }
-      
+
       setErrors(validationErrors);
-      const valid = !validationErrors.some(e => e.severity === 'error');
+      const valid = !validationErrors.some((e) => e.severity === "error");
       setIsValid(valid);
-      
+
       if (onValidationChange) {
         onValidationChange(valid, validationErrors);
       }
     }
   };
 
-  const errorCount = errors.filter(e => e.severity === 'error').length;
-  const warningCount = errors.filter(e => e.severity === 'warning').length;
+  const errorCount = errors.filter((e) => e.severity === "error").length;
+  const warningCount = errors.filter((e) => e.severity === "warning").length;
 
   return (
     <div className="border rounded-lg p-4 bg-background">
@@ -84,16 +84,20 @@ export const ScriptValidator: React.FC<ScriptValidatorProps> = ({ code, onValida
             <span className="text-sm">No errors found</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+          <div className="flex items-center gap-2 text-red-600 dark:text-destructive">
             <AlertCircle className="w-4 h-4" />
-            <span className="text-sm">{errorCount} error{errorCount !== 1 ? 's' : ''}</span>
+            <span className="text-sm">
+              {errorCount} error{errorCount !== 1 ? "s" : ""}
+            </span>
           </div>
         )}
 
         {warningCount > 0 && (
           <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
             <AlertTriangle className="w-4 h-4" />
-            <span className="text-sm">{warningCount} warning{warningCount !== 1 ? 's' : ''}</span>
+            <span className="text-sm">
+              {warningCount} warning{warningCount !== 1 ? "s" : ""}
+            </span>
           </div>
         )}
       </div>
@@ -104,12 +108,12 @@ export const ScriptValidator: React.FC<ScriptValidatorProps> = ({ code, onValida
             <div
               key={index}
               className={`flex items-start gap-2 p-2 rounded text-sm ${
-                error.severity === 'error'
-                  ? 'bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200'
-                  : 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-900 dark:text-yellow-200'
+                error.severity === "error"
+                  ? "bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200"
+                  : "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-900 dark:text-yellow-200"
               }`}
             >
-              {error.severity === 'error' ? (
+              {error.severity === "error" ? (
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               ) : (
                 <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />

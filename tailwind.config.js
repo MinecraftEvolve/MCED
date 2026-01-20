@@ -5,6 +5,9 @@ module.exports = {
     './src/renderer/**/*.{ts,tsx}',
     './index.html',
   ],
+  corePlugins: {
+    preflight: true,
+  },
   theme: {
   	extend: {
   		colors: {

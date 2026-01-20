@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Package, Plus, X } from 'lucide-react';
-import { ItemPicker } from '../ItemPicker/ItemPicker';
+import React, { useState } from "react";
+import { Package, Plus, X } from "lucide-react";
+import { ItemPicker } from "../ItemPicker/ItemPicker";
 
 interface Item {
   id: string;
@@ -15,24 +15,24 @@ interface CraftingShapedEditorProps {
   initialRecipe?: any;
 }
 
-export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ instancePath, onSave, initialRecipe }) => {
+export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({
+  instancePath,
+  onSave,
+  initialRecipe,
+}) => {
   const [grid, setGrid] = useState<(Item | null)[]>(Array(9).fill(null));
   const [output, setOutput] = useState<Item | null>(null);
   const [outputCount, setOutputCount] = useState(initialRecipe?.results?.[0]?.count || 1);
   const [showItemPicker, setShowItemPicker] = useState(false);
-  const [pickingSlot, setPickingSlot] = useState<number | 'output' | null>(null);
+  const [pickingSlot, setPickingSlot] = useState<number | "output" | null>(null);
 
   // Generate pattern for preview
   const generatePattern = () => {
-    const rows = [
-      grid.slice(0, 3),
-      grid.slice(3, 6),
-      grid.slice(6, 9)
-    ];
+    const rows = [grid.slice(0, 3), grid.slice(3, 6), grid.slice(6, 9)];
 
     const pattern: (Item | null)[][] = [];
-    rows.forEach(row => {
-      if (row.some(item => item !== null)) {
+    rows.forEach((row) => {
+      if (row.some((item) => item !== null)) {
         pattern.push(row);
       }
     });
@@ -44,7 +44,7 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
     const keyMap: { [key: string]: string } = {};
     let keyCounter = 65; // Start with 'A'
 
-    grid.forEach(item => {
+    grid.forEach((item) => {
       if (item && !Object.values(keyMap).includes(item.id)) {
         const key = String.fromCharCode(keyCounter++);
         keyMap[key] = item.id;
@@ -63,7 +63,7 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
   };
 
   const handleOutputSlotClick = () => {
-    setPickingSlot('output');
+    setPickingSlot("output");
     setShowItemPicker(true);
   };
 
@@ -71,7 +71,7 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
     try {
       // Fetch the full item data from the registry
       const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-      
+
       let item: Item;
       if (result.success && result.data) {
         item = {
@@ -84,14 +84,14 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
         // Fallback: create a basic Item with just the ID
         item = {
           id: itemId,
-          name: itemId.split(':')[1] || itemId,
-          modId: itemId.split(':')[0] || 'minecraft',
+          name: itemId.split(":")[1] || itemId,
+          modId: itemId.split(":")[0] || "minecraft",
         };
       }
-      
-      if (pickingSlot === 'output') {
+
+      if (pickingSlot === "output") {
         setOutput(item);
-      } else if (typeof pickingSlot === 'number') {
+      } else if (typeof pickingSlot === "number") {
         const newGrid = [...grid];
         newGrid[pickingSlot] = item;
         setGrid(newGrid);
@@ -99,17 +99,17 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
       setShowItemPicker(false);
       setPickingSlot(null);
     } catch (error) {
-      console.error('Failed to fetch item data:', error);
+      console.error("Failed to fetch item data:", error);
       // Fallback on error
       const item: Item = {
         id: itemId,
-        name: itemId.split(':')[1] || itemId,
-        modId: itemId.split(':')[0] || 'minecraft',
+        name: itemId.split(":")[1] || itemId,
+        modId: itemId.split(":")[0] || "minecraft",
       };
-      
-      if (pickingSlot === 'output') {
+
+      if (pickingSlot === "output") {
         setOutput(item);
-      } else if (typeof pickingSlot === 'number') {
+      } else if (typeof pickingSlot === "number") {
         const newGrid = [...grid];
         newGrid[pickingSlot] = item;
         setGrid(newGrid);
@@ -131,29 +131,25 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
 
   const handleSave = () => {
     if (!output) {
-      alert('Please provide an output item');
+      alert("Please provide an output item");
       return;
     }
 
     // Convert grid to pattern
-    const rows = [
-      grid.slice(0, 3),
-      grid.slice(3, 6),
-      grid.slice(6, 9)
-    ];
+    const rows = [grid.slice(0, 3), grid.slice(3, 6), grid.slice(6, 9)];
 
     // Remove empty rows/columns
     const pattern: string[] = [];
     const keyMap: { [key: string]: string } = {};
     let keyCounter = 65; // Start with 'A'
 
-    rows.forEach(row => {
-      let patternRow = '';
-      row.forEach(item => {
+    rows.forEach((row) => {
+      let patternRow = "";
+      row.forEach((item) => {
         if (!item) {
-          patternRow += ' ';
+          patternRow += " ";
         } else {
-          let key = Object.keys(keyMap).find(k => keyMap[k] === item.id);
+          let key = Object.keys(keyMap).find((k) => keyMap[k] === item.id);
           if (!key) {
             key = String.fromCharCode(keyCounter++);
             keyMap[key] = item.id;
@@ -167,13 +163,13 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
     });
 
     const recipe = {
-      type: 'minecraft:crafting_shaped',
+      type: "minecraft:crafting_shaped",
       pattern,
       key: keyMap,
       result: {
         item: output.id,
-        count: outputCount
-      }
+        count: outputCount,
+      },
     };
 
     onSave(recipe);
@@ -185,13 +181,13 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
         {/* Crafting Grid */}
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Crafting Pattern</h3>
-          <div className="inline-block bg-muted/50 border border-border rounded-lg p-4">
+          <div className="inline-block bg-muted/50 border border-primary/20 rounded-lg p-4">
             <div className="grid grid-cols-3 gap-2">
               {grid.map((item, index) => (
                 <div
                   key={index}
                   onClick={() => handleSlotClick(index)}
-                  className="relative w-16 h-16 bg-secondary border-2 border-border rounded cursor-pointer hover:border-primary transition-colors group"
+                  className="relative w-16 h-16 bg-secondary border-2 border-primary/30 rounded cursor-pointer hover:border-primary transition-colors group"
                 >
                   {item ? (
                     <>
@@ -217,7 +213,7 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
                       </button>
                       {/* Tooltip */}
                       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10 pointer-events-none">
-                        <div className="bg-popover text-popover-foreground text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg border border-border">
+                        <div className="bg-popover text-popover-foreground text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg border border-primary/20">
                           <div className="font-medium">{item.name}</div>
                           <div className="text-muted-foreground">{item.id}</div>
                         </div>
@@ -237,10 +233,10 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
         {/* Output */}
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Output</h3>
-          <div className="inline-block bg-muted/50 border border-border rounded-lg p-4">
+          <div className="inline-block bg-muted/50 border border-primary/20 rounded-lg p-4">
             <div
               onClick={handleOutputSlotClick}
-              className="relative w-24 h-24 bg-secondary border-2 border-border rounded cursor-pointer hover:border-primary transition-colors group"
+              className="relative w-24 h-24 bg-secondary border-2 border-primary/30 rounded cursor-pointer hover:border-primary transition-colors group"
             >
               {output ? (
                 <>
@@ -266,13 +262,13 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
                   </button>
                   {/* Count Badge */}
                   {outputCount > 1 && (
-                    <div className="absolute bottom-1 right-1 bg-background text-foreground text-xs font-bold px-1.5 py-0.5 rounded shadow-lg border border-border">
+                    <div className="absolute bottom-1 right-1 bg-background text-foreground text-xs font-bold px-1.5 py-0.5 rounded shadow-lg border border-primary/20">
                       {outputCount}
                     </div>
                   )}
                   {/* Tooltip */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10 pointer-events-none">
-                    <div className="bg-popover text-popover-foreground text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg border border-border">
+                    <div className="bg-popover text-popover-foreground text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg border border-primary/20">
                       <div className="font-medium">{output.name}</div>
                       <div className="text-muted-foreground">{output.id}</div>
                     </div>
@@ -284,20 +280,20 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
                 </div>
               )}
             </div>
-            
+
             {/* Output Count */}
             {output && (
               <div className="mt-3">
-                <label className="block text-xs font-medium text-foreground mb-1">
-                  Count
-                </label>
+                <label className="block text-xs font-medium text-foreground mb-1">Count</label>
                 <input
                   type="number"
                   min="1"
                   max="64"
                   value={outputCount}
-                  onChange={(e) => setOutputCount(Math.max(1, Math.min(64, parseInt(e.target.value) || 1)))}
-                  className="w-20 px-2 py-1 bg-secondary border border-border rounded text-sm text-foreground focus:outline-none focus:border-primary"
+                  onChange={(e) =>
+                    setOutputCount(Math.max(1, Math.min(64, parseInt(e.target.value) || 1)))
+                  }
+                  className="w-20 px-2 py-1 bg-secondary border border-primary/20 rounded text-sm text-foreground focus:outline-none focus:border-primary"
                 />
               </div>
             )}
@@ -306,14 +302,14 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-primary/20">
         <button
           onClick={() => {
             setGrid(Array(9).fill(null));
             setOutput(null);
             setOutputCount(1);
           }}
-          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-border rounded text-sm text-foreground transition-colors"
+          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-primary/20 rounded text-sm text-foreground transition-colors"
         >
           Clear
         </button>
@@ -327,17 +323,19 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({ inst
       </div>
 
       {/* Code Preview */}
-      {output && pattern.some(row => row.some(item => item !== null)) && (
-        <div className="bg-muted/30 border border-border rounded-lg p-4">
+      {output && pattern.some((row) => row.some((item) => item !== null)) && (
+        <div className="bg-muted/30 border border-primary/20 rounded-lg p-4">
           <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-            <span className="text-primary">{'</>'}</span>
+            <span className="text-primary">{"</>"}</span>
             Generated Code
           </h3>
-          <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-border overflow-x-auto">
-{`event.shaped('${output.id}'${outputCount > 1 ? ` * ${outputCount}` : ''}, [
-${pattern.map(row => `  '${row.map(item => item ? itemToKey[item.id] : ' ').join('')}'`).join(',\n')}
+          <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-primary/20 overflow-x-auto">
+            {`event.shaped('${output.id}'${outputCount > 1 ? ` * ${outputCount}` : ""}, [
+${pattern.map((row) => `  '${row.map((item) => (item ? itemToKey[item.id] : " ")).join("")}'`).join(",\n")}
 ], {
-${Object.entries(itemToKey).map(([itemId, key]) => `  ${key}: '${itemId}'`).join(',\n')}
+${Object.entries(itemToKey)
+  .map(([itemId, key]) => `  ${key}: '${itemId}'`)
+  .join(",\n")}
 })`}
           </pre>
         </div>
@@ -353,13 +351,13 @@ ${Object.entries(itemToKey).map(([itemId, key]) => `  ${key}: '${itemId}'`).join
             setPickingSlot(null);
           }}
           selectedItem={
-            pickingSlot === 'output' 
-              ? output?.id 
-              : typeof pickingSlot === 'number' 
-                ? grid[pickingSlot]?.id 
+            pickingSlot === "output"
+              ? output?.id
+              : typeof pickingSlot === "number"
+                ? grid[pickingSlot]?.id
                 : undefined
           }
-          title={pickingSlot === 'output' ? 'Select Output Item' : 'Select Ingredient'}
+          title={pickingSlot === "output" ? "Select Output Item" : "Select Ingredient"}
         />
       )}
     </div>

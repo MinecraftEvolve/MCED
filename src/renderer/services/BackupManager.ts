@@ -92,9 +92,7 @@ class BackupManager {
     for (const backups of this.backups.values()) {
       allBackups.push(...backups);
     }
-    return allBackups.sort(
-      (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
-    );
+    return allBackups.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }
 
   private async cleanupOldBackups(configPath: string): Promise<void> {

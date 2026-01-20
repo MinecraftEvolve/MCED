@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { ItemSlot } from './ItemSlot';
-import { ItemSelector } from './ItemSelector';
+import React, { useState } from "react";
+import { ItemSlot } from "./ItemSlot";
+import { ItemSelector } from "./ItemSelector";
 
 interface ThermalPulverizerEditorProps {
   instancePath: string;
@@ -8,22 +8,26 @@ interface ThermalPulverizerEditorProps {
   initialRecipe?: any;
 }
 
-const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({ instancePath, onSave, initialRecipe }) => {
-  const [input, setInput] = useState(initialRecipe?.input || '');
-  const [primaryOutput, setPrimaryOutput] = useState(initialRecipe?.primaryOutput || '');
+const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({
+  instancePath,
+  onSave,
+  initialRecipe,
+}) => {
+  const [input, setInput] = useState(initialRecipe?.input || "");
+  const [primaryOutput, setPrimaryOutput] = useState(initialRecipe?.primaryOutput || "");
   const [primaryCount, setPrimaryCount] = useState(initialRecipe?.primaryCount || 1);
-  const [secondaryOutput, setSecondaryOutput] = useState(initialRecipe?.secondaryOutput || '');
+  const [secondaryOutput, setSecondaryOutput] = useState(initialRecipe?.secondaryOutput || "");
   const [secondaryCount, setSecondaryCount] = useState(initialRecipe?.secondaryCount || 1);
   const [secondaryChance, setSecondaryChance] = useState(initialRecipe?.secondaryChance || 0);
   const [energy, setEnergy] = useState(initialRecipe?.energy || 4000);
-  
+
   const [showInputSelector, setShowInputSelector] = useState(false);
   const [showPrimarySelector, setShowPrimarySelector] = useState(false);
   const [showSecondarySelector, setShowSecondarySelector] = useState(false);
 
   const updateRecipe = (updates: any) => {
     const recipe = {
-      type: 'thermal:pulverizer',
+      type: "thermal:pulverizer",
       input,
       primaryOutput,
       primaryCount,
@@ -31,7 +35,7 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({ insta
       secondaryCount,
       secondaryChance,
       energy,
-      ...updates
+      ...updates,
     };
     onSave(recipe);
   };
@@ -39,36 +43,36 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({ insta
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="text-lg font-semibold text-foreground mb-2">Thermal: Pulverizer</div>
-      
+
       <div className="flex items-center gap-8">
         {/* Input */}
         <div className="flex flex-col gap-2">
-          <div className="text-sm text-gray-400 mb-2">Input</div>
+          <div className="text-sm text-muted-foreground mb-2">Input</div>
           <ItemSlot
             item={input}
             onClick={() => setShowInputSelector(true)}
             onClear={() => {
-              setInput('');
-              updateRecipe({ input: '' });
+              setInput("");
+              updateRecipe({ input: "" });
             }}
             size="lg"
           />
         </div>
 
         {/* Arrow */}
-        <div className="text-4xl text-gray-400">→</div>
+        <div className="text-4xl text-muted-foreground">→</div>
 
         {/* Outputs */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <div className="text-sm text-gray-400">Primary Output</div>
+            <div className="text-sm text-muted-foreground">Primary Output</div>
             <ItemSlot
               item={primaryOutput}
               count={primaryCount}
               onClick={() => setShowPrimarySelector(true)}
               onClear={() => {
-                setPrimaryOutput('');
-                updateRecipe({ primaryOutput: '' });
+                setPrimaryOutput("");
+                updateRecipe({ primaryOutput: "" });
               }}
               onCountChange={(count) => {
                 setPrimaryCount(count);
@@ -78,16 +82,16 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({ insta
               size="lg"
             />
           </div>
-          
+
           <div className="flex items-center gap-3">
-            <div className="text-sm text-gray-400">Secondary Output</div>
+            <div className="text-sm text-muted-foreground">Secondary Output</div>
             <ItemSlot
               item={secondaryOutput}
               count={secondaryCount}
               onClick={() => setShowSecondarySelector(true)}
               onClear={() => {
-                setSecondaryOutput('');
-                updateRecipe({ secondaryOutput: '' });
+                setSecondaryOutput("");
+                updateRecipe({ secondaryOutput: "" });
               }}
               onCountChange={(count) => {
                 setSecondaryCount(count);
@@ -97,7 +101,7 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({ insta
               size="lg"
             />
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">Chance:</span>
+              <span className="text-xs text-muted-foreground">Chance:</span>
               <input
                 type="number"
                 value={secondaryChance}
@@ -109,7 +113,7 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({ insta
                 min={0}
                 max={1}
                 step={0.01}
-                className="w-16 px-2 py-1 bg-[#2a2a2a] border rounded text-xs text-foreground"
+                className="w-16 px-2 py-1 bg-secondary border rounded text-xs text-foreground"
               />
             </div>
           </div>
@@ -117,7 +121,7 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({ insta
       </div>
 
       {/* Energy Cost */}
-      <div className="flex items-center gap-3 p-4 bg-[#1e1e1e]/50 rounded-lg border">
+      <div className="flex items-center gap-3 p-4 bg-card/50 rounded-lg border">
         <span className="text-sm text-foreground">Energy Cost:</span>
         <input
           type="number"
@@ -127,15 +131,15 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({ insta
             setEnergy(val);
             updateRecipe({ energy: val });
           }}
-          className="w-24 px-2 py-1 bg-[#2a2a2a] border rounded text-sm text-foreground"
+          className="w-24 px-2 py-1 bg-secondary border rounded text-sm text-foreground"
         />
-        <span className="text-xs text-gray-400">RF</span>
+        <span className="text-xs text-muted-foreground">RF</span>
       </div>
 
       {/* Item Selectors */}
       {showInputSelector && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1e1e1e] rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col">
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col">
             <div className="p-4 border-b border-border">
               <h3 className="text-lg font-semibold text-foreground">Select Input Item</h3>
             </div>
@@ -163,7 +167,7 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({ insta
 
       {showPrimarySelector && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1e1e1e] rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col">
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col">
             <div className="p-4 border-b border-border">
               <h3 className="text-lg font-semibold text-foreground">Select Primary Output</h3>
             </div>
@@ -191,7 +195,7 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({ insta
 
       {showSecondarySelector && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1e1e1e] rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col">
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col">
             <div className="p-4 border-b border-border">
               <h3 className="text-lg font-semibold text-foreground">Select Secondary Output</h3>
             </div>
@@ -221,13 +225,13 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({ insta
       {input && primaryOutput && (
         <div className="bg-muted/30 border border-border rounded-lg p-4 mt-6">
           <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-            <span className="text-primary">{'</>'}</span>
+            <span className="text-primary">{"</>"}</span>
             Generated Code
           </h3>
           <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-border overflow-x-auto">
-{`event.recipes.thermal.pulverizer([
-  '${primaryOutput}'${primaryCount > 1 ? ` * ${primaryCount}` : ''}${secondaryOutput ? `,\n  Item.of('${secondaryOutput}')${secondaryCount > 1 ? `.withCount(${secondaryCount})` : ''}.withChance(${secondaryChance})` : ''}
-], '${input}')${energy !== 4000 ? `.energy(${energy})` : ''}`}
+            {`event.recipes.thermal.pulverizer([
+  '${primaryOutput}'${primaryCount > 1 ? ` * ${primaryCount}` : ""}${secondaryOutput ? `,\n  Item.of('${secondaryOutput}')${secondaryCount > 1 ? `.withCount(${secondaryCount})` : ""}.withChance(${secondaryChance})` : ""}
+], '${input}')${energy !== 4000 ? `.energy(${energy})` : ""}`}
           </pre>
         </div>
       )}

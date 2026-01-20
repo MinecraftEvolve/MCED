@@ -54,7 +54,7 @@ class CurseForgeAPI {
 
     const cacheKey = `${endpoint}${JSON.stringify(options)}`;
     const cached = this.cache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
       return cached.data;
     }
@@ -63,7 +63,7 @@ class CurseForgeAPI {
       ...options,
       headers: {
         "x-api-key": this.apiKey,
-        "Accept": "application/json",
+        Accept: "application/json",
         ...options?.headers,
       },
     });
@@ -74,7 +74,7 @@ class CurseForgeAPI {
 
     const data = await response.json();
     this.cache.set(cacheKey, { data, timestamp: Date.now() });
-    
+
     return data;
   }
 
@@ -89,7 +89,7 @@ class CurseForgeAPI {
 
       if (response.data && response.data.length > 0) {
         const normalizedQuery = query.toLowerCase().replace(/[_\s-]/g, "");
-        
+
         const exactMatch = response.data.find(
           (mod) =>
             mod.slug.toLowerCase() === query.toLowerCase() ||

@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface ConfigChange {
   key: string;
@@ -11,7 +11,12 @@ interface ConfigChange {
 
 interface ChangeTrackingState {
   changes: Map<string, ConfigChange>;
-  trackChange: (modId: string, settingKey: string, originalValue: unknown, currentValue: unknown) => void;
+  trackChange: (
+    modId: string,
+    settingKey: string,
+    originalValue: unknown,
+    currentValue: unknown
+  ) => void;
   resetToDefault: (modId: string, settingKey: string) => unknown | null;
   isModified: (modId: string, settingKey: string) => boolean;
   getOriginalValue: (modId: string, settingKey: string) => unknown | null;
@@ -24,7 +29,12 @@ export const useChangeTrackingStore = create<ChangeTrackingState>()(
     (set, get) => ({
       changes: new Map(),
 
-      trackChange: (modId: string, settingKey: string, originalValue: unknown, currentValue: unknown) => {
+      trackChange: (
+        modId: string,
+        settingKey: string,
+        originalValue: unknown,
+        currentValue: unknown
+      ) => {
         const key = `${modId}:${settingKey}`;
         const isModified = JSON.stringify(originalValue) !== JSON.stringify(currentValue);
 
@@ -44,7 +54,7 @@ export const useChangeTrackingStore = create<ChangeTrackingState>()(
       resetToDefault: (modId: string, settingKey: string) => {
         const key = `${modId}:${settingKey}`;
         const change = get().changes.get(key);
-        
+
         if (change) {
           set((state) => {
             const newChanges = new Map(state.changes);
@@ -79,7 +89,7 @@ export const useChangeTrackingStore = create<ChangeTrackingState>()(
       },
     }),
     {
-      name: 'mced-change-tracking',
+      name: "mced-change-tracking",
       // Custom storage to handle Map serialization
       storage: {
         getItem: (name) => {

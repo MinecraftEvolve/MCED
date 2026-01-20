@@ -1,6 +1,6 @@
-import DiscordRPC from 'discord-rpc';
+import DiscordRPC from "discord-rpc";
 
-const CLIENT_ID = '1460565402500333568';
+const CLIENT_ID = "1460565402500333568";
 
 interface RPCState {
   instanceName?: string;
@@ -24,9 +24,9 @@ class DiscordRPCService {
     try {
       DiscordRPC.register(CLIENT_ID);
 
-      this.client = new DiscordRPC.Client({ transport: 'ipc' });
+      this.client = new DiscordRPC.Client({ transport: "ipc" });
 
-      this.client.on('ready', () => {
+      this.client.on("ready", () => {
         this.connected = true;
         // If there was a pending update, apply it now
         if (this.pendingUpdate) {
@@ -41,7 +41,7 @@ class DiscordRPCService {
         }
       });
 
-      this.client.on('disconnected', () => {
+      this.client.on("disconnected", () => {
         this.connected = false;
         if (this.enabled) {
           this.retryTimeout = setTimeout(() => this.initialize(), 15000);
@@ -51,12 +51,12 @@ class DiscordRPCService {
       // Handle connection errors silently
       const transport = (this.client as any).transport;
       if (transport) {
-        transport.on('error', (error: Error) => {
-          if (error.message.includes('connection closed')) {
+        transport.on("error", (error: Error) => {
+          if (error.message.includes("connection closed")) {
             // Discord connection closed, will retry automatically
             this.connected = false;
           } else {
-            console.error('[Discord RPC] Transport error:', error);
+            console.error("[Discord RPC] Transport error:", error);
           }
         });
       }
@@ -64,7 +64,7 @@ class DiscordRPCService {
       await this.client.login({ clientId: CLIENT_ID });
     } catch (error) {
       this.connected = false;
-      
+
       if (this.enabled) {
         this.retryTimeout = setTimeout(() => this.initialize(), 15000);
       }
@@ -83,7 +83,7 @@ class DiscordRPCService {
   setInstanceName(name: string) {
     this.currentState.instanceName = name;
     this.currentState.startTimestamp = Date.now();
-    
+
     if (this.connected) {
       this.updatePresence();
     } else {
@@ -95,7 +95,7 @@ class DiscordRPCService {
     this.currentState.modName = modName;
     this.currentState.modCount = modCount;
     this.currentState.configFileName = configFileName;
-    
+
     if (this.connected) {
       this.updatePresence();
     } else {
@@ -106,7 +106,7 @@ class DiscordRPCService {
   clearModInfo() {
     this.currentState.modName = undefined;
     this.currentState.configFileName = undefined;
-    
+
     if (this.connected) {
       this.updatePresence();
     } else {
@@ -124,14 +124,14 @@ class DiscordRPCService {
 
     try {
       const presence: DiscordRPC.Presence = {
-        details: 'Minecraft Config Editor',
-        state: 'Browsing instances',
+        details: "Minecraft Config Editor",
+        state: "Browsing instances",
         startTimestamp: Date.now(),
       };
 
       try {
-        presence.largeImageKey = 'mced_logo';
-        presence.largeImageText = 'MCED';
+        presence.largeImageKey = "mced_logo";
+        presence.largeImageText = "MCED";
       } catch (e) {
         // Image not uploaded, ignore
       }
@@ -139,8 +139,8 @@ class DiscordRPCService {
       await this.client.setActivity(presence);
     } catch (error: any) {
       // Silently handle connection closed errors
-      if (!error?.message?.includes('connection closed')) {
-        console.error('[Discord RPC] Failed to set default presence:', error);
+      if (!error?.message?.includes("connection closed")) {
+        console.error("[Discord RPC] Failed to set default presence:", error);
       }
     }
   }
@@ -157,11 +157,11 @@ class DiscordRPCService {
 
     try {
       let state: string;
-      
+
       if (modName) {
         // Editing a specific mod
-        if (modName === 'Loading mods...') {
-          state = 'Loading mods...';
+        if (modName === "Loading mods...") {
+          state = "Loading mods...";
         } else {
           state = `Editing ${modName}`;
         }
@@ -170,7 +170,7 @@ class DiscordRPCService {
         state = `Browsing ${modCount} mods`;
       } else {
         // No mods or count
-        state = 'Browsing mods';
+        state = "Browsing mods";
       }
 
       const presence: DiscordRPC.Presence = {
@@ -180,8 +180,8 @@ class DiscordRPCService {
       };
 
       try {
-        presence.largeImageKey = 'mced_logo';
-        presence.largeImageText = 'Minecraft Config Editor';
+        presence.largeImageKey = "mced_logo";
+        presence.largeImageText = "Minecraft Config Editor";
       } catch (e) {
         // Image not uploaded, ignore
       }
@@ -189,7 +189,7 @@ class DiscordRPCService {
       // Show config file being edited as small text
       if (configFileName) {
         try {
-          presence.smallImageKey = 'config_file';
+          presence.smallImageKey = "config_file";
           presence.smallImageText = `Editing: ${configFileName}`;
         } catch (e) {
           // Small image not uploaded, show as party size instead
@@ -201,8 +201,8 @@ class DiscordRPCService {
       await this.client.setActivity(presence);
     } catch (error: any) {
       // Silently handle connection closed errors
-      if (!error?.message?.includes('connection closed')) {
-        console.error('[Discord RPC] Failed to update presence:', error);
+      if (!error?.message?.includes("connection closed")) {
+        console.error("[Discord RPC] Failed to update presence:", error);
       }
     }
   }
@@ -214,8 +214,8 @@ class DiscordRPCService {
       await this.client.clearActivity();
     } catch (error: any) {
       // Silently handle connection closed errors
-      if (!error?.message?.includes('connection closed')) {
-        console.error('[Discord RPC] Failed to clear presence:', error);
+      if (!error?.message?.includes("connection closed")) {
+        console.error("[Discord RPC] Failed to clear presence:", error);
       }
     }
   }
@@ -225,7 +225,7 @@ class DiscordRPCService {
       clearTimeout(this.retryTimeout);
       this.retryTimeout = null;
     }
-    
+
     if (this.client) {
       this.clearPresence();
       this.client.destroy();

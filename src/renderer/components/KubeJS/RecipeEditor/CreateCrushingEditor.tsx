@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { ArrowRight, Plus, X } from 'lucide-react';
-import { ItemPicker } from '../ItemPicker/ItemPicker';
-import { ItemSlot } from './ItemSlot';
+import React, { useState } from "react";
+import { ArrowRight, Plus, X } from "lucide-react";
+import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { ItemSlot } from "./ItemSlot";
 
 interface Item {
   id: string;
@@ -21,12 +21,12 @@ interface CreateCrushingEditorProps {
 export const CreateCrushingEditor: React.FC<CreateCrushingEditorProps> = ({
   instancePath,
   onSave,
-  initialRecipe
+  initialRecipe,
 }) => {
   const [input, setInput] = useState<Item | null>(null);
   const [outputs, setOutputs] = useState<(Item | null)[]>([null, null, null]);
   const [showItemPicker, setShowItemPicker] = useState(false);
-  const [pickingSlot, setPickingSlot] = useState<'input' | number | null>(null);
+  const [pickingSlot, setPickingSlot] = useState<"input" | number | null>(null);
 
   // Load item data from registry
   const loadItemData = async (itemId: string, additionalData?: Partial<Item>): Promise<Item> => {
@@ -39,19 +39,19 @@ export const CreateCrushingEditor: React.FC<CreateCrushingEditorProps> = ({
           modId: result.data.modId,
           texture: result.data.texture,
           count: additionalData?.count || 1,
-          chance: additionalData?.chance || 1.0
+          chance: additionalData?.chance || 1.0,
         };
       }
     } catch (error) {
-      console.error('Failed to load item data:', error);
+      console.error("Failed to load item data:", error);
     }
     // Fallback
     return {
       id: itemId,
-      name: itemId.split(':')[1] || itemId,
-      modId: itemId.split(':')[0] || 'minecraft',
+      name: itemId.split(":")[1] || itemId,
+      modId: itemId.split(":")[0] || "minecraft",
       count: additionalData?.count || 1,
-      chance: additionalData?.chance || 1.0
+      chance: additionalData?.chance || 1.0,
     };
   };
 
@@ -72,7 +72,7 @@ export const CreateCrushingEditor: React.FC<CreateCrushingEditorProps> = ({
             const itemId = res.item || res;
             return loadItemData(itemId, { count: res.count, chance: res.chance });
           })
-        ).then(loadedOutputs => {
+        ).then((loadedOutputs) => {
           const newOutputs: (Item | null)[] = [...loadedOutputs];
           while (newOutputs.length < 3) newOutputs.push(null);
           setOutputs(newOutputs);
@@ -84,7 +84,7 @@ export const CreateCrushingEditor: React.FC<CreateCrushingEditorProps> = ({
   const handleItemSelected = async (itemId: string) => {
     try {
       const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-      
+
       let item: Item;
       if (result.success && result.data) {
         item = {
@@ -93,34 +93,34 @@ export const CreateCrushingEditor: React.FC<CreateCrushingEditorProps> = ({
           modId: result.data.modId,
           texture: result.data.texture,
           count: 1,
-          chance: 1.0
+          chance: 1.0,
         };
       } else {
         item = {
           id: itemId,
-          name: itemId.split(':')[1] || itemId,
-          modId: itemId.split(':')[0] || 'minecraft',
+          name: itemId.split(":")[1] || itemId,
+          modId: itemId.split(":")[0] || "minecraft",
           count: 1,
-          chance: 1.0
+          chance: 1.0,
         };
       }
-      
-      if (pickingSlot === 'input') {
+
+      if (pickingSlot === "input") {
         setInput(item);
-      } else if (typeof pickingSlot === 'number') {
+      } else if (typeof pickingSlot === "number") {
         const newOutputs = [...outputs];
         newOutputs[pickingSlot] = item;
         setOutputs(newOutputs);
       }
-      
+
       setShowItemPicker(false);
       setPickingSlot(null);
     } catch (error) {
-      console.error('Failed to fetch item data:', error);
+      console.error("Failed to fetch item data:", error);
     }
   };
 
-  const updateOutput = (index: number, field: 'count' | 'chance', value: number) => {
+  const updateOutput = (index: number, field: "count" | "chance", value: number) => {
     const newOutputs = [...outputs];
     if (newOutputs[index]) {
       newOutputs[index] = { ...newOutputs[index]!, [field]: value };
@@ -130,24 +130,24 @@ export const CreateCrushingEditor: React.FC<CreateCrushingEditorProps> = ({
 
   const handleSave = () => {
     if (!input) {
-      alert('Please provide an input item');
+      alert("Please provide an input item");
       return;
     }
 
-    const validOutputs = outputs.filter(o => o !== null) as Item[];
+    const validOutputs = outputs.filter((o) => o !== null) as Item[];
     if (validOutputs.length === 0) {
-      alert('Please add at least one output');
+      alert("Please add at least one output");
       return;
     }
 
     const recipe = {
-      type: 'create:crushing',
+      type: "create:crushing",
       ingredients: [{ item: input.id }],
-      results: validOutputs.map(o => ({
+      results: validOutputs.map((o) => ({
         item: o.id,
         count: o.count || 1,
-        ...(o.chance && o.chance < 1 ? { chance: o.chance } : {})
-      }))
+        ...(o.chance && o.chance < 1 ? { chance: o.chance } : {}),
+      })),
     };
 
     onSave(recipe);
@@ -156,7 +156,7 @@ export const CreateCrushingEditor: React.FC<CreateCrushingEditorProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-muted/50 border border-border rounded-lg p-4">
+      <div className="bg-muted/50 border border-primary/20 rounded-lg p-4">
         <div>
           <h3 className="text-lg font-semibold text-foreground">Create: Crushing Wheel</h3>
           <p className="text-sm text-muted-foreground">
@@ -173,7 +173,7 @@ export const CreateCrushingEditor: React.FC<CreateCrushingEditorProps> = ({
             item={input}
             size="large"
             onClick={() => {
-              setPickingSlot('input');
+              setPickingSlot("input");
               setShowItemPicker(true);
             }}
             onClear={() => setInput(null)}
@@ -208,26 +208,42 @@ export const CreateCrushingEditor: React.FC<CreateCrushingEditorProps> = ({
                 {output && (
                   <div className="flex gap-2">
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Count</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">
+                        Count
+                      </label>
                       <input
                         type="number"
                         min="1"
                         max="64"
                         value={output.count || 1}
-                        onChange={(e) => updateOutput(index, 'count', Math.max(1, Math.min(64, parseInt(e.target.value) || 1)))}
-                        className="w-16 px-2 py-1 bg-secondary border border-border rounded text-sm text-foreground focus:outline-none focus:border-primary"
+                        onChange={(e) =>
+                          updateOutput(
+                            index,
+                            "count",
+                            Math.max(1, Math.min(64, parseInt(e.target.value) || 1))
+                          )
+                        }
+                        className="w-16 px-2 py-1 bg-secondary border border-primary/20 rounded text-sm text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Chance %</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">
+                        Chance %
+                      </label>
                       <input
                         type="number"
                         min="0"
                         max="100"
                         step="5"
                         value={Math.round((output.chance || 1) * 100)}
-                        onChange={(e) => updateOutput(index, 'chance', Math.max(0, Math.min(100, parseInt(e.target.value) || 100)) / 100)}
-                        className="w-16 px-2 py-1 bg-secondary border border-border rounded text-sm text-foreground focus:outline-none focus:border-primary"
+                        onChange={(e) =>
+                          updateOutput(
+                            index,
+                            "chance",
+                            Math.max(0, Math.min(100, parseInt(e.target.value) || 100)) / 100
+                          )
+                        }
+                        className="w-16 px-2 py-1 bg-secondary border border-primary/20 rounded text-sm text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -238,19 +254,19 @@ export const CreateCrushingEditor: React.FC<CreateCrushingEditorProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-primary/20">
         <button
           onClick={() => {
             setInput(null);
             setOutputs([null, null, null]);
           }}
-          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-border rounded text-sm text-foreground transition-colors"
+          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-primary/20 rounded text-sm text-foreground transition-colors"
         >
           Clear
         </button>
         <button
           onClick={handleSave}
-          disabled={!input || outputs.every(o => o === null)}
+          disabled={!input || outputs.every((o) => o === null)}
           className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Save Recipe
@@ -258,17 +274,21 @@ export const CreateCrushingEditor: React.FC<CreateCrushingEditorProps> = ({
       </div>
 
       {/* Code Preview */}
-      {input && outputs.some(o => o !== null) && (
-        <div className="bg-muted/30 border border-border rounded-lg p-4">
+      {input && outputs.some((o) => o !== null) && (
+        <div className="bg-muted/30 border border-primary/20 rounded-lg p-4">
           <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-            <span className="text-primary">{'</>'}</span>
+            <span className="text-primary">{"</>"}</span>
             Generated Code
           </h3>
-          <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-border overflow-x-auto">
-{`event.recipes.create.crushing([
-${outputs.filter(o => o !== null).map(output => 
-  `  ${(output!.chance ?? 1) < 1 ? `Item.of('${output!.id}')${(output!.count ?? 1) > 1 ? `.withCount(${output!.count})` : ''}.withChance(${output!.chance})` : `'${output!.id}'${(output!.count ?? 1) > 1 ? ` * ${output!.count}` : ''}`}`
-).join(',\n')}
+          <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-primary/20 overflow-x-auto">
+            {`event.recipes.create.crushing([
+${outputs
+  .filter((o) => o !== null)
+  .map(
+    (output) =>
+      `  ${(output!.chance ?? 1) < 1 ? `Item.of('${output!.id}')${(output!.count ?? 1) > 1 ? `.withCount(${output!.count})` : ""}.withChance(${output!.chance})` : `'${output!.id}'${(output!.count ?? 1) > 1 ? ` * ${output!.count}` : ""}`}`
+  )
+  .join(",\n")}
 ], '${input.id}')`}
           </pre>
         </div>
@@ -283,10 +303,13 @@ ${outputs.filter(o => o !== null).map(output =>
             setPickingSlot(null);
           }}
           selectedItem={
-            pickingSlot === 'input' ? input?.id : 
-            typeof pickingSlot === 'number' ? outputs[pickingSlot]?.id : undefined
+            pickingSlot === "input"
+              ? input?.id
+              : typeof pickingSlot === "number"
+                ? outputs[pickingSlot]?.id
+                : undefined
           }
-          title={pickingSlot === 'input' ? 'Select Input Item' : 'Select Output Item'}
+          title={pickingSlot === "input" ? "Select Input Item" : "Select Output Item"}
         />
       )}
     </div>

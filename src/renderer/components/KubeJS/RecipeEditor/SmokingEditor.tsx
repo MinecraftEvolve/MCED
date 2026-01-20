@@ -1,5 +1,5 @@
-import React from 'react';
-import { SmeltingEditor } from './SmeltingEditor';
+import React from "react";
+import { SmeltingEditor } from "./SmeltingEditor";
 
 interface SmokingEditorProps {
   instancePath: string;
@@ -10,7 +10,7 @@ interface SmokingEditorProps {
 export const SmokingEditor: React.FC<SmokingEditorProps> = ({
   instancePath,
   onSave,
-  initialRecipe
+  initialRecipe,
 }) => {
   return (
     <SmeltingEditor

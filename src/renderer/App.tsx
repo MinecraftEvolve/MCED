@@ -3,6 +3,7 @@ import { useAppStore } from "./store";
 import { useSettingsStore } from "./store/settingsStore";
 import { useStatsStore } from "./store/statsStore";
 import { useChangelogStore } from "./store/changelogStore";
+import { NotificationProvider } from "./components/common/Notifications";
 import { Loader2, Settings as SettingsIcon, FolderOpen } from "lucide-react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
@@ -25,7 +26,7 @@ async function associateConfigsWithMods(
   mods: ModInfo[],
   instancePath: string,
   defaultConfigsFolder?: string,
-  serverConfigFolder?: string,
+  serverConfigFolder?: string
 ): Promise<ModInfo[]> {
   try {
     const modsWithConfigs = await Promise.all(
@@ -35,13 +36,13 @@ async function associateConfigsWithMods(
             instancePath,
             mod.modId,
             defaultConfigsFolder,
-            serverConfigFolder,
+            serverConfigFolder
           );
           return { ...mod, configFiles };
         } catch (error) {
           return mod;
         }
-      }),
+      })
     );
     return modsWithConfigs;
   } catch (error) {
@@ -51,7 +52,7 @@ async function associateConfigsWithMods(
 
 async function enrichModsWithIcons(
   mods: ModInfo[],
-  preferCurseForge: boolean = false,
+  preferCurseForge: boolean = false
 ): Promise<ModInfo[]> {
   const enrichedMods = await Promise.all(
     mods.map(async (mod) => {
@@ -90,7 +91,7 @@ async function enrichModsWithIcons(
       }
 
       return mod;
-    }),
+    })
   );
 
   return enrichedMods;
@@ -160,17 +161,17 @@ function App() {
   useEffect(() => {
     const handleLinkClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'A') {
-        const href = target.getAttribute('href');
-        if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+      if (target.tagName === "A") {
+        const href = target.getAttribute("href");
+        if (href && (href.startsWith("http://") || href.startsWith("https://"))) {
           e.preventDefault();
           window.api.openExternal(href);
         }
       }
     };
 
-    document.addEventListener('click', handleLinkClick);
-    return () => document.removeEventListener('click', handleLinkClick);
+    document.addEventListener("click", handleLinkClick);
+    return () => document.removeEventListener("click", handleLinkClick);
   }, []);
 
   const handleOpenInstance = async (providedPath?: string) => {
@@ -178,8 +179,7 @@ function App() {
       setError(null);
       setIsLoading(true);
 
-      const instancePath =
-        providedPath || (await window.electron.openDirectory());
+      const instancePath = providedPath || (await window.electron.openDirectory());
 
       if (!instancePath) {
         setIsLoading(false);
@@ -197,12 +197,14 @@ function App() {
 
       const instanceInfo = result.instance;
       setCurrentInstance(instanceInfo);
-      setLauncherType(result.launcherType || 'unknown');
+      setLauncherType(result.launcherType || "unknown");
       addRecentInstance({
         path: String(instanceInfo.path),
         name: instanceInfo.name,
         minecraftVersion: instanceInfo.minecraftVersion,
-        loader: instanceInfo.loader ? `${instanceInfo.loader.type} ${instanceInfo.loader.version}`.trim() : 'unknown',
+        loader: instanceInfo.loader
+          ? `${instanceInfo.loader.type} ${instanceInfo.loader.version}`.trim()
+          : "unknown",
         launcher: result.launcherType,
       });
 
@@ -213,36 +215,33 @@ function App() {
 
       // Update Discord RPC with instance name and loading state
       if (settings.discordRpcEnabled) {
-        window.api.discordSetInstance(instanceInfo.name || 'Minecraft Instance');
-        window.api.discordSetMod('Loading mods...', 0);
+        window.api.discordSetInstance(instanceInfo.name || "Minecraft Instance");
+        window.api.discordSetMod("Loading mods...", 0);
       }
 
       const modsResult = await window.api.scanMods(instanceInfo.modsFolder);
 
-      const modsList =
-        modsResult.success && Array.isArray(modsResult.mods)
-          ? modsResult.mods
-          : [];
+      const modsList = modsResult.success && Array.isArray(modsResult.mods) ? modsResult.mods : [];
 
       const modsWithConfigs = await associateConfigsWithMods(
         modsList,
         instanceInfo.path,
         instanceInfo.defaultConfigsFolder,
-        instanceInfo.serverConfigFolder,
+        instanceInfo.serverConfigFolder
       );
       setMods(modsWithConfigs);
 
       // Detect KubeJS and load item registry if present
-      const hasKubeJS = modsList.some(mod => 
-        mod.modId === 'kubejs' || mod.name?.toLowerCase().includes('kubejs')
+      const hasKubeJS = modsList.some(
+        (mod) => mod.modId === "kubejs" || mod.name?.toLowerCase().includes("kubejs")
       );
-      
+
       if (hasKubeJS) {
         try {
           await window.api.itemRegistryInitialize(instanceInfo.path, instanceInfo.modsFolder);
           await window.api.fluidRegistryInitialize(instanceInfo.path, instanceInfo.modsFolder);
         } catch (error) {
-          console.error('Failed to load KubeJS registries:', error);
+          console.error("Failed to load KubeJS registries:", error);
         }
       }
 
@@ -262,7 +261,7 @@ function App() {
     } catch (error) {
       setError(
         (error as Error)?.message ||
-          "Failed to open instance. Please select a valid Minecraft instance folder.",
+          "Failed to open instance. Please select a valid Minecraft instance folder."
       );
       setIsLoading(false);
     }
@@ -271,7 +270,7 @@ function App() {
   const handleCloseInstance = () => {
     // End tracking sessions
     endSession();
-    
+
     setCurrentInstance(null);
     setMods([]);
     setError(null);
@@ -284,7 +283,7 @@ function App() {
 
   const handleReloadMods = async () => {
     if (!currentInstance) return;
-    
+
     try {
       setIsLoading(true);
 
@@ -295,9 +294,9 @@ function App() {
         modsList,
         currentInstance.path,
         currentInstance.defaultConfigsFolder,
-        currentInstance.serverConfigFolder,
+        currentInstance.serverConfigFolder
       );
-      
+
       setMods(modsWithConfigs);
       setIsLoading(false);
 
@@ -314,7 +313,7 @@ function App() {
           .catch(() => {});
       }
     } catch (error) {
-      console.error('Failed to reload mods:', error);
+      console.error("Failed to reload mods:", error);
       setIsLoading(false);
     }
   };
@@ -363,12 +362,11 @@ function App() {
 
   // Loading overlay (doesn't block window interaction)
   const LoadingOverlay = isLoading ? (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 pointer-events-none">
-      <div className="bg-background p-8 rounded-lg shadow-xl flex flex-col items-center pointer-events-auto">
-        <Loader2 className="w-16 h-16 text-purple-500 animate-spin mb-4" />
-        <p className="text-xl font-semibold text-foreground">
-          Loading instance...
-        </p>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-none animate-fadeIn">
+      <div className="bg-card/90 backdrop-blur-xl p-10 rounded-3xl shadow-2xl flex flex-col items-center pointer-events-auto border-2 border-purple-500/30 animate-slideInRight">
+        <Loader2 className="w-20 h-20 text-purple-500 animate-spin mb-6" />
+        <p className="text-2xl font-bold text-foreground mb-2">Loading instance...</p>
+        <p className="text-sm text-muted-foreground">This may take a moment</p>
       </div>
     </div>
   ) : null;
@@ -377,92 +375,111 @@ function App() {
     return (
       <>
         {LoadingOverlay}
-        <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground">
-          {/* Logo */}
-          <div className="mb-8">
-            <img
-              src="./logo.png"
-              alt="Minecraft Config Editor Desktop"
-              className="w-32 h-32 drop-shadow-2xl"
-            />
+        <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-background via-background to-primary/5 text-foreground relative overflow-hidden">
+          {/* Animated background elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
           </div>
 
-          {/* Title */}
-          <h1 className="text-5xl font-bold mb-4 pb-2 bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-            Minecraft Config Editor Desktop
-          </h1>
-          <p className="text-muted-foreground mb-12 text-lg">
-            Modern config editing for your modpacks
-          </p>
+          {/* Content */}
+          <div className="relative z-10 flex flex-col items-center">
+            {/* Logo */}
+            <div className="mb-6 group">
+              <img
+                src="./logo.png"
+                alt="Minecraft Config Editor Desktop"
+                className="w-24 h-24 drop-shadow-2xl group-hover:scale-110 transition-transform duration-300 animate-fadeIn"
+              />
+            </div>
 
-          {/* Main Actions */}
-          <div className="flex flex-col gap-4 w-80">
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                handleOpenInstance();
-              }}
-              className="w-full px-6 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold 
-                       transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-3"
-            >
-              <FolderOpen size={24} />
-              <span>Open Instance</span>
-            </button>
+            {/* Title */}
+            <h1 className="text-4xl font-bold mb-2 pb-2 text-primary animate-fadeIn">
+              Minecraft Config Editor Desktop
+            </h1>
+            <p className="text-muted-foreground mb-8 text-base animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+              Modern config editing for your modpacks
+            </p>
 
-            {recentInstances && recentInstances.length > 0 && (
-              <div className="mt-4">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-2">
-                  Recent Instances
-                </h3>
-                <div className="space-y-2">
-                  {recentInstances.slice(0, 3).map((instance, idx) => {
-                    const instancePath = typeof instance === 'string' ? instance : instance.path;
-                    const instanceName =
-                      (typeof instance === 'object' && instance.name) || instancePath.split(/[/\\]/).pop() || instancePath;
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => handleOpenInstance(instancePath)}
-                        className="w-full px-4 py-3 bg-card hover:bg-card/80 rounded-lg text-left
-                                 transition-all duration-200 border border-border hover:border-purple-500/50 group"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="font-medium text-foreground group-hover:text-purple-400 transition-colors">
-                            {instanceName}
+            {/* Main Actions */}
+            <div className="flex flex-col gap-3 w-80 animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleOpenInstance();
+                }}
+                className="w-full px-6 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-base
+                         transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2 shadow-lg hover:shadow-xl group"
+              >
+                <FolderOpen size={20} className="group-hover:scale-110 transition-transform" />
+                <span>Open Instance</span>
+              </button>
+
+              {recentInstances && recentInstances.length > 0 && (
+                <div className="mt-4">
+                  <h3 className="text-xs font-semibold text-muted-foreground mb-3 px-2 flex items-center gap-2">
+                    <div className="w-1 h-3 bg-purple-500 rounded-full"></div>
+                    Recent Instances
+                  </h3>
+                  <div className="space-y-2">
+                    {recentInstances.slice(0, 3).map((instance, idx) => {
+                      const instancePath = typeof instance === "string" ? instance : instance.path;
+                      const instanceName =
+                        (typeof instance === "object" && instance.name) ||
+                        instancePath.split(/[/\\]/).pop() ||
+                        instancePath;
+                      return (
+                        <button
+                          key={idx}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleOpenInstance(instancePath);
+                          }}
+                          className="w-full px-4 py-3 bg-card/50 backdrop-blur-sm hover:bg-purple-900/30 rounded-xl text-left
+                                   transition-all duration-200 border-2 border-purple-500/20 hover:border-purple-500/50 group overflow-hidden hover:shadow-lg transform hover:scale-[1.01]"
+                          style={{ animationDelay: `${0.3 + idx * 0.1}s` }}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">
+                              {instanceName}
+                            </div>
+                            {typeof instance === "object" && instance.launcher && (
+                              <LauncherIcon launcher={instance.launcher} size={18} />
+                            )}
                           </div>
-                          {typeof instance === 'object' && instance.launcher && (
-                            <LauncherIcon launcher={instance.launcher} size={20} />
-                          )}
-                        </div>
-                        {typeof instance === 'object' && instance.minecraftVersion && instance.loader && (
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                            <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded text-xs font-medium">
-                              MC {instance.minecraftVersion}
-                            </span>
-                            <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded text-xs font-medium">
-                              {instance.loader}
-                            </span>
+                          {typeof instance === "object" &&
+                            instance.minecraftVersion &&
+                            instance.loader && (
+                              <div className="flex items-center gap-2 text-xs mt-1.5">
+                                <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded-md text-xs font-semibold border border-green-500/30">
+                                  MC {instance.minecraftVersion}
+                                </span>
+                                <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-md text-xs font-semibold border border-purple-500/30">
+                                  {instance.loader}
+                                </span>
+                              </div>
+                            )}
+                          <div className="text-xs text-muted-foreground truncate mt-1.5 font-mono opacity-70">
+                            {instancePath}
                           </div>
-                        )}
-                        <div className="text-xs text-muted-foreground truncate mt-1">
-                          {instancePath}
-                        </div>
-                      </button>
-                    );
-                  })}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Settings Button */}
           <button
             onClick={() => setShowSettings(true)}
-            className="absolute top-4 right-4 p-3 rounded-lg bg-card hover:bg-card/80 border border-border 
-                     hover:border-purple-500/50 transition-all duration-200"
+            className="absolute top-4 right-4 p-3 rounded-xl bg-card/50 backdrop-blur-sm hover:bg-card/80 border-2 border-primary/20 
+                     hover:border-primary/50 transition-all duration-200 group shadow-lg hover:shadow-primary/20 transform hover:scale-105"
             title="Settings (Ctrl+,)"
           >
-            <SettingsIcon size={20} />
+            <SettingsIcon size={20} className="group-hover:rotate-90 transition-transform duration-300" />
           </button>
         </div>
 
@@ -472,30 +489,31 @@ function App() {
   }
 
   return (
-    <>
-      {LoadingOverlay}
-      <div className="flex flex-col h-screen bg-background text-foreground">
-        <Header
-          onSearchClick={() => setShowSearch(true)}
-          onOpenInstance={handleOpenInstance}
-          onCloseInstance={handleCloseInstance}
-          onStatsClick={() => setShowStats(true)}
-          onChangelogClick={() => setShowChangelog(true)}
-        />
-        <div className="flex-1 flex overflow-hidden">
-          <Sidebar />
-          <MainPanel />
+    <NotificationProvider>
+      <>
+        {LoadingOverlay}
+        <div className="flex flex-col h-screen bg-background text-foreground">
+          <Header
+            onSearchClick={() => setShowSearch(true)}
+            onOpenInstance={handleOpenInstance}
+            onCloseInstance={handleCloseInstance}
+            onStatsClick={() => setShowStats(true)}
+            onChangelogClick={() => setShowChangelog(true)}
+          />
+          {showSearch && <SmartSearch onClose={() => setShowSearch(false)} />}
+          <div className="flex flex-1 overflow-hidden">
+            <Sidebar />
+            <MainPanel />
+          </div>
+          <StatusBar />
         </div>
-        <StatusBar />
-
-        {showSearch && <SmartSearch onClose={() => setShowSearch(false)} />}
-      </div>
-
-      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
-      {showStats && <StatsModal onClose={() => setShowStats(false)} />}
-      {showChangelog && <ChangelogViewer onClose={() => setShowChangelog(false)} />}
-      <UpdateNotification />
-    </>
+        {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+        {showChangelog && <ChangelogViewer onClose={() => setShowChangelog(false)} />}
+        <UpdateNotification />
+        {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+        {/* useKeyboardShortcuts() - temporarily disabled due to hooks order issue */}
+      </>
+    </NotificationProvider>
   );
 }
 

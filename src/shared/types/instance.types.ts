@@ -56,7 +56,15 @@ export interface InstanceMetadata {
 }
 
 export interface LauncherInfo {
-  type: "multimc" | "prism" | "curseforge" | "atlauncher" | "ftb" | "technic" | "gdlauncher" | "vanilla";
+  type:
+    | "multimc"
+    | "prism"
+    | "curseforge"
+    | "atlauncher"
+    | "ftb"
+    | "technic"
+    | "gdlauncher"
+    | "vanilla";
   path: string;
   executable: string;
   version?: string;

@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  FolderOpen,
-  Clock,
-  Shield,
-  Zap,
-  Book,
-  Github,
-  Heart,
-} from "lucide-react";
+import { FolderOpen, Clock, Shield, Zap, Book, Github, Heart } from "lucide-react";
 import { RecentInstance } from "../../../shared/types/instance.types";
 import { LauncherIcon } from "../LauncherIcon";
 import "./LandingPage.css";
@@ -17,13 +9,10 @@ interface LandingPageProps {
   recentInstances?: RecentInstance[];
 }
 
-export function LandingPage({
-  onSelectInstance,
-  recentInstances = [],
-}: LandingPageProps) {
+export function LandingPage({ onSelectInstance, recentInstances = [] }: LandingPageProps) {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  
-  console.log('LandingPage recentInstances:', recentInstances);
+
+  console.log("LandingPage recentInstances:", recentInstances);
 
   const handleRecentInstance = (instance: RecentInstance) => {
     // Pass path via event or some other method if needed
@@ -32,18 +21,25 @@ export function LandingPage({
   };
 
   const getLauncherIcon = (launcher?: string) => {
-    return <LauncherIcon launcher={launcher || 'generic'} className="w-4 h-4" />;
+    return <LauncherIcon launcher={launcher || "generic"} className="w-4 h-4" />;
   };
 
   const getLauncherName = (launcher?: string) => {
     switch (launcher) {
-      case 'modrinth': return 'Modrinth App';
-      case 'curseforge': return 'CurseForge';
-      case 'prism': return 'Prism Launcher';
-      case 'multimc': return 'MultiMC';
-      case 'atlauncher': return 'ATLauncher';
-      case 'packwiz': return 'Packwiz';
-      default: return 'Generic Launcher';
+      case "modrinth":
+        return "Modrinth App";
+      case "curseforge":
+        return "CurseForge";
+      case "prism":
+        return "Prism Launcher";
+      case "multimc":
+        return "MultiMC";
+      case "atlauncher":
+        return "ATLauncher";
+      case "packwiz":
+        return "Packwiz";
+      default:
+        return "Generic Launcher";
     }
   };
 
@@ -55,9 +51,7 @@ export function LandingPage({
           <img src="./icon.png" alt="MCED Logo" className="landing-logo" />
         </div>
         <h1 className="landing-title">Minecraft Config Editor</h1>
-        <p className="landing-subtitle">
-          Edit your modpack configurations with style and ease
-        </p>
+        <p className="landing-subtitle">Edit your modpack configurations with style and ease</p>
 
         {/* Primary CTA */}
         <button className="landing-cta-button" onClick={onSelectInstance}>
@@ -118,7 +112,8 @@ export function LandingPage({
           </div>
           <div className="recent-instances">
             {recentInstances.slice(0, 5).map((instance, index) => {
-              const instanceName = instance.name || instance.path.split(/[\\/]/).pop() || instance.path;
+              const instanceName =
+                instance.name || instance.path.split(/[\\/]/).pop() || instance.path;
               return (
                 <button
                   key={index}
@@ -139,7 +134,10 @@ export function LandingPage({
                     )}
                     {instance.loader && (
                       <span className="instance-loader px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded text-xs font-medium">
-                        {instance.loader.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                        {instance.loader
+                          .split(" ")
+                          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(" ")}
                       </span>
                     )}
                   </div>
@@ -169,9 +167,8 @@ export function LandingPage({
       {/* Footer */}
       <div className="landing-footer">
         <p>
-          Made with{" "}
-          <Heart className="heart-icon" size={16} fill="currentColor" /> for the
-          Minecraft community
+          Made with <Heart className="heart-icon" size={16} fill="currentColor" /> for the Minecraft
+          community
         </p>
         <p className="version">Version 1.0.6</p>
       </div>

@@ -83,4 +83,4 @@ Built for the Minecraft modding community with ❤️
 
 ---
 
-**Current Version:** 1.0.9 | **Platform:** Windows, Linux, macOS
+**Current Version:** 1.1.1 | **Platform:** Windows, Linux, macOS

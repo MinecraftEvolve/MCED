@@ -21,11 +21,12 @@ export const ModListItem = React.memo(function ModListItem({
       onClick={onClick}
       className={`
         cursor-pointer transition-all duration-200 group
-        ${isCompact ? "p-2" : "p-3"}
+        ${isCompact ? "p-2 mx-2 my-1" : "p-3 mx-2 my-1.5"}
+        rounded-xl
         ${
           isSelected
-            ? "bg-primary/20 border-l-2 border-primary shadow-sm"
-            : "hover:bg-accent/30 border-l-2 border-transparent hover:border-primary/50"
+            ? "bg-gradient-to-r from-primary/20 to-primary/10 border-2 border-primary shadow-lg shadow-primary/20 scale-[1.02]"
+            : "bg-card/30 hover:bg-card/60 border-2 border-transparent hover:border-primary/30 hover:scale-[1.02] hover:shadow-md"
         }
       `}
     >
@@ -34,7 +35,7 @@ export const ModListItem = React.memo(function ModListItem({
           <img
             src={mod.icon}
             alt={mod.name}
-            className={`rounded-lg shadow-md group-hover:scale-110 transition-transform flex-shrink-0 ${isCompact ? "w-8 h-8" : "w-10 h-10"}`}
+            className={`rounded-xl shadow-md group-hover:scale-110 transition-transform flex-shrink-0 ${isCompact ? "w-8 h-8" : "w-10 h-10"}`}
             onError={(e) => {
               e.currentTarget.style.display = "none";
               e.currentTarget.nextElementSibling?.classList.remove("hidden");
@@ -42,7 +43,7 @@ export const ModListItem = React.memo(function ModListItem({
           />
         ) : null}
         <div
-          className={`rounded-lg bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center text-primary font-bold shadow-md group-hover:scale-110 transition-transform flex-shrink-0 ${isCompact ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm"} ${mod.icon ? "hidden" : ""}`}
+          className={`rounded-xl bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center text-primary font-bold shadow-md group-hover:scale-110 transition-transform flex-shrink-0 ${isCompact ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm"} ${mod.icon ? "hidden" : ""}`}
         >
           {mod.name.substring(0, 2).toUpperCase()}
         </div>
@@ -53,16 +54,12 @@ export const ModListItem = React.memo(function ModListItem({
           >
             {mod.name}
           </h3>
-          {!isCompact && (
-            <p className="text-xs text-muted-foreground truncate">
-              v{mod.version}
-            </p>
-          )}
+          {!isCompact && <p className="text-xs text-muted-foreground truncate">v{mod.version}</p>}
         </div>
 
         {isSelected && (
           <div
-            className={`rounded-full bg-primary animate-pulse ${isCompact ? "w-1.5 h-1.5" : "w-2 h-2"}`}
+            className={`rounded-full bg-primary animate-pulse shadow-lg shadow-primary/50 ${isCompact ? "w-2 h-2" : "w-2.5 h-2.5"}`}
           ></div>
         )}
       </div>

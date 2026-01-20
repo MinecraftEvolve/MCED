@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Package } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Search, Package } from "lucide-react";
 
 interface Item {
   id: string;
   name: string;
   modId: string;
-  type: 'item' | 'block';
+  type: "item" | "block";
   texture?: string;
 }
 
@@ -19,7 +19,7 @@ const ITEMS_PER_PAGE = 100;
 export const ItemSelector: React.FC<ItemSelectorProps> = ({ instancePath, onSelect }) => {
   const [allItems, setAllItems] = useState<Item[]>([]);
   const [displayedItems, setDisplayedItems] = useState<Item[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
@@ -61,11 +61,11 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({ instancePath, onSele
   const initializeRegistry = async () => {
     setIsLoading(true);
     try {
-      const modsFolder = instancePath + '/mods';
+      const modsFolder = instancePath + "/mods";
       await window.api.itemRegistryInitialize(instancePath, modsFolder);
       setIsInitialized(true);
     } catch (error) {
-      console.error('Failed to initialize items:', error);
+      console.error("Failed to initialize items:", error);
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +81,7 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({ instancePath, onSele
         setDisplayedItems(items.slice(0, ITEMS_PER_PAGE));
       }
     } catch (error) {
-      console.error('Failed to load items:', error);
+      console.error("Failed to load items:", error);
     } finally {
       setIsLoading(false);
     }
@@ -91,39 +91,42 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({ instancePath, onSele
     const nextPage = page + 1;
     const startIdx = displayedItems.length;
     const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, allItems.length);
-    
+
     if (startIdx < allItems.length) {
-      setDisplayedItems(prev => [...prev, ...allItems.slice(startIdx, endIdx)]);
+      setDisplayedItems((prev) => [...prev, ...allItems.slice(startIdx, endIdx)]);
       setPage(nextPage);
     }
   }, [allItems, displayedItems, page]);
 
-  const handleSearch = useCallback(async (query: string) => {
-    setSearchQuery(query);
-    setPage(0);
-    
-    if (!isInitialized) return;
+  const handleSearch = useCallback(
+    async (query: string) => {
+      setSearchQuery(query);
+      setPage(0);
 
-    if (!query.trim()) {
-      // Load all items when search is cleared
-      await loadInitialItems();
-      return;
-    }
+      if (!isInitialized) return;
 
-    setIsLoading(true);
-    try {
-      const result = await window.api.itemRegistrySearchItems(instancePath, query);
-      if (result.success && result.data) {
-        const items = result.data;
-        setAllItems(items);
-        setDisplayedItems(items.slice(0, ITEMS_PER_PAGE));
+      if (!query.trim()) {
+        // Load all items when search is cleared
+        await loadInitialItems();
+        return;
       }
-    } catch (error) {
-      console.error('Search failed:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [instancePath, isInitialized]);
+
+      setIsLoading(true);
+      try {
+        const result = await window.api.itemRegistrySearchItems(instancePath, query);
+        if (result.success && result.data) {
+          const items = result.data;
+          setAllItems(items);
+          setDisplayedItems(items.slice(0, ITEMS_PER_PAGE));
+        }
+      } catch (error) {
+        console.error("Search failed:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [instancePath, isInitialized]
+  );
 
   const handleItemClick = (item: Item) => {
     setSelectedItem(item);
@@ -142,15 +145,15 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({ instancePath, onSele
           placeholder="Search items... (e.g., 'minecraft:diamond', 'iron', 'create')"
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
+          className="w-full pl-10 pr-4 py-3 bg-secondary border border-primary/20 rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
         />
       </div>
 
       {/* Selected Item Display */}
       {selectedItem && (
-        <div className="bg-secondary border border-border rounded-lg p-4">
+        <div className="bg-secondary border border-primary/20 rounded-lg p-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-background border border-border rounded flex items-center justify-center">
+            <div className="w-16 h-16 bg-background border border-primary/20 rounded flex items-center justify-center">
               {selectedItem.texture ? (
                 <img
                   src={`data:image/png;base64,${selectedItem.texture}`}
@@ -171,7 +174,7 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({ instancePath, onSele
       )}
 
       {/* Items Grid */}
-      <div className="bg-secondary border border-border rounded-lg p-4">
+      <div className="bg-secondary border border-primary/20 rounded-lg p-4">
         {!isInitialized ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-muted-foreground">Initializing item registry...</div>
@@ -180,7 +183,9 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({ instancePath, onSele
           <div className="flex flex-col items-center justify-center py-12">
             <Search className="w-12 h-12 text-muted-foreground mb-3" />
             <p className="text-muted-foreground">Loading items...</p>
-            <p className="text-sm text-muted-foreground/70 mt-1">Try searching by mod, item name, or ID</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">
+              Try searching by mod, item name, or ID
+            </p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -201,8 +206,8 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({ instancePath, onSele
                   onClick={() => handleItemClick(item)}
                   className={`group relative aspect-square bg-background border rounded hover:border-primary transition-all ${
                     selectedItem?.id === item.id
-                      ? 'border-primary ring-2 ring-primary/20'
-                      : 'border-border'
+                      ? "border-primary ring-2 ring-primary/20"
+                      : "border-primary/20"
                   }`}
                   title={`${item.name}\n${item.id}`}
                 >
@@ -220,7 +225,7 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({ instancePath, onSele
                   </div>
                   {/* Hover Tooltip */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                    <div className="bg-popover text-popover-foreground text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg border border-border">
+                    <div className="bg-popover text-popover-foreground text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg border border-primary/20">
                       <div className="font-medium">{item.name}</div>
                       <div className="text-muted-foreground">{item.id}</div>
                     </div>
@@ -241,7 +246,8 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({ instancePath, onSele
       {/* Item Count */}
       {displayedItems.length > 0 && (
         <div className="text-xs text-muted-foreground text-center">
-          Showing {displayedItems.length} of {allItems.length} item{allItems.length !== 1 ? 's' : ''}
+          Showing {displayedItems.length} of {allItems.length} item
+          {allItems.length !== 1 ? "s" : ""}
         </div>
       )}
     </div>

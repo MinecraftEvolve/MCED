@@ -1,7 +1,7 @@
 // Monaco Editor Types
 declare global {
   interface Window {
-    monaco?: typeof import('monaco-editor');
+    monaco?: typeof import("monaco-editor");
   }
 }
 

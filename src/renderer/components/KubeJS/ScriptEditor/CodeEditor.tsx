@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Editor from '@monaco-editor/react';
-import { Save, AlertCircle, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
-import { ScriptValidator } from '../ScriptValidator';
+import React, { useState, useEffect, useRef } from "react";
+import Editor from "@monaco-editor/react";
+import { Save, AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react";
+import { ScriptValidator } from "../ScriptValidator";
 
 interface CodeEditorProps {
   filePath: string;
   fileName: string;
-  scriptType: 'server' | 'client' | 'startup';
+  scriptType: "server" | "client" | "startup";
   instancePath: string;
   hasProbeJS: boolean;
   onClose: () => void;
@@ -22,17 +22,19 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   onClose,
   onSave,
 }) => {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Array<{
-    line: number;
-    column: number;
-    message: string;
-    severity: 'error' | 'warning';
-  }>>([]);
+  const [validationErrors, setValidationErrors] = useState<
+    Array<{
+      line: number;
+      column: number;
+      message: string;
+      severity: "error" | "warning";
+    }>
+  >([]);
   const [isValid, setIsValid] = useState(true);
   const editorRef = useRef<any>(null);
 
@@ -44,12 +46,12 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();
-        e.returnValue = '';
+        e.returnValue = "";
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
   const loadScript = async () => {
@@ -62,10 +64,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         setCode(result.data);
         setIsDirty(false);
       } else {
-        setError(result.error || 'Failed to load script');
+        setError(result.error || "Failed to load script");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -81,10 +83,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         setIsDirty(false);
         if (onSave) onSave();
       } else {
-        setError(result.error || 'Failed to save script');
+        setError(result.error || "Failed to save script");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setSaving(false);
     }
@@ -101,7 +103,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     editorRef.current = editor;
 
     // Save monaco reference globally
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       (window as any).monaco = monaco;
     }
 
@@ -110,7 +112,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       fontSize: 14,
       minimap: { enabled: true },
       scrollBeyondLastLine: false,
-      wordWrap: 'on',
+      wordWrap: "on",
       automaticLayout: true,
       tabSize: 2,
       insertSpaces: true,
@@ -124,7 +126,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         }
       });
     } catch (err) {
-      console.warn('Failed to add keyboard shortcut:', err);
+      console.warn("Failed to add keyboard shortcut:", err);
     }
   };
 
@@ -135,7 +137,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
   const handleClose = () => {
     if (isDirty) {
-      const confirmed = window.confirm('You have unsaved changes. Are you sure you want to close?');
+      const confirmed = window.confirm("You have unsaved changes. Are you sure you want to close?");
       if (!confirmed) return;
     }
     onClose();
@@ -162,9 +164,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               <h3 className="text-base font-semibold text-foreground">{fileName}</h3>
               {isDirty && <span className="text-xs text-orange-400">• Modified</span>}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {scriptType}_scripts
-            </p>
+            <p className="text-xs text-muted-foreground">{scriptType}_scripts</p>
           </div>
         </div>
 
@@ -172,17 +172,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           {!isValid && (
             <span className="flex items-center gap-1 text-sm text-destructive">
               <AlertCircle className="w-4 h-4" />
-              {validationErrors.filter(e => e.severity === 'error').length} error(s)
+              {validationErrors.filter((e) => e.severity === "error").length} error(s)
             </span>
           )}
-          
+
           <button
             onClick={saveScript}
             disabled={saving || !isDirty}
             className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             <Save className="w-4 h-4" />
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? "Saving..." : "Save"}
           </button>
 
           <button
@@ -202,7 +202,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           <div className="flex-1">
             <p className="text-xs text-blue-300 font-medium">ProbeJS Not Detected</p>
             <p className="text-xs text-blue-400">
-              Install ProbeJS and run <code className="px-1 py-0.5 bg-blue-500/20 rounded text-xs">/probejs dump</code> in singleplayer for autocomplete.
+              Install ProbeJS and run{" "}
+              <code className="px-1 py-0.5 bg-blue-500/20 rounded text-xs">/probejs dump</code> in
+              singleplayer for autocomplete.
             </p>
           </div>
         </div>
@@ -245,7 +247,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                 <div
                   key={idx}
                   className={`p-1.5 rounded text-xs cursor-pointer hover:bg-accent transition-colors ${
-                    err.severity === 'error' ? 'bg-destructive/10 border-l-2 border-destructive' : 'bg-yellow-500/10 border-l-2 border-yellow-500'
+                    err.severity === "error"
+                      ? "bg-destructive/10 border-l-2 border-destructive"
+                      : "bg-yellow-500/10 border-l-2 border-yellow-500"
                   }`}
                   onClick={() => {
                     if (editorRef.current) {
@@ -256,13 +260,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                   }}
                 >
                   <div className="flex items-start gap-1.5">
-                    {err.severity === 'error' ? (
+                    {err.severity === "error" ? (
                       <AlertCircle className="w-3 h-3 text-destructive mt-0.5 flex-shrink-0" />
                     ) : (
                       <AlertTriangle className="w-3 h-3 text-yellow-500 mt-0.5 flex-shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className={err.severity === 'error' ? 'text-destructive' : 'text-yellow-500'}>
+                      <p
+                        className={
+                          err.severity === "error" ? "text-destructive" : "text-yellow-500"
+                        }
+                      >
                         Line {err.line}:{err.column}
                       </p>
                       <p className="text-muted-foreground">{err.message}</p>

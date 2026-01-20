@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ParsedRecipe } from '../../../types/kubejs';
+import React, { useState } from "react";
+import { ParsedRecipe } from "../../../types/kubejs";
 
 interface BulkRecipeEditorProps {
   recipes: ParsedRecipe[];
@@ -12,8 +12,10 @@ export const BulkRecipeEditor: React.FC<BulkRecipeEditorProps> = ({
   onApply,
   onCancel,
 }) => {
-  const [operation, setOperation] = useState<'prefix' | 'suffix' | 'replace' | 'multiply'>('prefix');
-  const [textValue, setTextValue] = useState('');
+  const [operation, setOperation] = useState<"prefix" | "suffix" | "replace" | "multiply">(
+    "prefix"
+  );
+  const [textValue, setTextValue] = useState("");
   const [multiplier, setMultiplier] = useState(1);
 
   const handleApply = () => {
@@ -21,18 +23,18 @@ export const BulkRecipeEditor: React.FC<BulkRecipeEditorProps> = ({
       const changes: Partial<ParsedRecipe> = {};
 
       switch (operation) {
-        case 'prefix':
+        case "prefix":
           changes.id = textValue + recipe.id;
           break;
-        case 'suffix':
+        case "suffix":
           changes.id = recipe.id + textValue;
           break;
-        case 'replace':
-          changes.id = recipe.id.replace(new RegExp(textValue, 'g'), '');
+        case "replace":
+          changes.id = recipe.id.replace(new RegExp(textValue, "g"), "");
           break;
-        case 'multiply':
+        case "multiply":
           // Multiply output counts
-          if (recipe.output && typeof recipe.output === 'object' && 'count' in recipe.output) {
+          if (recipe.output && typeof recipe.output === "object" && "count" in recipe.output) {
             changes.output = { ...recipe.output, count: (recipe.output.count || 1) * multiplier };
           }
           break;
@@ -46,16 +48,14 @@ export const BulkRecipeEditor: React.FC<BulkRecipeEditorProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
-        <h2 className="text-xl font-bold text-white mb-4">
-          Bulk Edit {recipes.length} Recipes
-        </h2>
+      <div className="bg-card rounded-lg p-6 w-full max-w-2xl border border-primary/20">
+        <h2 className="text-xl font-bold text-foreground mb-4">Bulk Edit {recipes.length} Recipes</h2>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-200 mb-2">Operation</label>
+            <label className="block text-sm font-medium text-foreground mb-2">Operation</label>
             <select
-              className="w-full px-3 py-2 bg-[#2a2a2a] border rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-secondary border border-primary/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               value={operation}
               onChange={(e) => setOperation(e.target.value as any)}
             >
@@ -66,27 +66,27 @@ export const BulkRecipeEditor: React.FC<BulkRecipeEditorProps> = ({
             </select>
           </div>
 
-          {(operation === 'prefix' || operation === 'suffix' || operation === 'replace') && (
+          {(operation === "prefix" || operation === "suffix" || operation === "replace") && (
             <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">Text</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Text</label>
               <input
                 type="text"
-                className="w-full px-3 py-2 bg-[#2a2a2a] border rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-secondary border border-primary/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 value={textValue}
                 onChange={(e) => setTextValue(e.target.value)}
-                placeholder={operation === 'replace' ? 'Text to remove' : 'Text to add'}
+                placeholder={operation === "replace" ? "Text to remove" : "Text to add"}
               />
             </div>
           )}
 
-          {operation === 'multiply' && (
+          {operation === "multiply" && (
             <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">Multiplier</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Multiplier</label>
               <input
                 type="number"
                 min="0.1"
                 step="0.1"
-                className="w-full px-3 py-2 bg-[#2a2a2a] border rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-secondary border border-primary/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 value={multiplier}
                 onChange={(e) => setMultiplier(parseFloat(e.target.value))}
               />
@@ -96,13 +96,13 @@ export const BulkRecipeEditor: React.FC<BulkRecipeEditorProps> = ({
           <div className="flex gap-3">
             <button
               onClick={handleApply}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+              className="flex-1 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors"
             >
               Apply to {recipes.length} Recipes
             </button>
             <button
               onClick={onCancel}
-              className="px-4 py-2 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-md transition-colors"
+              className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground rounded-lg transition-colors"
             >
               Cancel
             </button>

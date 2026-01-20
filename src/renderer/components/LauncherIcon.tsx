@@ -6,11 +6,7 @@ interface LauncherIconProps {
   className?: string;
 }
 
-export const LauncherIcon: React.FC<LauncherIconProps> = ({
-  launcher,
-  size = 24,
-  className,
-}) => {
+export const LauncherIcon: React.FC<LauncherIconProps> = ({ launcher, size = 24, className }) => {
   const getLauncherIcon = () => {
     switch (launcher.toLowerCase()) {
       case "modrinth":
@@ -144,38 +140,10 @@ export const LauncherIcon: React.FC<LauncherIconProps> = ({
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <rect
-              x="96"
-              y="96"
-              width="128"
-              height="128"
-              rx="16"
-              fill="#10B981"
-            />
-            <rect
-              x="288"
-              y="96"
-              width="128"
-              height="128"
-              rx="16"
-              fill="#059669"
-            />
-            <rect
-              x="96"
-              y="288"
-              width="128"
-              height="128"
-              rx="16"
-              fill="#059669"
-            />
-            <rect
-              x="288"
-              y="288"
-              width="128"
-              height="128"
-              rx="16"
-              fill="#047857"
-            />
+            <rect x="96" y="96" width="128" height="128" rx="16" fill="#10B981" />
+            <rect x="288" y="96" width="128" height="128" rx="16" fill="#059669" />
+            <rect x="96" y="288" width="128" height="128" rx="16" fill="#059669" />
+            <rect x="288" y="288" width="128" height="128" rx="16" fill="#047857" />
           </svg>
         );
       case "technic":
@@ -219,14 +187,7 @@ export const LauncherIcon: React.FC<LauncherIconProps> = ({
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <rect
-              x="96"
-              y="96"
-              width="320"
-              height="320"
-              rx="32"
-              fill="#6B7280"
-            />
+            <rect x="96" y="96" width="320" height="320" rx="32" fill="#6B7280" />
             <path
               d="M256 192v128M192 256h128"
               stroke="#9CA3AF"
@@ -262,10 +223,7 @@ export const LauncherIcon: React.FC<LauncherIconProps> = ({
   };
 
   return (
-    <div
-      className={`inline-flex items-center ${className || ""}`}
-      title={getLauncherName()}
-    >
+    <div className={`inline-flex items-center ${className || ""}`} title={getLauncherName()}>
       {getLauncherIcon()}
     </div>
   );

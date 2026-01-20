@@ -102,8 +102,8 @@
 }
 
 .landing-feature-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.15);
   border-radius: 16px;
   padding: 32px 24px;
   text-align: center;
@@ -182,8 +182,8 @@
   flex-direction: column;
   gap: 8px;
   padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.15);
   border-radius: 12px;
   color: white;
   cursor: pointer;
@@ -273,8 +273,8 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.15);
   border-radius: 10px;
   color: white;
   font-size: 14px;
@@ -284,8 +284,8 @@
 }
 
 .quick-action-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.3);
 }
 
 /* Footer */

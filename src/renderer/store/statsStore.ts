@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface EditStat {
   modId: string;
@@ -21,7 +21,7 @@ interface StatsState {
   editStats: Map<string, EditStat>;
   sessions: SessionStats[];
   currentSessionId: string | null;
-  
+
   // Actions
   recordEdit: (modId: string, modName: string, settingKey: string) => void;
   startSession: () => void;
@@ -68,7 +68,7 @@ export const useStatsStore = create<StatsState>()(
           // Update current session
           const sessions = [...state.sessions];
           if (state.currentSessionId) {
-            const currentSession = sessions.find(s => s.sessionId === state.currentSessionId);
+            const currentSession = sessions.find((s) => s.sessionId === state.currentSessionId);
             if (currentSession) {
               currentSession.totalEdits++;
               if (!currentSession.modsEdited.includes(modId)) {
@@ -102,9 +102,7 @@ export const useStatsStore = create<StatsState>()(
           if (!state.currentSessionId) return state;
 
           const sessions = state.sessions.map((s) =>
-            s.sessionId === state.currentSessionId
-              ? { ...s, endTime: new Date() }
-              : s
+            s.sessionId === state.currentSessionId ? { ...s, endTime: new Date() } : s
           );
 
           return { sessions, currentSessionId: null };
@@ -121,7 +119,8 @@ export const useStatsStore = create<StatsState>()(
             modStats.set(stat.modId, {
               ...existing,
               editCount: existing.editCount + stat.editCount,
-              lastEdited: stat.lastEdited > existing.lastEdited ? stat.lastEdited : existing.lastEdited,
+              lastEdited:
+                stat.lastEdited > existing.lastEdited ? stat.lastEdited : existing.lastEdited,
             });
           } else {
             modStats.set(stat.modId, stat);
@@ -166,7 +165,7 @@ export const useStatsStore = create<StatsState>()(
       },
     }),
     {
-      name: 'mced-stats',
+      name: "mced-stats",
       storage: {
         getItem: (name) => {
           const str = localStorage.getItem(name);

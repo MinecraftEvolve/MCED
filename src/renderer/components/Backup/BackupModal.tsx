@@ -26,6 +26,6 @@ export function BackupModal({ onClose }: BackupModalProps) {
         </div>
       </div>
     </div>,
-    document.body,
+    document.body
   );
 }

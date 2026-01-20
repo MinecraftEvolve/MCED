@@ -41,7 +41,7 @@ export function SliderInput({ setting, onChange }: SliderInputProps) {
   };
 
   return (
-    <div className="py-3 border-b border-border">
+    <div className="py-3 border-b border-primary/20">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <label className="font-medium text-sm">{setting.key}</label>
@@ -56,7 +56,7 @@ export function SliderInput({ setting, onChange }: SliderInputProps) {
           value={inputValue}
           onChange={handleInputChange}
           onBlur={handleInputBlur}
-          className="w-20 px-2 py-1 text-sm bg-secondary border border-border rounded text-right"
+          className="w-20 px-2 py-1 text-sm bg-secondary border border-primary/20 rounded text-right"
           step={step}
           min={min}
           max={max}
@@ -64,9 +64,7 @@ export function SliderInput({ setting, onChange }: SliderInputProps) {
       </div>
 
       {setting.description && (
-        <p className="text-xs text-muted-foreground mb-2">
-          {setting.description}
-        </p>
+        <p className="text-xs text-muted-foreground mb-2">{setting.description}</p>
       )}
 
       <div className="flex items-center gap-3">
@@ -84,18 +82,17 @@ export function SliderInput({ setting, onChange }: SliderInputProps) {
       </div>
 
       <div className="flex items-center justify-between mt-2">
-        {setting.defaultValue !== undefined &&
-          value !== setting.defaultValue && (
-            <button
-              onClick={() => {
-                onChange(setting.defaultValue as number);
-                setInputValue(String(setting.defaultValue));
-              }}
-              className="text-xs text-primary hover:underline"
-            >
-              Reset to default ({String(setting.defaultValue)})
-            </button>
-          )}
+        {setting.defaultValue !== undefined && value !== setting.defaultValue && (
+          <button
+            onClick={() => {
+              onChange(setting.defaultValue as number);
+              setInputValue(String(setting.defaultValue));
+            }}
+            className="text-xs text-primary hover:underline"
+          >
+            Reset to default ({String(setting.defaultValue)})
+          </button>
+        )}
         {setting.range && (
           <span className="text-xs text-muted-foreground ml-auto">
             Range: {min} ~ {max}

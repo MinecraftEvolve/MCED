@@ -67,9 +67,7 @@ export class TomlParser {
       const settingMatch = line.match(/^([\w\.]+)\s*=/);
       if (settingMatch) {
         const settingName = settingMatch[1];
-        const fullKey = currentSection
-          ? `${currentSection}.${settingName}`
-          : settingName;
+        const fullKey = currentSection ? `${currentSection}.${settingName}` : settingName;
 
         // Only parse if we have comments
         if (currentComments.length > 0) {
@@ -151,7 +149,7 @@ export class TomlParser {
           .split(/[,\s]+/)
           .map((v) => v.trim())
           .filter((v) => v && v.length > 0 && /^[A-Z][A-Z0-9_]*$/.test(v));
-        
+
         if (parsed.allowedValues.length > 0) {
           break;
         }

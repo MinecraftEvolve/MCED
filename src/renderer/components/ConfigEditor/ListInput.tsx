@@ -22,31 +22,24 @@ export function ListInput({ setting, onChange }: ListInputProps) {
   };
 
   return (
-    <div className="py-3 border-b border-border">
+    <div className="py-3 border-b border-primary/20">
       <label className="block font-medium text-sm mb-2">{setting.key}</label>
 
       {setting.description && (
-        <p className="text-xs text-muted-foreground mb-2">
-          {setting.description}
-        </p>
+        <p className="text-xs text-muted-foreground mb-2">{setting.description}</p>
       )}
 
       <div className="space-y-2">
         {value.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
-            <span className="flex-1 px-3 py-2 bg-secondary border border-border rounded-md text-sm">
+            <span className="flex-1 px-3 py-2 bg-secondary border border-primary/20 rounded-md text-sm">
               {String(item)}
             </span>
             <button
               onClick={() => handleRemove(index)}
               className="p-2 text-destructive hover:bg-destructive/10 rounded"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -65,7 +58,7 @@ export function ListInput({ setting, onChange }: ListInputProps) {
             onChange={(e) => setNewItem(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleAdd()}
             placeholder="Add new item..."
-            className="flex-1 px-3 py-2 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 px-3 py-2 bg-secondary border border-primary/20 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <button
             onClick={handleAdd}

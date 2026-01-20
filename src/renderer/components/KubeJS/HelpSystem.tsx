@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { HelpCircle, X, Book, Lightbulb, Keyboard, ChevronRight } from 'lucide-react';
+import React, { useState } from "react";
+import { HelpCircle, X, Book, Lightbulb, Keyboard, ChevronRight } from "lucide-react";
 
 interface HelpTopic {
   id: string;
   title: string;
   content: string;
-  category: 'getting-started' | 'recipes' | 'advanced' | 'shortcuts';
+  category: "getting-started" | "recipes" | "advanced" | "shortcuts";
 }
 
 const helpTopics: HelpTopic[] = [
   {
-    id: 'intro',
-    title: 'Getting Started',
-    category: 'getting-started',
+    id: "intro",
+    title: "Getting Started",
+    category: "getting-started",
     content: `Welcome to the KubeJS Visual Editor!
 
 This tool helps you create and edit KubeJS recipes visually without writing code.
@@ -25,9 +25,9 @@ To get started:
 5. Save your recipe to generate the JavaScript code`,
   },
   {
-    id: 'item-selection',
-    title: 'Selecting Items',
-    category: 'getting-started',
+    id: "item-selection",
+    title: "Selecting Items",
+    category: "getting-started",
     content: `To add items to recipes:
 
 1. Click on any empty item slot
@@ -39,9 +39,9 @@ To get started:
 You can also use tags like #forge:ingots/iron instead of specific items.`,
   },
   {
-    id: 'recipe-types',
-    title: 'Recipe Types',
-    category: 'recipes',
+    id: "recipe-types",
+    title: "Recipe Types",
+    category: "recipes",
     content: `Supported recipe types:
 
 Vanilla:
@@ -62,9 +62,9 @@ Other Mods:
 - Thermal Pulverizer & Smelter`,
   },
   {
-    id: 'tags',
-    title: 'Using Tags',
-    category: 'advanced',
+    id: "tags",
+    title: "Using Tags",
+    category: "advanced",
     content: `Tags allow recipes to accept multiple items:
 
 Example: #forge:ingots/iron accepts any iron ingot from any mod.
@@ -81,9 +81,9 @@ Common tags:
 - #forge:crops`,
   },
   {
-    id: 'fluids',
-    title: 'Working with Fluids',
-    category: 'advanced',
+    id: "fluids",
+    title: "Working with Fluids",
+    category: "advanced",
     content: `Some recipes (like Create Filling) use fluids:
 
 1. Click on a fluid slot
@@ -97,9 +97,9 @@ Common fluid amounts:
 - 1 ingot (melted) = 90 mB`,
   },
   {
-    id: 'recipe-management',
-    title: 'Managing Recipes',
-    category: 'recipes',
+    id: "recipe-management",
+    title: "Managing Recipes",
+    category: "recipes",
     content: `Recipe management features:
 
 View Recipes:
@@ -121,9 +121,9 @@ Duplicate Recipes:
 - Modify it to create variations`,
   },
   {
-    id: 'shortcuts',
-    title: 'Keyboard Shortcuts',
-    category: 'shortcuts',
+    id: "shortcuts",
+    title: "Keyboard Shortcuts",
+    category: "shortcuts",
     content: `Available keyboard shortcuts:
 
 General:
@@ -142,9 +142,9 @@ Item Search:
 - Enter: Select item`,
   },
   {
-    id: 'validation',
-    title: 'Recipe Validation',
-    category: 'advanced',
+    id: "validation",
+    title: "Recipe Validation",
+    category: "advanced",
     content: `The editor validates your recipes:
 
 Common errors:
@@ -161,9 +161,9 @@ The editor will show warnings when:
 Fix errors before saving to ensure your recipes work in-game.`,
   },
   {
-    id: 'probejs',
-    title: 'ProbeJS Integration',
-    category: 'advanced',
+    id: "probejs",
+    title: "ProbeJS Integration",
+    category: "advanced",
     content: `If ProbeJS is detected, you get:
 
 - Type checking for recipes
@@ -183,10 +183,10 @@ const HelpSystem: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories = [
-    { id: 'getting-started', name: 'Getting Started', icon: Book },
-    { id: 'recipes', name: 'Recipes', icon: Lightbulb },
-    { id: 'advanced', name: 'Advanced', icon: HelpCircle },
-    { id: 'shortcuts', name: 'Shortcuts', icon: Keyboard },
+    { id: "getting-started", name: "Getting Started", icon: Book },
+    { id: "recipes", name: "Recipes", icon: Lightbulb },
+    { id: "advanced", name: "Advanced", icon: HelpCircle },
+    { id: "shortcuts", name: "Shortcuts", icon: Keyboard },
   ];
 
   const filteredTopics = selectedCategory
@@ -198,7 +198,7 @@ const HelpSystem: React.FC = () => {
       {/* Help Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg transition-colors z-50"
+        className="fixed bottom-4 right-4 bg-blue-500 hover:bg-primary text-white p-3 rounded-full shadow-lg transition-colors z-50"
         title="Help & Documentation"
       >
         <HelpCircle className="w-6 h-6" />
@@ -207,7 +207,7 @@ const HelpSystem: React.FC = () => {
       {/* Help Dialog */}
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          <div className="bg-background rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -220,7 +220,7 @@ const HelpSystem: React.FC = () => {
                   setSelectedTopic(null);
                   setSelectedCategory(null);
                 }}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-muted-foreground hover:text-white transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -236,20 +236,16 @@ const HelpSystem: React.FC = () => {
                     return (
                       <div key={category.id}>
                         <button
-                          onClick={() =>
-                            setSelectedCategory(
-                              isSelected ? null : category.id
-                            )
-                          }
-                          className={`w-full flex items-center gap-2 p-2 rounded hover:bg-gray-800 transition-colors ${
-                            isSelected ? 'bg-gray-800 text-blue-400' : 'text-gray-300'
+                          onClick={() => setSelectedCategory(isSelected ? null : category.id)}
+                          className={`w-full flex items-center gap-2 p-2 rounded hover:bg-card transition-colors ${
+                            isSelected ? "bg-card text-blue-400" : "text-muted-foreground"
                           }`}
                         >
                           <Icon className="w-5 h-5" />
                           <span className="flex-1 text-left">{category.name}</span>
                           <ChevronRight
                             className={`w-4 h-4 transition-transform ${
-                              isSelected ? 'rotate-90' : ''
+                              isSelected ? "rotate-90" : ""
                             }`}
                           />
                         </button>
@@ -261,10 +257,10 @@ const HelpSystem: React.FC = () => {
                                 <button
                                   key={topic.id}
                                   onClick={() => setSelectedTopic(topic)}
-                                  className={`w-full text-left p-2 rounded text-sm hover:bg-gray-800 transition-colors ${
+                                  className={`w-full text-left p-2 rounded text-sm hover:bg-card transition-colors ${
                                     selectedTopic?.id === topic.id
-                                      ? 'bg-gray-800 text-blue-400'
-                                      : 'text-gray-400'
+                                      ? "bg-card text-blue-400"
+                                      : "text-muted-foreground"
                                   }`}
                                 >
                                   {topic.title}
@@ -282,15 +278,13 @@ const HelpSystem: React.FC = () => {
               <div className="flex-1 overflow-y-auto p-6">
                 {selectedTopic ? (
                   <div className="prose prose-invert max-w-none">
-                    <h3 className="text-2xl font-bold text-white mb-4">
-                      {selectedTopic.title}
-                    </h3>
-                    <div className="text-gray-300 whitespace-pre-line leading-relaxed">
+                    <h3 className="text-2xl font-bold text-white mb-4">{selectedTopic.title}</h3>
+                    <div className="text-muted-foreground whitespace-pre-line leading-relaxed">
                       {selectedTopic.content}
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center text-gray-400 mt-20">
+                  <div className="text-center text-muted-foreground mt-20">
                     <HelpCircle className="w-16 h-16 mx-auto mb-4 opacity-50" />
                     <p className="text-lg">Select a topic to view help</p>
                     <p className="text-sm mt-2">

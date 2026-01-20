@@ -21,8 +21,7 @@ import { Kbd } from "@/components/ui/kbd";
 import "./Settings.css";
 
 export function Settings({ onClose }: { onClose: () => void }) {
-  const { settings, updateSettings, clearRecentInstances, resetSettings } =
-    useSettingsStore();
+  const { settings, updateSettings, clearRecentInstances, resetSettings } = useSettingsStore();
   const [localSettings, setLocalSettings] = useState(settings);
   const [appVersion, setAppVersion] = useState("...");
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
@@ -35,9 +34,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
       // Apply theme
       if (newSettings.theme === "auto") {
-        const isDark = window.matchMedia(
-          "(prefers-color-scheme: dark)",
-        ).matches;
+        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         root.classList.remove("light", "dark");
         root.classList.add(isDark ? "dark" : "light");
       } else if (newSettings.theme === "light") {
@@ -63,7 +60,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
       // Update the store
       updateSettings(newSettings);
     },
-    [updateSettings],
+    [updateSettings]
   );
 
   useEffect(() => {
@@ -98,26 +95,34 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
   const handleCheckForUpdates = useCallback(async () => {
     try {
-      const response = await fetch('https://api.github.com/repos/MinecraftEvolve/MCED/releases/latest');
+      const response = await fetch(
+        "https://api.github.com/repos/MinecraftEvolve/MCED/releases/latest"
+      );
       const data = await response.json();
-      const latest = data.tag_name.replace('v', '');
+      const latest = data.tag_name.replace("v", "");
       setLatestVersion(latest);
-      
+
       if (latest !== appVersion) {
-        if (confirm(`New version ${latest} is available!\n\nCurrent version: ${appVersion}\n\nWould you like to download it?`)) {
+        if (
+          confirm(
+            `New version ${latest} is available!\n\nCurrent version: ${appVersion}\n\nWould you like to download it?`
+          )
+        ) {
           await window.api.openExternal(data.html_url);
         }
       } else {
-        alert('You are already using the latest version!');
+        alert("You are already using the latest version!");
       }
     } catch (error) {
-      alert('Failed to check for updates: ' + error);
+      alert("Failed to check for updates: " + error);
     }
   }, [appVersion]);
 
   const fetchChangelog = useCallback(async () => {
     try {
-      const response = await fetch('https://raw.githubusercontent.com/MinecraftEvolve/MCED/main/CHANGELOG.md');
+      const response = await fetch(
+        "https://raw.githubusercontent.com/MinecraftEvolve/MCED/main/CHANGELOG.md"
+      );
       const text = await response.text();
       setChangelog(text);
     } catch (error) {
@@ -151,16 +156,16 @@ export function Settings({ onClose }: { onClose: () => void }) {
   <pre>${changelog}</pre>
 </body>
 </html>`;
-      
+
       try {
-        const tempPath = await window.api.getAppPath('temp');
+        const tempPath = await window.api.getAppPath("temp");
         if (tempPath.success && tempPath.path) {
           const changelogPath = `${tempPath.path}/mced-changelog.html`;
           await window.api.writeFile(changelogPath, htmlContent);
-          await window.api.openExternal(`file:///${changelogPath.replace(/\\/g, '/')}`);
+          await window.api.openExternal(`file:///${changelogPath.replace(/\\/g, "/")}`);
         }
       } catch (error) {
-        alert('Failed to open changelog: ' + error);
+        alert("Failed to open changelog: " + error);
       }
     }
   }, [changelog]);
@@ -175,10 +180,14 @@ export function Settings({ onClose }: { onClose: () => void }) {
   }, [resetSettings, applySettings]);
 
   const handleBulkMigrateServerConfigs = useCallback(async () => {
-    if (!confirm("This will migrate all server configs to defaultconfigs folder for all loaded mods. Continue?")) {
+    if (
+      !confirm(
+        "This will migrate all server configs to defaultconfigs folder for all loaded mods. Continue?"
+      )
+    ) {
       return;
     }
-    
+
     try {
       // Get the current instance path
       const currentInstancePath = (window as any).currentInstancePath;
@@ -211,7 +220,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
       for (const worldFolder of worldFolders) {
         const worldPath = await window.api.joinPath(serverConfigFolder, worldFolder);
         const serverConfigPath = await window.api.joinPath(worldPath, "serverconfig");
-        
+
         const serverConfigExists = await window.api.fileExists(serverConfigPath);
         if (!serverConfigExists) {
           continue;
@@ -235,10 +244,10 @@ export function Settings({ onClose }: { onClose: () => void }) {
               console.error(`Failed to read ${configFile}`);
               continue;
             }
-            
+
             // Write to defaultconfigs (will overwrite if exists)
             await window.api.writeFile(destPath, fileResult.content);
-            
+
             migratedCount++;
           } catch (error) {
             errors.push(`Failed to migrate ${configFile}: ${error}`);
@@ -247,7 +256,9 @@ export function Settings({ onClose }: { onClose: () => void }) {
       }
 
       if (errors.length > 0) {
-        alert(`Migration completed with errors:\n- ${migratedCount} files migrated\n- ${errors.length} errors\n\nErrors:\n${errors.join("\n")}`);
+        alert(
+          `Migration completed with errors:\n- ${migratedCount} files migrated\n- ${errors.length} errors\n\nErrors:\n${errors.join("\n")}`
+        );
       } else {
         alert(`Successfully migrated ${migratedCount} server config files to defaultconfigs!`);
       }
@@ -258,9 +269,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
   const handleRemoveRecentInstance = useCallback(
     (index: number) => {
-      const updated = localSettings.recentInstances.filter(
-        (_, i) => i !== index,
-      );
+      const updated = localSettings.recentInstances.filter((_, i) => i !== index);
       const newSettings = {
         ...localSettings,
         recentInstances: updated,
@@ -268,7 +277,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
       setLocalSettings(newSettings);
       applySettings(newSettings);
     },
-    [localSettings, applySettings],
+    [localSettings, applySettings]
   );
 
   return createPortal(
@@ -295,9 +304,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
             <div className="setting-row">
               <div className="setting-info">
                 <span className="setting-label">Theme</span>
-                <span className="setting-description">
-                  Choose your preferred color scheme
-                </span>
+                <span className="setting-description">Choose your preferred color scheme</span>
               </div>
               <select
                 value={localSettings.theme}
@@ -320,9 +327,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
             <div className="setting-row">
               <div className="setting-info">
                 <span className="setting-label">Compact Mode</span>
-                <span className="setting-description">
-                  Show more items with smaller spacing
-                </span>
+                <span className="setting-description">Show more items with smaller spacing</span>
               </div>
               <label className="toggle">
                 <input
@@ -400,9 +405,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
             <div className="setting-row">
               <div className="setting-info">
                 <span className="setting-label">Show Advanced Options</span>
-                <span className="setting-description">
-                  Display advanced configuration options
-                </span>
+                <span className="setting-description">Display advanced configuration options</span>
               </div>
               <label className="toggle">
                 <input
@@ -423,9 +426,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
             <div className="setting-row">
               <div className="setting-info">
-                <span className="setting-label">
-                  Mods Without Configs at End
-                </span>
+                <span className="setting-label">Mods Without Configs at End</span>
                 <span className="setting-description">
                   Show mods without config files at the end of the list
                 </span>
@@ -597,9 +598,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
             <div className="setting-row">
               <div className="setting-info">
                 <span className="setting-label">Discord Rich Presence</span>
-                <span className="setting-description">
-                  Show what you're editing in Discord
-                </span>
+                <span className="setting-description">Show what you're editing in Discord</span>
               </div>
               <label className="toggle">
                 <input
@@ -652,35 +651,31 @@ export function Settings({ onClose }: { onClose: () => void }) {
                 />
               </div>
 
-              {localSettings.recentInstances &&
-                localSettings.recentInstances.length > 0 && (
-                  <>
-                    <div className="recent-instances-list">
-                      {localSettings.recentInstances.map((path, index) => (
-                        <div key={index} className="recent-instance-item">
-                          <span className="instance-path" title={path}>
-                            {path}
-                          </span>
-                          <button
-                            onClick={() => handleRemoveRecentInstance(index)}
-                            className="remove-btn"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="setting-row">
-                      <button
-                        onClick={handleClearRecentInstances}
-                        className="btn-secondary"
-                      >
-                        <Trash2 className="icon" size={16} />
-                        Clear All Recent Instances
-                      </button>
-                    </div>
-                  </>
-                )}
+              {localSettings.recentInstances && localSettings.recentInstances.length > 0 && (
+                <>
+                  <div className="recent-instances-list">
+                    {localSettings.recentInstances.map((path, index) => (
+                      <div key={index} className="recent-instance-item">
+                        <span className="instance-path" title={path}>
+                          {path}
+                        </span>
+                        <button
+                          onClick={() => handleRemoveRecentInstance(index)}
+                          className="remove-btn"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="setting-row">
+                    <button onClick={handleClearRecentInstances} className="btn-secondary">
+                      <Trash2 className="icon" size={16} />
+                      Clear All Recent Instances
+                    </button>
+                  </div>
+                </>
+              )}
             </section>
           )}
 
@@ -754,10 +749,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
               {latestVersion && latestVersion !== appVersion && (
                 <span className="update-badge">Update Available: v{latestVersion}</span>
               )}
-              <p>
-                A modern desktop application for editing Minecraft modpack
-                configurations.
-              </p>
+              <p>A modern desktop application for editing Minecraft modpack configurations.</p>
               <div className="about-links">
                 <button
                   onClick={() => window.api.openExternal("https://github.com/MinecraftEvolve/MCED")}
@@ -766,13 +758,15 @@ export function Settings({ onClose }: { onClose: () => void }) {
                   GitHub
                 </button>
                 <button
-                  onClick={() => window.api.openExternal("https://github.com/MinecraftEvolve/MCED/issues")}
+                  onClick={() =>
+                    window.api.openExternal("https://github.com/MinecraftEvolve/MCED/issues")
+                  }
                   className="link-button"
                 >
                   Report Issue
                 </button>
               </div>
-              <div className="setting-row" style={{ marginTop: '12px' }}>
+              <div className="setting-row" style={{ marginTop: "12px" }}>
                 <button onClick={handleCheckForUpdates} className="btn-secondary">
                   <Download className="icon" size={16} />
                   Check for Updates
@@ -798,6 +792,6 @@ export function Settings({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     </div>,
-    document.body,
+    document.body
   );
 }

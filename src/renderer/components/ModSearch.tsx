@@ -16,7 +16,7 @@ export function ModSearch() {
   };
 
   return (
-    <div className="p-3 border-b border-border">
+    <div className="p-4 border-b border-primary/20 bg-card/20">
       <div className="relative">
         <input
           type="text"
@@ -24,10 +24,10 @@ export function ModSearch() {
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Search mods... (ESC to clear)"
-          className="w-full px-3 py-2 pl-9 bg-secondary text-foreground rounded-md border border-border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          className="w-full px-4 py-2.5 pl-10 bg-secondary/50 text-foreground rounded-xl border-2 border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/40 transition-all placeholder:text-muted-foreground/60 font-medium"
         />
         <svg
-          className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground"
+          className="absolute left-3 top-3 h-5 w-5 text-primary/60"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -42,14 +42,10 @@ export function ModSearch() {
         {searchQuery && (
           <button
             onClick={handleClear}
-            className="absolute right-2 top-2 p-1 hover:bg-accent rounded"
+            className="absolute right-2 top-2 p-1.5 hover:bg-destructive/20 text-muted-foreground hover:text-destructive rounded-lg transition-all"
+            title="Clear search"
           >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

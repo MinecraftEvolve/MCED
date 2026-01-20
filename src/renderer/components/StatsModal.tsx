@@ -1,19 +1,15 @@
-import { createPortal } from 'react-dom';
-import { X, BarChart3, Clock, Edit, TrendingUp } from 'lucide-react';
-import { useStatsStore } from '@/store/statsStore';
-import './StatsModal.css';
+import { createPortal } from "react-dom";
+import { X, BarChart3, Clock, Edit, TrendingUp } from "lucide-react";
+import { useStatsStore } from "@/store/statsStore";
+import "./StatsModal.css";
 
 interface StatsModalProps {
   onClose: () => void;
 }
 
 export function StatsModal({ onClose }: StatsModalProps) {
-  const {
-    getMostEditedMods,
-    getMostEditedSettings,
-    getTotalEdits,
-    getCurrentSessionDuration,
-  } = useStatsStore();
+  const { getMostEditedMods, getMostEditedSettings, getTotalEdits, getCurrentSessionDuration } =
+    useStatsStore();
 
   const mostEditedMods = getMostEditedMods(5);
   const mostEditedSettings = getMostEditedSettings(10);

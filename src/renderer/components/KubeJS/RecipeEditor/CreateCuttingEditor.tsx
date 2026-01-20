@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowRight, Plus, X } from 'lucide-react';
-import { ItemPicker } from '../ItemPicker/ItemPicker';
-import { ItemSlot } from './ItemSlot';
+import React, { useState, useEffect } from "react";
+import { ArrowRight, Plus, X } from "lucide-react";
+import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { ItemSlot } from "./ItemSlot";
 
 interface Item {
   id: string;
@@ -21,51 +21,51 @@ interface CreateCuttingEditorProps {
 export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
   instancePath,
   onSave,
-  initialRecipe
+  initialRecipe,
 }) => {
-  console.log('CreateCuttingEditor - initialRecipe:', initialRecipe);
-  
+  console.log("CreateCuttingEditor - initialRecipe:", initialRecipe);
+
   const [input, setInput] = useState<Item | null>(null);
   const [outputs, setOutputs] = useState<(Item | null)[]>([null, null, null]);
   const [showItemPicker, setShowItemPicker] = useState(false);
-  const [pickingSlot, setPickingSlot] = useState<'input' | number | null>(null);
+  const [pickingSlot, setPickingSlot] = useState<"input" | number | null>(null);
 
   useEffect(() => {
     if (initialRecipe) {
-      console.log('Loading initial recipe data:', initialRecipe);
-      
+      console.log("Loading initial recipe data:", initialRecipe);
+
       // Parse input
       if (initialRecipe.ingredients && initialRecipe.ingredients.length > 0) {
         const inputData = initialRecipe.ingredients[0];
         const inputId = inputData.item || inputData.tag || inputData;
-        console.log('Input ID:', inputId);
-        
-        if (typeof inputId === 'string') {
-          loadItem(inputId).then(item => {
-            console.log('Loaded input item:', item);
+        console.log("Input ID:", inputId);
+
+        if (typeof inputId === "string") {
+          loadItem(inputId).then((item) => {
+            console.log("Loaded input item:", item);
             setInput(item);
           });
         }
       }
-      
+
       // Parse outputs
       if (initialRecipe.results && initialRecipe.results.length > 0) {
-        console.log('Results:', initialRecipe.results);
+        console.log("Results:", initialRecipe.results);
         Promise.all(
           initialRecipe.results.slice(0, 3).map(async (result: any) => {
             const itemId = result.item || result.tag || result;
-            if (typeof itemId === 'string') {
+            if (typeof itemId === "string") {
               const item = await loadItem(itemId);
               return {
                 ...item,
                 count: result.count || 1,
-                chance: result.chance !== undefined ? result.chance : 1.0
+                chance: result.chance !== undefined ? result.chance : 1.0,
               };
             }
             return null;
           })
-        ).then(loadedOutputs => {
-          console.log('Loaded outputs:', loadedOutputs);
+        ).then((loadedOutputs) => {
+          console.log("Loaded outputs:", loadedOutputs);
           const newOutputs = [...loadedOutputs];
           while (newOutputs.length < 3) newOutputs.push(null);
           setOutputs(newOutputs);
@@ -77,7 +77,7 @@ export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
   const loadItem = async (itemId: string): Promise<Item> => {
     try {
       const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-      
+
       if (result.success && result.data) {
         return {
           id: result.data.id,
@@ -85,38 +85,38 @@ export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
           modId: result.data.modId,
           texture: result.data.texture,
           count: 1,
-          chance: 1.0
+          chance: 1.0,
         };
       }
     } catch (error) {
-      console.error('Failed to load item:', itemId, error);
+      console.error("Failed to load item:", itemId, error);
     }
-    
+
     return {
       id: itemId,
-      name: itemId.split(':')[1] || itemId,
-      modId: itemId.split(':')[0] || 'minecraft',
+      name: itemId.split(":")[1] || itemId,
+      modId: itemId.split(":")[0] || "minecraft",
       count: 1,
-      chance: 1.0
+      chance: 1.0,
     };
   };
 
   const handleItemSelected = async (itemId: string) => {
     const item = await loadItem(itemId);
-    
-    if (pickingSlot === 'input') {
+
+    if (pickingSlot === "input") {
       setInput(item);
-    } else if (typeof pickingSlot === 'number') {
+    } else if (typeof pickingSlot === "number") {
       const newOutputs = [...outputs];
       newOutputs[pickingSlot] = item;
       setOutputs(newOutputs);
     }
-    
+
     setShowItemPicker(false);
     setPickingSlot(null);
   };
 
-  const updateOutput = (index: number, field: 'count' | 'chance', value: number) => {
+  const updateOutput = (index: number, field: "count" | "chance", value: number) => {
     const newOutputs = [...outputs];
     if (newOutputs[index]) {
       newOutputs[index] = { ...newOutputs[index]!, [field]: value };
@@ -126,24 +126,24 @@ export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
 
   const handleSave = () => {
     if (!input) {
-      alert('Please provide input item');
+      alert("Please provide input item");
       return;
     }
 
-    const validOutputs = outputs.filter(o => o !== null) as Item[];
+    const validOutputs = outputs.filter((o) => o !== null) as Item[];
     if (validOutputs.length === 0) {
-      alert('Please add at least one output');
+      alert("Please add at least one output");
       return;
     }
 
     const recipe = {
-      type: 'create:Cutting',
+      type: "create:Cutting",
       ingredients: [{ item: input.id }],
-      results: validOutputs.map(o => ({
+      results: validOutputs.map((o) => ({
         item: o.id,
         count: o.count || 1,
-        ...(o.chance && o.chance < 1 ? { chance: o.chance } : {})
-      }))
+        ...(o.chance && o.chance < 1 ? { chance: o.chance } : {}),
+      })),
     };
 
     onSave(recipe);
@@ -159,7 +159,7 @@ export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
             item={input}
             size="large"
             onClick={() => {
-              setPickingSlot('input');
+              setPickingSlot("input");
               setShowItemPicker(true);
             }}
             onClear={() => setInput(null)}
@@ -194,26 +194,42 @@ export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
                 {output && (
                   <div className="flex gap-2">
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Count</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">
+                        Count
+                      </label>
                       <input
                         type="number"
                         min="1"
                         max="64"
                         value={output.count || 1}
-                        onChange={(e) => updateOutput(index, 'count', Math.max(1, Math.min(64, parseInt(e.target.value) || 1)))}
-                        className="w-16 px-2 py-1 bg-secondary border border-border rounded text-sm text-foreground focus:outline-none focus:border-primary"
+                        onChange={(e) =>
+                          updateOutput(
+                            index,
+                            "count",
+                            Math.max(1, Math.min(64, parseInt(e.target.value) || 1))
+                          )
+                        }
+                        className="w-16 px-2 py-1 bg-secondary border border-primary/20 rounded text-sm text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">Chance %</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">
+                        Chance %
+                      </label>
                       <input
                         type="number"
                         min="0"
                         max="100"
                         step="5"
                         value={Math.round((output.chance || 1) * 100)}
-                        onChange={(e) => updateOutput(index, 'chance', Math.max(0, Math.min(100, parseInt(e.target.value) || 100)) / 100)}
-                        className="w-16 px-2 py-1 bg-secondary border border-border rounded text-sm text-foreground focus:outline-none focus:border-primary"
+                        onChange={(e) =>
+                          updateOutput(
+                            index,
+                            "chance",
+                            Math.max(0, Math.min(100, parseInt(e.target.value) || 100)) / 100
+                          )
+                        }
+                        className="w-16 px-2 py-1 bg-secondary border border-primary/20 rounded text-sm text-foreground focus:outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -224,19 +240,19 @@ export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-primary/20">
         <button
           onClick={() => {
             setInput(null);
             setOutputs([null, null, null]);
           }}
-          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-border rounded text-sm text-foreground transition-colors"
+          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-primary/20 rounded text-sm text-foreground transition-colors"
         >
           Clear
         </button>
         <button
           onClick={handleSave}
-          disabled={!input || outputs.every(o => o === null)}
+          disabled={!input || outputs.every((o) => o === null)}
           className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Save Recipe
@@ -244,17 +260,18 @@ export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
       </div>
 
       {/* Code Preview */}
-      {input && outputs.some(o => o !== null) && (
-        <div className="bg-muted/30 border border-border rounded-lg p-4">
+      {input && outputs.some((o) => o !== null) && (
+        <div className="bg-muted/30 border border-primary/20 rounded-lg p-4">
           <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-            <span className="text-primary">{'</>'}</span>
+            <span className="text-primary">{"</>"}</span>
             Generated Code
           </h3>
-          <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-border overflow-x-auto">
-{`event.recipes.create.cutting([
-${outputs.filter(o => o !== null).map(output => 
-  `  '${output!.id}'${(output!.count || 1) > 1 ? ` * ${output!.count}` : ''}`
-).join(',\n')}
+          <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-primary/20 overflow-x-auto">
+            {`event.recipes.create.cutting([
+${outputs
+  .filter((o) => o !== null)
+  .map((output) => `  '${output!.id}'${(output!.count || 1) > 1 ? ` * ${output!.count}` : ""}`)
+  .join(",\n")}
 ], '${input.id}')`}
           </pre>
         </div>
@@ -269,10 +286,13 @@ ${outputs.filter(o => o !== null).map(output =>
             setPickingSlot(null);
           }}
           selectedItem={
-            pickingSlot === 'input' ? input?.id : 
-            typeof pickingSlot === 'number' ? outputs[pickingSlot]?.id : undefined
+            pickingSlot === "input"
+              ? input?.id
+              : typeof pickingSlot === "number"
+                ? outputs[pickingSlot]?.id
+                : undefined
           }
-          title={pickingSlot === 'input' ? 'Select Input Item' : 'Select Output Item'}
+          title={pickingSlot === "input" ? "Select Input Item" : "Select Output Item"}
         />
       )}
     </div>

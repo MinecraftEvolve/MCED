@@ -1,6 +1,6 @@
 import { ConfigFile, ConfigSetting, UserComment } from "../types/config.types";
 import { TomlParser } from "./parsers/TomlParser";
-import JSON5 from 'json5';
+import JSON5 from "json5";
 
 export class ConfigService {
   private tomlParser = new TomlParser();
@@ -11,23 +11,23 @@ export class ConfigService {
     instancePath: string,
     modId: string,
     defaultConfigsFolder?: string,
-    serverConfigFolder?: string,
+    serverConfigFolder?: string
   ): Promise<ConfigFile[]> {
     try {
       const configs: ConfigFile[] = [];
-      
+
       // Track which config files we've already loaded to avoid duplicates
       const loadedConfigNames = new Set<string>();
-      
+
       // Load from main config folder (recursively)
       const mainResult = await window.api.readdirRecursive(`${instancePath}/config`, {
-        extensions: ['.toml', '.json', '.json5', '.yml', '.yaml', '.cfg', '.properties', '.txt']
+        extensions: [".toml", ".json", ".json5", ".yml", ".yaml", ".cfg", ".properties", ".txt"],
       });
-      
+
       if (mainResult.success && mainResult.files) {
         for (const file of mainResult.files) {
-          const fileName = file.relativePath.split('/').pop() || file.relativePath;
-          
+          const fileName = file.relativePath.split("/").pop() || file.relativePath;
+
           // Pass full relative path for better mod matching (supports subfolders)
           if (this.matchesModId(file.relativePath, modId)) {
             const fileResult = await window.api.readFile(file.path);
@@ -37,7 +37,7 @@ export class ConfigService {
                 file.relativePath, // Use relative path to show folder structure
                 fileResult.content,
                 file.path,
-                "client",
+                "client"
               );
               if (config) {
                 configs.push(config);
@@ -51,18 +51,18 @@ export class ConfigService {
       // Load from defaultconfigs folder FIRST (highest priority) - recursively
       if (defaultConfigsFolder) {
         const defaultResult = await window.api.readdirRecursive(defaultConfigsFolder, {
-          extensions: ['.toml', '.json', '.json5', '.yml', '.yaml', '.cfg', '.properties']
+          extensions: [".toml", ".json", ".json5", ".yml", ".yaml", ".cfg", ".properties"],
         });
-        
+
         if (defaultResult.success && defaultResult.files) {
           for (const file of defaultResult.files) {
-            const fileName = file.relativePath.split('/').pop() || file.relativePath;
-            
+            const fileName = file.relativePath.split("/").pop() || file.relativePath;
+
             // Skip if already loaded from main config folder
             if (loadedConfigNames.has(fileName.toLowerCase())) {
               continue;
             }
-            
+
             // Pass full relative path for better mod matching (supports subfolders)
             if (this.matchesModId(file.relativePath, modId)) {
               const fileResult = await window.api.readFile(file.path);
@@ -72,7 +72,7 @@ export class ConfigService {
                   file.relativePath,
                   fileResult.content,
                   file.path,
-                  "server-default",
+                  "server-default"
                 );
                 if (config) {
                   configs.push(config);
@@ -88,13 +88,13 @@ export class ConfigService {
       // Only load if NOT already loaded from defaultconfigs or main config
       if (serverConfigFolder) {
         const serverResult = await window.api.readdirRecursive(serverConfigFolder, {
-          extensions: ['.toml', '.json', '.json5', '.yml', '.yaml', '.cfg', '.properties']
+          extensions: [".toml", ".json", ".json5", ".yml", ".yaml", ".cfg", ".properties"],
         });
-        
+
         if (serverResult.success && serverResult.files) {
           for (const file of serverResult.files) {
-            const fileName = file.relativePath.split('/').pop() || file.relativePath;
-            
+            const fileName = file.relativePath.split("/").pop() || file.relativePath;
+
             // Skip if already loaded
             if (loadedConfigNames.has(fileName.toLowerCase())) {
               continue;
@@ -102,7 +102,7 @@ export class ConfigService {
 
             // Pass full relative path for better mod matching (supports subfolders)
             const matches = this.matchesModId(file.relativePath, modId);
-            
+
             if (matches) {
               const fileResult = await window.api.readFile(file.path);
 
@@ -111,7 +111,7 @@ export class ConfigService {
                   file.relativePath,
                   fileResult.content,
                   file.path,
-                  "server",
+                  "server"
                 );
                 if (config) {
                   configs.push(config);
@@ -137,20 +137,20 @@ export class ConfigService {
   // Map for mods that share a parent config folder
   // Key: parent folder name, Value: mapping of subfolder -> modId
   private sharedFolderMappings: Record<string, Record<string, string>> = {
-    'xaero': {
-      'minimap': 'xaerominimap',
-      'world-map': 'xaeroworldmap',
-      'lib': 'xaerominimap' // Shared library, assign to minimap
-    }
+    xaero: {
+      minimap: "xaerominimap",
+      "world-map": "xaeroworldmap",
+      lib: "xaerominimap", // Shared library, assign to minimap
+    },
   };
 
   private matchesModId(filePathOrName: string, modId: string): boolean {
     const modIdLower = modId.toLowerCase();
-    
+
     // Extract both filename and folder path
-    const parts = filePathOrName.split('/');
+    const parts = filePathOrName.split("/");
     const fileName = parts[parts.length - 1];
-    
+
     // Remove file extension for matching
     const fileNameLower = fileName
       .toLowerCase()
@@ -159,7 +159,7 @@ export class ConfigService {
     // Normalize by replacing underscores and hyphens
     const normalizedFileName = fileNameLower.replace(/[-_]/g, "");
     const normalizedModId = modIdLower.replace(/[-_]/g, "");
-    
+
     // Check for shared folder mappings (e.g., xaero/minimap -> xaerominimap)
     // This needs to be checked before general folder matching
     for (let i = 0; i < parts.length - 1; i++) {
@@ -176,22 +176,25 @@ export class ConfigService {
         }
       }
     }
-    
+
     // Check all folder parts in the path (for nested structures like "betterdeserttemples/forge-1_20/config.toml")
     const folderParts = parts.slice(0, -1); // All parts except the filename
-    
+
     // 1. Check if any folder in the path matches the mod ID
     for (const folder of folderParts) {
       const normalizedFolder = folder.toLowerCase().replace(/[-_]/g, "");
-      
+
       // Exact folder match
       if (normalizedFolder === normalizedModId) {
         return true;
       }
-      
+
       // Folder might contain version info like "forge-1_20", "fabric-1.19", etc.
       // Strip version patterns: forge-X_XX, fabric-X.XX, etc.
-      const folderWithoutVersion = normalizedFolder.replace(/(?:forge|fabric|neoforge|quilt)?[-_]?\d+[-_.]\d+(?:[-_.]\d+)?/g, '');
+      const folderWithoutVersion = normalizedFolder.replace(
+        /(?:forge|fabric|neoforge|quilt)?[-_]?\d+[-_.]\d+(?:[-_.]\d+)?/g,
+        ""
+      );
       if (folderWithoutVersion && folderWithoutVersion === normalizedModId) {
         return true;
       }
@@ -224,7 +227,7 @@ export class ConfigService {
     fileName: string,
     content: string,
     filePath: string,
-    configType: "client" | "server" | "server-default" = "client",
+    configType: "client" | "server" | "server-default" = "client"
   ): Promise<ConfigFile | null> {
     const format = this.detectFormat(fileName);
 
@@ -267,7 +270,7 @@ export class ConfigService {
    */
   private async parseSettings(
     content: string,
-    format: ConfigFile["format"],
+    format: ConfigFile["format"]
   ): Promise<ConfigSetting[]> {
     const settings: ConfigSetting[] = [];
 
@@ -315,16 +318,12 @@ export class ConfigService {
     obj: any,
     settings: ConfigSetting[],
     path: string,
-    metadata: Map<string, any>,
+    metadata: Map<string, any>
   ) {
     for (const [key, value] of Object.entries(obj)) {
       const fullKey = path ? `${path}.${key}` : key;
 
-      if (
-        typeof value === "object" &&
-        value !== null &&
-        !Array.isArray(value)
-      ) {
+      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
         // Nested object - recurse
         this.extractSettingsFromToml(value, settings, fullKey, metadata);
       } else {
@@ -334,8 +333,7 @@ export class ConfigService {
         const setting: ConfigSetting = {
           key: fullKey,
           value,
-          defaultValue:
-            meta.defaultValue !== undefined ? meta.defaultValue : value,
+          defaultValue: meta.defaultValue !== undefined ? meta.defaultValue : value,
           type:
             meta.allowedValues && meta.allowedValues.length > 0
               ? "enum"
@@ -349,7 +347,7 @@ export class ConfigService {
           enumValues: meta.allowedValues,
           unit: meta.unit,
         };
-        
+
         settings.push(setting);
       }
     }
@@ -380,11 +378,11 @@ export class ConfigService {
       if (line.startsWith("#@MCED:")) {
         const commentContent = line.substring(7).trim(); // Remove "#@MCED:"
         const pipeIndex = commentContent.indexOf("|");
-        
+
         if (pipeIndex !== -1) {
           const timestamp = commentContent.substring(0, pipeIndex).trim();
           const text = commentContent.substring(pipeIndex + 1).trim();
-          
+
           userComments.push({
             id: `${timestamp}-${Math.random().toString(36).substr(2, 9)}`,
             timestamp,
@@ -408,9 +406,7 @@ export class ConfigService {
         const [key, ...valueParts] = line.split("=");
         const value = valueParts.join("=").trim();
 
-        const fullKey = currentSection
-          ? `${currentSection}.${key.trim()}`
-          : key.trim();
+        const fullKey = currentSection ? `${currentSection}.${key.trim()}` : key.trim();
         const description = currentComments.join(" ");
 
         // Create metadata object for type detection
@@ -448,11 +444,11 @@ export class ConfigService {
     try {
       // First, extract comments from the JSON5 content
       const commentMap = this.extractJsonComments(content);
-      
+
       const obj = JSON5.parse(content);
       this.extractSettings(obj, settings, "", commentMap);
     } catch (error) {
-      console.error('[ConfigService] Failed to parse JSON5:', error);
+      console.error("[ConfigService] Failed to parse JSON5:", error);
       // Silently fail
     }
 
@@ -465,7 +461,7 @@ export class ConfigService {
     try {
       // Try to extract comments from plain JSON (though standard JSON doesn't support them)
       const commentMap = this.extractJsonComments(content);
-      
+
       const obj = JSON.parse(content);
       this.extractSettings(obj, settings, "", commentMap);
     } catch (error) {
@@ -480,58 +476,58 @@ export class ConfigService {
    */
   private extractJsonComments(content: string): Map<string, string> {
     const commentMap = new Map<string, string>();
-    const lines = content.split('\n');
-    let lastComment = '';
+    const lines = content.split("\n");
+    let lastComment = "";
     let currentPath: string[] = [];
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
 
       // Single-line comment
-      if (line.startsWith('//')) {
+      if (line.startsWith("//")) {
         const comment = line.substring(2).trim();
         lastComment = lastComment ? `${lastComment} ${comment}` : comment;
         continue;
       }
 
       // Multi-line comment start
-      if (line.includes('/*')) {
-        let commentText = line.substring(line.indexOf('/*') + 2);
-        
+      if (line.includes("/*")) {
+        let commentText = line.substring(line.indexOf("/*") + 2);
+
         // Check if comment ends on same line
-        if (commentText.includes('*/')) {
-          const endIndex = commentText.indexOf('*/');
+        if (commentText.includes("*/")) {
+          const endIndex = commentText.indexOf("*/");
           lastComment = commentText.substring(0, endIndex).trim();
           continue;
         }
-        
+
         // Multi-line comment - collect until */
         let commentLines = [commentText];
         for (let j = i + 1; j < lines.length; j++) {
           i = j;
           const nextLine = lines[j];
-          if (nextLine.includes('*/')) {
-            commentLines.push(nextLine.substring(0, nextLine.indexOf('*/')).trim());
+          if (nextLine.includes("*/")) {
+            commentLines.push(nextLine.substring(0, nextLine.indexOf("*/")).trim());
             break;
           }
           commentLines.push(nextLine.trim());
         }
-        lastComment = commentLines.join(' ').replace(/\*/g, '').trim();
+        lastComment = commentLines.join(" ").replace(/\*/g, "").trim();
         continue;
       }
 
       // Property line - associate comment with this property
-      if (line.includes(':') && !line.startsWith('{') && !line.startsWith('[')) {
-        const colonIndex = line.indexOf(':');
+      if (line.includes(":") && !line.startsWith("{") && !line.startsWith("[")) {
+        const colonIndex = line.indexOf(":");
         let propertyName = line.substring(0, colonIndex).trim();
-        
+
         // Remove quotes from property name
-        propertyName = propertyName.replace(/["']/g, '');
-        
+        propertyName = propertyName.replace(/["']/g, "");
+
         if (lastComment && propertyName) {
           commentMap.set(propertyName, lastComment);
         }
-        lastComment = '';
+        lastComment = "";
       }
     }
 
@@ -541,15 +537,16 @@ export class ConfigService {
   /**
    * Recursively extract settings from object
    */
-  private extractSettings(obj: any, settings: ConfigSetting[], path: string, commentMap?: Map<string, string>) {
+  private extractSettings(
+    obj: any,
+    settings: ConfigSetting[],
+    path: string,
+    commentMap?: Map<string, string>
+  ) {
     for (const [key, value] of Object.entries(obj)) {
       const fullKey = path ? `${path}.${key}` : key;
 
-      if (
-        typeof value === "object" &&
-        value !== null &&
-        !Array.isArray(value)
-      ) {
+      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
         // Nested object - recurse
         this.extractSettings(value, settings, fullKey, commentMap);
       } else {
@@ -596,15 +593,10 @@ export class ConfigService {
   /**
    * Create a config setting object
    */
-  private createSetting(
-    key: string,
-    value: any,
-    comment: string,
-    section: string,
-  ): ConfigSetting {
+  private createSetting(key: string, value: any, comment: string, section: string): ConfigSetting {
     // Create metadata from comment for better type detection
     const metadata = comment ? { description: comment } : undefined;
-    
+
     return {
       key,
       value,
@@ -620,13 +612,17 @@ export class ConfigService {
    */
   private inferType(value: any, metadata?: any): ConfigSetting["type"] {
     // Check for enum based on metadata
-    if (metadata?.allowedValues && Array.isArray(metadata.allowedValues) && metadata.allowedValues.length > 0) {
+    if (
+      metadata?.allowedValues &&
+      Array.isArray(metadata.allowedValues) &&
+      metadata.allowedValues.length > 0
+    ) {
       return "enum";
     }
 
     // Check value type
     if (typeof value === "boolean") return "boolean";
-    
+
     if (typeof value === "number") {
       // Check for range if metadata exists
       if (metadata?.range && Array.isArray(metadata.range)) {
@@ -634,16 +630,16 @@ export class ConfigService {
       }
       return Number.isInteger(value) ? "integer" : "float";
     }
-    
+
     if (Array.isArray(value)) {
       // Check if it's a list of specific values
       if (value.length > 0) {
         // All booleans?
-        if (value.every(v => typeof v === "boolean")) return "array";
+        if (value.every((v) => typeof v === "boolean")) return "array";
         // All numbers?
-        if (value.every(v => typeof v === "number")) return "array";
+        if (value.every((v) => typeof v === "number")) return "array";
         // All strings?
-        if (value.every(v => typeof v === "string")) return "array";
+        if (value.every((v) => typeof v === "string")) return "array";
       }
       return "array";
     }
@@ -655,13 +651,15 @@ export class ConfigService {
         return "enum"; // Likely enum
       }
       // If metadata has description mentioning "Allowed Values" or similar
-      if (metadata?.description && 
-          (/allowed\s*values?/i.test(metadata.description) || 
-           /valid\s*options?/i.test(metadata.description))) {
+      if (
+        metadata?.description &&
+        (/allowed\s*values?/i.test(metadata.description) ||
+          /valid\s*options?/i.test(metadata.description))
+      ) {
         return "enum";
       }
     }
-    
+
     return "string";
   }
 
@@ -697,13 +695,10 @@ export class ConfigService {
       // Update value if changed
       if (oldValue !== newValue) {
         const patterns = [
-          new RegExp(
-            `(${this.escapeRegex(key)}\\s*=\\s*)${this.escapeRegex(oldValue)}`,
-            "g",
-          ),
+          new RegExp(`(${this.escapeRegex(key)}\\s*=\\s*)${this.escapeRegex(oldValue)}`, "g"),
           new RegExp(
             `(${this.escapeRegex(setting.key)}\\s*=\\s*)${this.escapeRegex(oldValue)}`,
-            "g",
+            "g"
           ),
         ];
 
@@ -737,10 +732,7 @@ export class ConfigService {
         if (settingLineIndex !== -1) {
           // Remove old MCED comments for this setting
           let insertIndex = settingLineIndex;
-          while (
-            insertIndex > 0 &&
-            lines[insertIndex - 1].trim().startsWith("#@MCED:")
-          ) {
+          while (insertIndex > 0 && lines[insertIndex - 1].trim().startsWith("#@MCED:")) {
             lines.splice(insertIndex - 1, 1);
             insertIndex--;
             settingLineIndex--;
@@ -748,8 +740,7 @@ export class ConfigService {
 
           // Add new MCED comments
           const commentLines = setting.userComments.map(
-            (comment) =>
-              `#@MCED: ${comment.timestamp} | ${comment.text.replace(/\n/g, " ")}`,
+            (comment) => `#@MCED: ${comment.timestamp} | ${comment.text.replace(/\n/g, " ")}`
           );
 
           lines.splice(insertIndex, 0, ...commentLines);
@@ -786,22 +777,22 @@ export class ConfigService {
    */
   private parseProperties(content: string): ConfigSetting[] {
     const settings: ConfigSetting[] = [];
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     let currentComments: string[] = [];
-    let currentSection = '';
+    let currentSection = "";
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
 
       // Section marker (e.g., ##[zoom] or ##[gui])
-      if (line.startsWith('##[') && line.endsWith(']')) {
+      if (line.startsWith("##[") && line.endsWith("]")) {
         currentSection = line.substring(3, line.length - 1);
         currentComments = [];
         continue;
       }
 
       // Comment line
-      if (line.startsWith('#') || line.startsWith('!')) {
+      if (line.startsWith("#") || line.startsWith("!")) {
         const comment = line.substring(1).trim();
         // Don't add empty comments
         if (comment) {
@@ -811,14 +802,14 @@ export class ConfigService {
       }
 
       // Property line
-      if (line.includes('=') || line.includes(':')) {
-        const separator = line.includes('=') ? '=' : ':';
+      if (line.includes("=") || line.includes(":")) {
+        const separator = line.includes("=") ? "=" : ":";
         const parts = line.split(separator);
-        
+
         if (parts.length >= 2) {
           let keyPart = parts[0].trim();
           let valuePart = parts.slice(1).join(separator).trim();
-          
+
           // Handle type prefixes (e.g., B:, F:, I:, S:, D:)
           // B = Boolean, F = Float, I = Integer, S = String, D = Double
           let explicitType: ConfigSetting["type"] | null = null;
@@ -826,49 +817,44 @@ export class ConfigService {
           if (typeMatch) {
             const typePrefix = typeMatch[1];
             keyPart = typeMatch[2];
-            
+
             // Map type prefix to our type system
             switch (typePrefix) {
-              case 'B':
-                explicitType = 'boolean';
+              case "B":
+                explicitType = "boolean";
                 break;
-              case 'I':
-                explicitType = 'integer';
+              case "I":
+                explicitType = "integer";
                 break;
-              case 'F':
-              case 'D':
-                explicitType = 'float';
+              case "F":
+              case "D":
+                explicitType = "float";
                 break;
-              case 'S':
-                explicitType = 'string';
+              case "S":
+                explicitType = "string";
                 break;
             }
           }
-          
+
           // Remove quotes and semicolons from value
-          valuePart = valuePart.replace(/[;'"]/g, '').trim();
-          
-          const comment = currentComments.join(' ');
+          valuePart = valuePart.replace(/[;'"]/g, "").trim();
+
+          const comment = currentComments.join(" ");
           const parsedValue = this.parseValue(valuePart);
-          
+
           // Create setting with explicit type if available
-          const setting = this.createSetting(
-            keyPart,
-            parsedValue,
-            comment,
-            currentSection
-          );
-          
+          const setting = this.createSetting(keyPart, parsedValue, comment, currentSection);
+
           // Override type if we detected it from prefix
           if (explicitType) {
             setting.type = explicitType;
           }
-          
+
           settings.push(setting);
         }
-        
+
         currentComments = [];
-      } else if (line !== '') {
+      } else if (line !== "") {
         // Reset comments on non-empty non-property lines
         currentComments = [];
       }
@@ -882,8 +868,8 @@ export class ConfigService {
    */
   private parseCfg(content: string): ConfigSetting[] {
     const settings: ConfigSetting[] = [];
-    const lines = content.split('\n');
-    let currentSection = '';
+    const lines = content.split("\n");
+    let currentSection = "";
     let currentComments: string[] = [];
 
     for (let i = 0; i < lines.length; i++) {
@@ -891,53 +877,55 @@ export class ConfigService {
 
       // Section header
       if (line.match(/^[A-Z_]+\s*{/)) {
-        currentSection = line.replace(/\s*{.*/, '').trim();
+        currentSection = line.replace(/\s*{.*/, "").trim();
         currentComments = [];
         continue;
       }
 
       // End of section
-      if (line === '}') {
-        currentSection = '';
+      if (line === "}") {
+        currentSection = "";
         currentComments = [];
         continue;
       }
 
       // Comment line
-      if (line.startsWith('#')) {
+      if (line.startsWith("#")) {
         const comment = line.substring(1).trim();
         currentComments.push(comment);
         continue;
       }
 
       // Property line
-      if (line.includes('=')) {
-        const parts = line.split('=');
-        
+      if (line.includes("=")) {
+        const parts = line.split("=");
+
         if (parts.length >= 2) {
           const keyPart = parts[0].trim();
-          const valuePart = parts.slice(1).join('=').trim();
-          
+          const valuePart = parts.slice(1).join("=").trim();
+
           // Extract type and key (format: "I:settingName=value" or just "settingName=value")
           let key = keyPart;
           let value = valuePart;
-          
+
           const typeMatch = keyPart.match(/^([IBSFD]):(.*)/);
           if (typeMatch) {
             key = typeMatch[2];
           }
-          
-          const comment = currentComments.join(' ');
-          settings.push(this.createSetting(
-            currentSection ? `${currentSection}.${key}` : key,
-            this.parseValue(value),
-            comment,
-            currentSection
-          ));
+
+          const comment = currentComments.join(" ");
+          settings.push(
+            this.createSetting(
+              currentSection ? `${currentSection}.${key}` : key,
+              this.parseValue(value),
+              comment,
+              currentSection
+            )
+          );
         }
-        
+
         currentComments = [];
-      } else if (line !== '') {
+      } else if (line !== "") {
         // Reset comments on non-empty non-property lines
         currentComments = [];
       }
@@ -951,7 +939,7 @@ export class ConfigService {
    */
   private parseYaml(content: string): ConfigSetting[] {
     const settings: ConfigSetting[] = [];
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     let currentComments: string[] = [];
     let currentPath: string[] = [];
     let indentStack: number[] = [0];
@@ -961,13 +949,13 @@ export class ConfigService {
       const trimmed = line.trim();
 
       // Comment line
-      if (trimmed.startsWith('#')) {
+      if (trimmed.startsWith("#")) {
         const comment = trimmed.substring(1).trim();
         currentComments.push(comment);
         continue;
       }
 
-      if (trimmed === '') {
+      if (trimmed === "") {
         continue;
       }
 
@@ -976,34 +964,33 @@ export class ConfigService {
       if (indent === -1) continue;
 
       // Adjust path based on indentation
-      while (indentStack.length > 0 && indent <= indentStack[indentStack.length - 1] && currentPath.length > 0) {
+      while (
+        indentStack.length > 0 &&
+        indent <= indentStack[indentStack.length - 1] &&
+        currentPath.length > 0
+      ) {
         indentStack.pop();
         currentPath.pop();
       }
 
       // Key-value pair
-      if (trimmed.includes(':')) {
-        const colonIndex = trimmed.indexOf(':');
+      if (trimmed.includes(":")) {
+        const colonIndex = trimmed.indexOf(":");
         const key = trimmed.substring(0, colonIndex).trim();
         const valueStr = trimmed.substring(colonIndex + 1).trim();
 
-        if (valueStr === '' || valueStr === '|' || valueStr === '>') {
+        if (valueStr === "" || valueStr === "|" || valueStr === ">") {
           // This is a section/object
           currentPath.push(key);
           indentStack.push(indent);
         } else {
           // This is a value
-          const fullKey = currentPath.length > 0 
-            ? `${currentPath.join('.')}.${key}` 
-            : key;
-          
-          const comment = currentComments.join(' ');
-          settings.push(this.createSetting(
-            fullKey,
-            this.parseValue(valueStr),
-            comment,
-            currentPath.join('.')
-          ));
+          const fullKey = currentPath.length > 0 ? `${currentPath.join(".")}.${key}` : key;
+
+          const comment = currentComments.join(" ");
+          settings.push(
+            this.createSetting(fullKey, this.parseValue(valueStr), comment, currentPath.join("."))
+          );
         }
 
         currentComments = [];
@@ -1038,7 +1025,7 @@ export class ConfigService {
    */
   async migrateServerToDefaultConfigs(
     serverConfigFolder: string,
-    defaultConfigsFolder: string,
+    defaultConfigsFolder: string
   ): Promise<{ success: boolean; message: string; movedCount: number }> {
     try {
       // Ensure defaultconfigs folder exists
@@ -1062,10 +1049,9 @@ export class ConfigService {
       }
 
       // Filter for config files
-      const configFiles = serverResult.files.filter((file: string) =>
-        file.endsWith(".toml") ||
-        file.endsWith(".json") ||
-        file.endsWith(".json5")
+      const configFiles = serverResult.files.filter(
+        (file: string) =>
+          file.endsWith(".toml") || file.endsWith(".json") || file.endsWith(".json5")
       );
 
       let movedCount = 0;

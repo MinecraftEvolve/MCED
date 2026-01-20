@@ -27,43 +27,34 @@ export class FluidRegistryService {
   }
 
   async initialize(modsFolder: string): Promise<void> {
-    console.log("=== FluidRegistryService.initialize CALLED ===");
-    console.log("Mods folder:", modsFolder);
-    
     // Always rebuild to ensure fresh data
-    console.log("Building new fluid registry...");
     await this.buildFluidRegistry(modsFolder);
     await this.saveCache();
   }
 
   async buildFluidRegistry(modsFolder: string): Promise<void> {
-    console.log("=== buildFluidRegistry CALLED ===");
     const fluids: FluidInfo[] = [];
 
     try {
       // Load vanilla Minecraft fluids from Forge JAR
-      console.log("Loading vanilla fluids from Forge JAR...");
       const forgeData = await this.jarLoader.findAndLoadForgeJar(this.instancePath);
       if (forgeData) {
-        console.log(`Loaded ${forgeData.fluids.length} vanilla fluids from Forge JAR`);
-        forgeData.fluids.forEach(fluid => {
+        forgeData.fluids.forEach((fluid) => {
           fluids.push({
             id: fluid.id,
-            modId: 'minecraft',
+            modId: "minecraft",
             name: fluid.name,
             texture: `data:image/png;base64,${fluid.texture}`,
           });
         });
       } else {
-        console.log("Forge JAR not found, trying Minecraft JAR...");
         // Fallback to vanilla Minecraft JAR
         const vanillaData = await this.jarLoader.findAndLoadMinecraftJar(this.instancePath);
         if (vanillaData && vanillaData.fluids.length > 0) {
-          console.log(`Loaded ${vanillaData.fluids.length} vanilla fluids from Minecraft JAR`);
-          vanillaData.fluids.forEach(fluid => {
+          vanillaData.fluids.forEach((fluid) => {
             fluids.push({
               id: fluid.id,
-              modId: 'minecraft',
+              modId: "minecraft",
               name: fluid.name,
               texture: `data:image/png;base64,${fluid.texture}`,
             });
@@ -72,36 +63,27 @@ export class FluidRegistryService {
       }
 
       // Add hardcoded vanilla fluids (water and lava)
-      // These are always present in Minecraft but not as JSON registry entries
       fluids.push(
         {
-          id: 'minecraft:water',
-          modId: 'minecraft',
-          name: 'Water',
-          texture: '', // Will use default fluid texture
+          id: "minecraft:water",
+          modId: "minecraft",
+          name: "Water",
+          texture: "",
         },
         {
-          id: 'minecraft:lava',
-          modId: 'minecraft',
-          name: 'Lava',
-          texture: '', // Will use default fluid texture
+          id: "minecraft:lava",
+          modId: "minecraft",
+          name: "Lava",
+          texture: "",
         }
       );
 
       // Always load all JARs fresh to get fluid data
-      // (ItemRegistryService might have loaded from cache without loading JARs)
-      console.log("Loading all mod JARs for fluid extraction...");
       await this.jarLoader.loadAllJars(modsFolder);
       const allJarData = this.jarLoader.getAllCachedData();
-      console.log(`Found ${allJarData.length} JAR entries after loading`);
-      
-      let fluidCount = 0;
+
       for (const jarData of allJarData) {
-        if (jarData.fluids.length > 0) {
-          console.log(`Found ${jarData.fluids.length} fluids in ${jarData.modId}`);
-          fluidCount += jarData.fluids.length;
-        }
-        jarData.fluids.forEach(fluid => {
+        jarData.fluids.forEach((fluid) => {
           fluids.push({
             id: fluid.id,
             modId: jarData.modId,
@@ -110,15 +92,11 @@ export class FluidRegistryService {
           });
         });
       }
-      
-      console.log(`Total fluids extracted from ${allJarData.length} JARs: ${fluidCount}`);
 
       this.cache = {
         fluids,
         lastUpdated: Date.now(),
       };
-      
-      console.log(`Built fluid registry with ${fluids.length} fluids`);
     } catch (error) {
       console.error("Failed to build fluid registry:", error);
       this.cache = { fluids: [], lastUpdated: Date.now() };
@@ -141,7 +119,7 @@ export class FluidRegistryService {
       await fs.mkdir(this.cacheDir, { recursive: true });
       const cacheFile = path.join(this.cacheDir, "fluids.json");
       await fs.writeFile(cacheFile, JSON.stringify(this.cache, null, 2));
-      console.log(`Fluid cache saved to ${cacheFile}`);
+      console.error(`Fluid cache saved to ${cacheFile}`);
     } catch (error) {
       console.error("Failed to save fluid cache:", error);
     }
@@ -158,16 +136,14 @@ export class FluidRegistryService {
     if (!this.cache) {
       await this.loadCache();
     }
-    return this.cache?.fluids.find(f => f.id === id) || null;
+    return this.cache?.fluids.find((f) => f.id === id) || null;
   }
 
   async searchFluids(query: string): Promise<FluidInfo[]> {
     const allFluids = await this.getAllFluids();
     const lowerQuery = query.toLowerCase();
     return allFluids.filter(
-      f =>
-        f.id.toLowerCase().includes(lowerQuery) ||
-        f.name.toLowerCase().includes(lowerQuery)
+      (f) => f.id.toLowerCase().includes(lowerQuery) || f.name.toLowerCase().includes(lowerQuery)
     );
   }
 

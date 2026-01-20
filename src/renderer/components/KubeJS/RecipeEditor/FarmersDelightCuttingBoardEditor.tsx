@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Plus, X } from 'lucide-react';
-import { ItemPicker } from '../ItemPicker/ItemPicker';
+import React, { useState } from "react";
+import { Plus, X } from "lucide-react";
+import { ItemPicker } from "../ItemPicker/ItemPicker";
 
 interface Item {
   id: string;
@@ -16,33 +16,37 @@ interface FarmersDelightCuttingBoardEditorProps {
   initialRecipe?: any;
 }
 
-export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoardEditorProps> = ({ instancePath, onSave, initialRecipe }) => {
+export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoardEditorProps> = ({
+  instancePath,
+  onSave,
+  initialRecipe,
+}) => {
   const [ingredient, setIngredient] = useState<Item | null>(null);
-  const [tool, setTool] = useState('');
+  const [tool, setTool] = useState("");
   const [results, setResults] = useState<Item[]>([]);
-  const [sound, setSound] = useState('minecraft:block.wood.break');
+  const [sound, setSound] = useState("minecraft:block.wood.break");
   const [showItemPicker, setShowItemPicker] = useState(false);
-  const [pickingType, setPickingType] = useState<'ingredient' | 'result' | null>(null);
+  const [pickingType, setPickingType] = useState<"ingredient" | "result" | null>(null);
 
   React.useEffect(() => {
     const parseAndLoadItems = async () => {
       if (!initialRecipe?.raw) return;
-      
+
       const raw = initialRecipe.raw;
-      console.log('Parsing raw recipe:', raw);
-      
+      console.log("Parsing raw recipe:", raw);
+
       // Extract parameters by finding the content between cutting( and matching )
-      const cuttingStart = raw.indexOf('cutting(');
+      const cuttingStart = raw.indexOf("cutting(");
       if (cuttingStart === -1) return;
-      
+
       const afterCutting = raw.substring(cuttingStart + 8); // 8 = 'cutting('.length
-      
+
       // Find the matching closing parenthesis
       let depth = 1;
       let endIndex = -1;
       for (let i = 0; i < afterCutting.length; i++) {
-        if (afterCutting[i] === '(') depth++;
-        if (afterCutting[i] === ')') {
+        if (afterCutting[i] === "(") depth++;
+        if (afterCutting[i] === ")") {
           depth--;
           if (depth === 0) {
             endIndex = i;
@@ -50,22 +54,22 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
           }
         }
       }
-      
+
       if (endIndex === -1) return;
       const paramsStr = afterCutting.substring(0, endIndex);
-      
+
       // Split by commas, but not within quotes or parentheses
       const params: string[] = [];
-      let current = '';
+      let current = "";
       let inQuotes = false;
-      let quoteChar = '';
+      let quoteChar = "";
       let parenDepth = 0;
-      
+
       for (let i = 0; i < paramsStr.length; i++) {
         const char = paramsStr[i];
-        const prevChar = i > 0 ? paramsStr[i-1] : '';
-        
-        if ((char === '"' || char === "'") && prevChar !== '\\') {
+        const prevChar = i > 0 ? paramsStr[i - 1] : "";
+
+        if ((char === '"' || char === "'") && prevChar !== "\\") {
           if (!inQuotes) {
             inQuotes = true;
             quoteChar = char;
@@ -73,89 +77,89 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
             inQuotes = false;
           }
         }
-        
+
         if (!inQuotes) {
-          if (char === '(' || char === '[') parenDepth++;
-          if (char === ')' || char === ']') parenDepth--;
+          if (char === "(" || char === "[") parenDepth++;
+          if (char === ")" || char === "]") parenDepth--;
         }
-        
-        if (char === ',' && !inQuotes && parenDepth === 0) {
+
+        if (char === "," && !inQuotes && parenDepth === 0) {
           params.push(current.trim());
-          current = '';
+          current = "";
         } else {
           current += char;
         }
       }
       if (current.trim()) params.push(current.trim());
-      
-      console.log('All parsed params:', params);
-      console.log('Third param (results):', params[2]);
-      
+
+      console.log("All parsed params:", params);
+      console.log("Third param (results):", params[2]);
+
       if (params.length < 3) return;
-      
-      const ingredientId = params[0].replace(/['"]/g, '');
-      const toolTag = params[1].replace(/['"]/g, '');
+
+      const ingredientId = params[0].replace(/['"]/g, "");
+      const toolTag = params[1].replace(/['"]/g, "");
       const resultsStr = params[2];
-      
+
       setTool(toolTag);
-      
+
       // Load ingredient with texture
       let loadedIngredient: Item | null = null;
       try {
-        console.log('Looking up ingredient:', ingredientId);
+        console.log("Looking up ingredient:", ingredientId);
         const ingResult = await window.api.itemRegistryGetItemById(instancePath, ingredientId);
-        console.log('Ingredient lookup result:', ingResult);
+        console.log("Ingredient lookup result:", ingResult);
         if (ingResult.success && ingResult.data) {
-          console.log('Setting ingredient with texture:', ingResult.data);
+          console.log("Setting ingredient with texture:", ingResult.data);
           loadedIngredient = {
             id: ingResult.data.id,
             name: ingResult.data.name,
             modId: ingResult.data.modId,
             texture: ingResult.data.texture,
-            count: 1
+            count: 1,
           };
           setIngredient(loadedIngredient);
         } else {
-          console.log('Item not found in registry, using fallback for:', ingredientId);
+          console.log("Item not found in registry, using fallback for:", ingredientId);
           loadedIngredient = {
             id: ingredientId,
-            name: ingredientId.split(':')[1] || ingredientId,
-            modId: ingredientId.split(':')[0] || 'minecraft',
-            count: 1
+            name: ingredientId.split(":")[1] || ingredientId,
+            modId: ingredientId.split(":")[0] || "minecraft",
+            count: 1,
           };
           setIngredient(loadedIngredient);
         }
       } catch (error) {
-        console.error('Failed to load ingredient:', error);
+        console.error("Failed to load ingredient:", error);
       }
-      
+
       // Parse and load results
       const loadedResults: Item[] = [];
-      
+
       // Try to match Item.of with count (handle multiline)
       const itemOfMatch = resultsStr.match(/Item\.of\(\s*['"]([^'"]+)['"]\s*,\s*(\d+)\s*\)/);
-      
-      console.log('Results string:', resultsStr);
-      console.log('Item.of match:', itemOfMatch);
-      
-      const resultIds: Array<{id: string, count: number}> = [];
-      
+
+      console.log("Results string:", resultsStr);
+      console.log("Item.of match:", itemOfMatch);
+
+      const resultIds: Array<{ id: string; count: number }> = [];
+
       if (itemOfMatch) {
         const parsed = { id: itemOfMatch[1], count: parseInt(itemOfMatch[2]) };
-        console.log('Parsed result with count:', parsed);
+        console.log("Parsed result with count:", parsed);
         resultIds.push(parsed);
       } else {
         // Try simple string match
         const simpleMatch = resultsStr.match(/['"]([^'"]+)['"]/);
         if (simpleMatch) {
-          console.log('Simple match found:', simpleMatch[1]);
+          console.log("Simple match found:", simpleMatch[1]);
           resultIds.push({ id: simpleMatch[1], count: 1 });
         }
       }
-      
-      console.log('Final result IDs to load:', resultIds);
-      
-      for (const {id, count} of resultIds) {
+
+      console.log("Final result IDs to load:", resultIds);
+
+      for (const { id, count } of resultIds) {
         try {
           const result = await window.api.itemRegistryGetItemById(instancePath, id);
           if (result.success && result.data) {
@@ -164,34 +168,39 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
               name: result.data.name,
               modId: result.data.modId,
               texture: result.data.texture,
-              count
+              count,
             });
           } else {
             loadedResults.push({
-              name: id.split(':')[1] || id,
-              modId: id.split(':')[0] || 'minecraft',
+              name: id.split(":")[1] || id,
+              modId: id.split(":")[0] || "minecraft",
               count,
-              id: ''
+              id: "",
             });
           }
         } catch (error) {
-          console.error('Failed to load result item:', error);
+          console.error("Failed to load result item:", error);
         }
       }
-      
+
       setIngredient(loadedIngredient);
       setResults(loadedResults);
       // Tool and sound are already set above
-      console.log('Loaded items with textures:', { loadedIngredient, loadedResults, tool: toolTag, sound: 'minecraft:block.wood.break' });
+      console.log("Loaded items with textures:", {
+        loadedIngredient,
+        loadedResults,
+        tool: toolTag,
+        sound: "minecraft:block.wood.break",
+      });
     };
-    
+
     parseAndLoadItems();
   }, [initialRecipe, instancePath]);
 
   const handleItemSelected = async (itemId: string) => {
     try {
       const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-      
+
       let item: Item;
       if (result.success && result.data) {
         item = {
@@ -199,26 +208,26 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
           name: result.data.name,
           modId: result.data.modId,
           texture: result.data.texture,
-          count: 1
+          count: 1,
         };
       } else {
         item = {
           id: itemId,
-          name: itemId.split(':')[1] || itemId,
-          modId: itemId.split(':')[0] || 'minecraft',
-          count: 1
+          name: itemId.split(":")[1] || itemId,
+          modId: itemId.split(":")[0] || "minecraft",
+          count: 1,
         };
       }
-      
-      if (pickingType === 'ingredient') {
+
+      if (pickingType === "ingredient") {
         setIngredient(item);
-      } else if (pickingType === 'result') {
+      } else if (pickingType === "result") {
         setResults([...results, item]);
       }
       setShowItemPicker(false);
       setPickingType(null);
     } catch (error) {
-      console.error('Failed to fetch item data:', error);
+      console.error("Failed to fetch item data:", error);
     }
   };
 
@@ -234,19 +243,15 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
 
   const handleSave = () => {
     onSave({
-      type: 'farmersdelight:cutting',
+      type: "farmersdelight:cutting",
       ingredients: ingredient ? [ingredient.id] : [],
       tool: { tag: tool },
-      result: results.map(r => ({ item: r.id, count: r.count || 1 })),
-      sound
+      result: results.map((r) => ({ item: r.id, count: r.count || 1 })),
+      sound,
     });
   };
 
-  const commonTools = [
-    'forge:tools/knives',
-    'forge:tools/axes',
-    'forge:tools'
-  ];
+  const commonTools = ["forge:tools/knives", "forge:tools/axes", "forge:tools"];
 
   return (
     <div className="space-y-6">
@@ -254,13 +259,13 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
         {/* Ingredient */}
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Ingredient</h3>
-          <div className="bg-muted/50 border border-border rounded-lg p-4">
+          <div className="bg-muted/50 border border-primary/20 rounded-lg p-4">
             <div
               onClick={() => {
-                setPickingType('ingredient');
+                setPickingType("ingredient");
                 setShowItemPicker(true);
               }}
-              className="relative w-20 h-20 bg-secondary border-2 border-border rounded cursor-pointer hover:border-primary transition-colors group mx-auto"
+              className="relative w-20 h-20 bg-secondary border-2 border-primary/30 rounded cursor-pointer hover:border-primary transition-colors group mx-auto"
             >
               {ingredient ? (
                 <>
@@ -272,7 +277,9 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
                         className="w-full h-full object-contain pixelated"
                       />
                     ) : (
-                      <div className="text-xs text-center text-muted-foreground">{ingredient.name}</div>
+                      <div className="text-xs text-center text-muted-foreground">
+                        {ingredient.name}
+                      </div>
                     )}
                   </div>
                   <button
@@ -286,7 +293,7 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
                   </button>
                   {/* Tooltip */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10 pointer-events-none">
-                    <div className="bg-popover text-popover-foreground text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg border border-border">
+                    <div className="bg-popover text-popover-foreground text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg border border-primary/20">
                       <div className="font-medium">{ingredient.name}</div>
                       <div className="text-muted-foreground">{ingredient.id}</div>
                     </div>
@@ -308,11 +315,11 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
         {/* Tool Selection */}
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Tool Required</h3>
-          <div className="bg-muted/50 border border-border rounded-lg p-4">
+          <div className="bg-muted/50 border border-primary/20 rounded-lg p-4">
             <select
               value={tool}
               onChange={(e) => setTool(e.target.value)}
-              className="w-full px-3 py-2 bg-secondary border border-border rounded text-sm text-foreground focus:outline-none focus:border-primary"
+              className="w-full px-3 py-2 bg-secondary border border-primary/20 rounded text-sm text-foreground focus:outline-none focus:border-primary"
             >
               <option value="">Select tool...</option>
               <option value="#forge:tools/knives">Knife</option>
@@ -332,11 +339,11 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
         {/* Results */}
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Results (Max 4)</h3>
-          <div className="bg-muted/50 border border-border rounded-lg p-4">
+          <div className="bg-muted/50 border border-primary/20 rounded-lg p-4">
             <div className="grid grid-cols-2 gap-2">
               {results.map((result, index) => (
                 <div key={index} className="relative">
-                  <div className="relative w-16 h-16 bg-secondary border-2 border-border rounded group mx-auto">
+                  <div className="relative w-16 h-16 bg-secondary border-2 border-primary/30 rounded group mx-auto">
                     <div className="absolute inset-0 flex items-center justify-center p-2">
                       {result.texture ? (
                         <img
@@ -345,11 +352,13 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
                           className="w-full h-full object-contain pixelated"
                         />
                       ) : (
-                        <div className="text-xs text-center text-muted-foreground">{result.name}</div>
+                        <div className="text-xs text-center text-muted-foreground">
+                          {result.name}
+                        </div>
                       )}
                     </div>
                     {result.count && result.count > 1 && (
-                      <div className="absolute bottom-1 right-1 bg-background text-foreground text-xs font-bold px-1.5 py-0.5 rounded shadow-lg border border-border">
+                      <div className="absolute bottom-1 right-1 bg-background text-foreground text-xs font-bold px-1.5 py-0.5 rounded shadow-lg border border-primary/20">
                         {result.count}
                       </div>
                     )}
@@ -361,7 +370,7 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
                     </button>
                     {/* Tooltip */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10 pointer-events-none">
-                      <div className="bg-popover text-popover-foreground text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg border border-border">
+                      <div className="bg-popover text-popover-foreground text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg border border-primary/20">
                         <div className="font-medium">{result.name}</div>
                         <div className="text-muted-foreground">{result.id}</div>
                       </div>
@@ -372,17 +381,17 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
                     value={result.count || 1}
                     onChange={(e) => updateResultCount(index, parseInt(e.target.value) || 1)}
                     min="1"
-                    className="w-16 mt-1 mx-auto block px-2 py-1 bg-secondary border border-border rounded text-xs text-center text-foreground focus:outline-none focus:border-primary"
+                    className="w-16 mt-1 mx-auto block px-2 py-1 bg-secondary border border-primary/20 rounded text-xs text-center text-foreground focus:outline-none focus:border-primary"
                   />
                 </div>
               ))}
               {results.length < 4 && (
                 <div
                   onClick={() => {
-                    setPickingType('result');
+                    setPickingType("result");
                     setShowItemPicker(true);
                   }}
-                  className="relative w-16 h-16 bg-secondary border-2 border-dashed border-border rounded cursor-pointer hover:border-primary transition-colors group mx-auto"
+                  className="relative w-16 h-16 bg-secondary border-2 border-dashed border-primary/20 rounded cursor-pointer hover:border-primary transition-colors group mx-auto"
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
                     <Plus className="w-6 h-6 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
@@ -405,21 +414,21 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
           value={sound}
           onChange={(e) => setSound(e.target.value)}
           placeholder="minecraft:block.wood.break"
-          className="w-full px-3 py-2 bg-secondary border border-border rounded text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
+          className="w-full px-3 py-2 bg-secondary border border-primary/20 rounded text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
         />
         <p className="text-xs text-muted-foreground mt-1">Sound to play when cutting</p>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-primary/20">
         <button
           onClick={() => {
             setIngredient(null);
-            setTool('');
+            setTool("");
             setResults([]);
-            setSound('minecraft:block.wood.break');
+            setSound("minecraft:block.wood.break");
           }}
-          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-border rounded text-sm text-foreground transition-colors"
+          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-primary/20 rounded text-sm text-foreground transition-colors"
         >
           Clear
         </button>
@@ -434,15 +443,15 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
 
       {/* Code Preview */}
       {ingredient && tool && results.length > 0 && (
-        <div className="bg-muted/30 border border-border rounded-lg p-4 mt-6">
+        <div className="bg-muted/30 border border-primary/20 rounded-lg p-4 mt-6">
           <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-            <span className="text-primary">{'</>'}</span>
+            <span className="text-primary">{"</>"}</span>
             Generated Code
           </h3>
-          <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-border overflow-x-auto">
-{`event.recipes.farmersdelight.cutting('${ingredient.id}', [
-${results.map(r => `  '${r.id}'${(r.count ?? 1) > 1 ? ` * ${r.count}` : ''}`).join(',\n')}
-], '${tool}')${sound !== 'minecraft:block.wood.break' ? `.sound('${sound}')` : ''}`}
+          <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-primary/20 overflow-x-auto">
+            {`event.recipes.farmersdelight.cutting('${ingredient.id}', [
+${results.map((r) => `  '${r.id}'${(r.count ?? 1) > 1 ? ` * ${r.count}` : ""}`).join(",\n")}
+], '${tool}')${sound !== "minecraft:block.wood.break" ? `.sound('${sound}')` : ""}`}
           </pre>
         </div>
       )}

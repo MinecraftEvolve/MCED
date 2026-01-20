@@ -9,14 +9,14 @@ export function useKeyboardShortcuts(callbacks?: {
   onOpenInstance?: () => void;
   onCloseInstance?: () => void;
 }) {
-  const { 
-    hasUnsavedChanges, 
-    saveConfigs, 
+  const {
+    hasUnsavedChanges,
+    saveConfigs,
     discardChanges,
     mods,
     selectedMod,
     setSelectedMod,
-    currentInstance
+    currentInstance,
   } = useAppStore();
 
   const { undo, redo, canUndo, canRedo } = useHistoryStore();
@@ -25,11 +25,7 @@ export function useKeyboardShortcuts(callbacks?: {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore shortcuts when typing in inputs
       const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable
-      ) {
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
         // Allow Ctrl+S and Ctrl+Shift+S in inputs
         if ((e.ctrlKey || e.metaKey) && e.key === "s") {
           // Let these pass through
@@ -108,7 +104,7 @@ export function useKeyboardShortcuts(callbacks?: {
       if (e.altKey && e.key === "ArrowLeft") {
         e.preventDefault();
         if (selectedMod && mods.length > 0) {
-          const currentIndex = mods.findIndex(m => m.modId === selectedMod.modId);
+          const currentIndex = mods.findIndex((m) => m.modId === selectedMod.modId);
           if (currentIndex > 0) {
             setSelectedMod(mods[currentIndex - 1]);
           }
@@ -119,7 +115,7 @@ export function useKeyboardShortcuts(callbacks?: {
       if (e.altKey && e.key === "ArrowRight") {
         e.preventDefault();
         if (selectedMod && mods.length > 0) {
-          const currentIndex = mods.findIndex(m => m.modId === selectedMod.modId);
+          const currentIndex = mods.findIndex((m) => m.modId === selectedMod.modId);
           if (currentIndex < mods.length - 1) {
             setSelectedMod(mods[currentIndex + 1]);
           }
@@ -129,7 +125,7 @@ export function useKeyboardShortcuts(callbacks?: {
       // Escape - Clear search or close modals
       if (e.key === "Escape") {
         const searchInput = document.querySelector<HTMLInputElement>(
-          'input[placeholder*="Search"]',
+          'input[placeholder*="Search"]'
         );
         if (searchInput && searchInput.value) {
           searchInput.value = "";
@@ -141,9 +137,9 @@ export function useKeyboardShortcuts(callbacks?: {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
-    hasUnsavedChanges, 
-    saveConfigs, 
-    discardChanges, 
+    hasUnsavedChanges,
+    saveConfigs,
+    discardChanges,
     callbacks,
     mods,
     selectedMod,
@@ -152,6 +148,6 @@ export function useKeyboardShortcuts(callbacks?: {
     canUndo,
     canRedo,
     undo,
-    redo
+    redo,
   ]);
 }

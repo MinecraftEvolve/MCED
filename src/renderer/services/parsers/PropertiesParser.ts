@@ -17,8 +17,7 @@ export class PropertiesParser {
 
       // Collect comments
       if (line.startsWith("#") || line.startsWith("!")) {
-        currentComment +=
-          (currentComment ? "\n" : "") + line.substring(1).trim();
+        currentComment += (currentComment ? "\n" : "") + line.substring(1).trim();
         continue;
       }
 
@@ -60,9 +59,7 @@ export class PropertiesParser {
     const metadata: any = { description: comment };
 
     // Range: X ~ Y or Range: X to Y
-    const rangeMatch = comment.match(
-      /Range:\s*(-?\d+(?:\.\d+)?)\s*(?:~|to)\s*(-?\d+(?:\.\d+)?)/i,
-    );
+    const rangeMatch = comment.match(/Range:\s*(-?\d+(?:\.\d+)?)\s*(?:~|to)\s*(-?\d+(?:\.\d+)?)/i);
     if (rangeMatch) {
       metadata.range = [parseFloat(rangeMatch[1]), parseFloat(rangeMatch[2])];
     }
@@ -84,7 +81,7 @@ export class PropertiesParser {
           .split(/[,\s]+/)
           .map((v) => v.trim())
           .filter((v) => v && v.length > 0 && /^[A-Z][A-Z0-9_]*$/.test(v));
-        
+
         if (values.length > 0) {
           metadata.allowedValues = values;
           break;
@@ -109,10 +106,7 @@ export class PropertiesParser {
 
   private parseValue(str: string): any {
     // Remove quotes if present
-    if (
-      (str.startsWith('"') && str.endsWith('"')) ||
-      (str.startsWith("'") && str.endsWith("'"))
-    ) {
+    if ((str.startsWith('"') && str.endsWith('"')) || (str.startsWith("'") && str.endsWith("'"))) {
       return str.substring(1, str.length - 1);
     }
 

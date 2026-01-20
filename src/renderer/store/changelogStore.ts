@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface ChangeLogEntry {
   id: string;
@@ -17,7 +17,7 @@ export interface ChangeLogEntry {
 interface ChangelogState {
   entries: ChangeLogEntry[];
   currentSessionId: string | null;
-  
+
   // Actions
   logChange: (
     modId: string,
@@ -50,7 +50,7 @@ export const useChangelogStore = create<ChangelogState>()(
         const entry: ChangeLogEntry = {
           id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           timestamp: new Date(),
-          sessionId: get().currentSessionId || 'unknown',
+          sessionId: get().currentSessionId || "unknown",
           modId,
           modName,
           settingKey,
@@ -105,7 +105,7 @@ export const useChangelogStore = create<ChangelogState>()(
       },
     }),
     {
-      name: 'mced-changelog',
+      name: "mced-changelog",
       storage: {
         getItem: (name) => {
           const str = localStorage.getItem(name);

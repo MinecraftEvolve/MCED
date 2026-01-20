@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { ItemSlot } from './ItemSlot';
-import { ItemPicker } from '../ItemPicker/ItemPicker';
+import React, { useState } from "react";
+import { ItemSlot } from "./ItemSlot";
+import { ItemPicker } from "../ItemPicker/ItemPicker";
 
 interface CreateSandpaperPolishingEditorProps {
   instancePath: string;
@@ -8,31 +8,35 @@ interface CreateSandpaperPolishingEditorProps {
   initialRecipe?: any;
 }
 
-const CreateSandpaperPolishingEditor: React.FC<CreateSandpaperPolishingEditorProps> = ({ instancePath, onSave, initialRecipe }) => {
+const CreateSandpaperPolishingEditor: React.FC<CreateSandpaperPolishingEditorProps> = ({
+  instancePath,
+  onSave,
+  initialRecipe,
+}) => {
   const [input, setInput] = useState<string | null>(initialRecipe?.input || null);
   const [output, setOutput] = useState<string | null>(initialRecipe?.output || null);
   const [outputCount, setOutputCount] = useState(initialRecipe?.outputCount || 1);
   const [showItemPicker, setShowItemPicker] = useState(false);
-  const [pickingSlot, setPickingSlot] = useState<'input' | 'output' | null>(null);
+  const [pickingSlot, setPickingSlot] = useState<"input" | "output" | null>(null);
 
   const handleSave = () => {
     if (!input || !output) {
-      alert('Please provide both input and output items');
+      alert("Please provide both input and output items");
       return;
     }
 
     const recipe = {
-      type: 'create:sandpaper_polishing',
+      type: "create:sandpaper_polishing",
       ingredients: [{ item: input }],
-      results: [{ item: output, count: outputCount }]
+      results: [{ item: output, count: outputCount }],
     };
 
     onSave(recipe);
   };
 
   const handleItemSelected = (item: string) => {
-    if (pickingSlot === 'input') setInput(item);
-    else if (pickingSlot === 'output') setOutput(item);
+    if (pickingSlot === "input") setInput(item);
+    else if (pickingSlot === "output") setOutput(item);
     setShowItemPicker(false);
     setPickingSlot(null);
   };
@@ -43,11 +47,11 @@ const CreateSandpaperPolishingEditor: React.FC<CreateSandpaperPolishingEditorPro
         {/* Input */}
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Input Item</h3>
-          <div className="inline-block bg-muted/50 border border-border rounded-lg p-4">
+          <div className="inline-block bg-muted/50 border border-primary/20 rounded-lg p-4">
             <ItemSlot
               item={input}
               onClick={() => {
-                setPickingSlot('input');
+                setPickingSlot("input");
                 setShowItemPicker(true);
               }}
               onClear={() => setInput(null)}
@@ -60,12 +64,12 @@ const CreateSandpaperPolishingEditor: React.FC<CreateSandpaperPolishingEditorPro
         {/* Output */}
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Output Item</h3>
-          <div className="inline-block bg-muted/50 border border-border rounded-lg p-4">
+          <div className="inline-block bg-muted/50 border border-primary/20 rounded-lg p-4">
             <ItemSlot
               item={output}
               count={outputCount}
               onClick={() => {
-                setPickingSlot('output');
+                setPickingSlot("output");
                 setShowItemPicker(true);
               }}
               onCountChange={(val) => setOutputCount(val)}
@@ -78,14 +82,14 @@ const CreateSandpaperPolishingEditor: React.FC<CreateSandpaperPolishingEditorPro
       </div>
 
       {/* Buttons */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-primary/20">
         <button
           onClick={() => {
             setInput(null);
             setOutput(null);
             setOutputCount(1);
           }}
-          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-border rounded text-sm text-foreground transition-colors"
+          className="px-4 py-2 bg-secondary hover:bg-secondary/80 border border-primary/20 rounded text-sm text-foreground transition-colors"
         >
           Clear
         </button>

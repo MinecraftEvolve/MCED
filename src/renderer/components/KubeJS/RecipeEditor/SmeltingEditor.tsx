@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Package, Plus, X, Flame } from 'lucide-react';
-import { ItemPicker } from '../ItemPicker/ItemPicker';
+import React, { useState } from "react";
+import { Package, Plus, X, Flame } from "lucide-react";
+import { ItemPicker } from "../ItemPicker/ItemPicker";
 
 interface Item {
   id: string;
@@ -12,58 +12,58 @@ interface Item {
 interface SmeltingEditorProps {
   instancePath: string;
   onSave: (recipe: any) => void;
-  recipeType?: 'smelting' | 'blasting' | 'smoking' | 'campfire_cooking';
+  recipeType?: "smelting" | "blasting" | "smoking" | "campfire_cooking";
   initialRecipe?: any;
 }
 
 export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
   instancePath,
   onSave,
-  recipeType = 'smelting',
-  initialRecipe
+  recipeType = "smelting",
+  initialRecipe,
 }) => {
   const [input, setInput] = useState<Item | null>(null);
   const [output, setOutput] = useState<Item | null>(null);
   const [experience, setExperience] = useState(initialRecipe?.properties?.experience || 0.1);
   const [cookingTime, setCookingTime] = useState(initialRecipe?.properties?.processingTime || 200);
   const [showItemPicker, setShowItemPicker] = useState(false);
-  const [pickingType, setPickingType] = useState<'input' | 'output' | null>(null);
+  const [pickingType, setPickingType] = useState<"input" | "output" | null>(null);
 
   const typeLabels = {
-    smelting: 'Furnace',
-    blasting: 'Blast Furnace',
-    smoking: 'Smoker',
-    campfire_cooking: 'Campfire'
+    smelting: "Furnace",
+    blasting: "Blast Furnace",
+    smoking: "Smoker",
+    campfire_cooking: "Campfire",
   };
 
   const typeIcons = {
-    smelting: '▲',
-    blasting: '◆',
-    smoking: '~',
-    campfire_cooking: '◊'
+    smelting: "▲",
+    blasting: "◆",
+    smoking: "~",
+    campfire_cooking: "◊",
   };
 
   const defaultCookingTimes = {
     smelting: 200,
     blasting: 100,
     smoking: 100,
-    campfire_cooking: 600
+    campfire_cooking: 600,
   };
 
   const handleInputSlotClick = () => {
-    setPickingType('input');
+    setPickingType("input");
     setShowItemPicker(true);
   };
 
   const handleOutputSlotClick = () => {
-    setPickingType('output');
+    setPickingType("output");
     setShowItemPicker(true);
   };
 
   const handleItemSelected = async (itemId: string) => {
     try {
       const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-      
+
       let item: Item;
       if (result.success && result.data) {
         item = {
@@ -75,29 +75,29 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
       } else {
         item = {
           id: itemId,
-          name: itemId.split(':')[1] || itemId,
-          modId: itemId.split(':')[0] || 'minecraft',
+          name: itemId.split(":")[1] || itemId,
+          modId: itemId.split(":")[0] || "minecraft",
         };
       }
-      
-      if (pickingType === 'output') {
+
+      if (pickingType === "output") {
         setOutput(item);
-      } else if (pickingType === 'input') {
+      } else if (pickingType === "input") {
         setInput(item);
       }
       setShowItemPicker(false);
       setPickingType(null);
     } catch (error) {
-      console.error('Failed to fetch item data:', error);
+      console.error("Failed to fetch item data:", error);
       const item: Item = {
         id: itemId,
-        name: itemId.split(':')[1] || itemId,
-        modId: itemId.split(':')[0] || 'minecraft',
+        name: itemId.split(":")[1] || itemId,
+        modId: itemId.split(":")[0] || "minecraft",
       };
-      
-      if (pickingType === 'output') {
+
+      if (pickingType === "output") {
         setOutput(item);
-      } else if (pickingType === 'input') {
+      } else if (pickingType === "input") {
         setInput(item);
       }
       setShowItemPicker(false);
@@ -107,7 +107,7 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
 
   const handleSave = () => {
     if (!input || !output) {
-      alert('Please provide input and output items');
+      alert("Please provide input and output items");
       return;
     }
 
@@ -116,24 +116,22 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
       ingredient: { item: input.id },
       result: output.id,
       experience,
-      cookingtime: cookingTime
+      cookingtime: cookingTime,
     };
 
     onSave(recipe);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Recipe Type Header */}
       <div className="bg-muted/50 border border-border rounded-lg p-4">
         <div className="flex items-center gap-3">
-          <div className="text-3xl">{typeIcons[recipeType]}</div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground">{typeLabels[recipeType]} Recipe</h3>
-            <p className="text-sm text-muted-foreground">
-              {recipeType === 'campfire_cooking' 
-                ? 'Cooking time in ticks (20 ticks = 1 second)'
-                : 'Smelting time in ticks (200 ticks = 10 seconds for furnace)'}
+            <p className="text-xs text-muted-foreground">
+              {recipeType === "campfire_cooking"
+                ? "Cooking time in ticks (20 ticks = 1 second)"
+                : "Smelting time in ticks (200 ticks = 10 seconds for furnace)"}
             </p>
           </div>
         </div>
@@ -153,7 +151,11 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
                   <div className="absolute inset-0 flex items-center justify-center p-2">
                     {input.texture ? (
                       <img
-                        src={input.texture.startsWith('data:') ? input.texture : `data:image/png;base64,${input.texture}`}
+                        src={
+                          input.texture.startsWith("data:")
+                            ? input.texture
+                            : `data:image/png;base64,${input.texture}`
+                        }
                         alt={input.name}
                         className="w-full h-full object-contain pixelated"
                       />
@@ -209,7 +211,11 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
                   <div className="absolute inset-0 flex items-center justify-center p-2">
                     {output.texture ? (
                       <img
-                        src={output.texture.startsWith('data:') ? output.texture : `data:image/png;base64,${output.texture}`}
+                        src={
+                          output.texture.startsWith("data:")
+                            ? output.texture
+                            : `data:image/png;base64,${output.texture}`
+                        }
                         alt={output.name}
                         className="w-full h-full object-contain pixelated"
                       />
@@ -268,7 +274,9 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
             min="1"
             max="6000"
             value={cookingTime}
-            onChange={(e) => setCookingTime(parseInt(e.target.value) || defaultCookingTimes[recipeType])}
+            onChange={(e) =>
+              setCookingTime(parseInt(e.target.value) || defaultCookingTimes[recipeType])
+            }
             className="w-full px-3 py-2 bg-secondary border border-border rounded text-sm text-foreground focus:outline-none focus:border-primary"
           />
         </div>
@@ -278,11 +286,11 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
       {input && output && (
         <div className="bg-muted/30 border border-border rounded-lg p-4">
           <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-            <span className="text-primary">{'</>'}</span>
+            <span className="text-primary">{"</>"}</span>
             Generated Code
           </h3>
           <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-border overflow-x-auto">
-{`event.smelting('${output.id}', '${input.id}')${experience !== 0.1 ? `.xp(${experience})` : ''}${cookingTime !== 200 ? `.cookingTime(${cookingTime})` : ''}`}
+            {`event.smelting('${output.id}', '${input.id}')${experience !== 0.1 ? `.xp(${experience})` : ""}${cookingTime !== 200 ? `.cookingTime(${cookingTime})` : ""}`}
           </pre>
         </div>
       )}
@@ -318,7 +326,7 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
             setShowItemPicker(false);
             setPickingType(null);
           }}
-          title={pickingType === 'output' ? 'Select Output Item' : 'Select Input Item'}
+          title={pickingType === "output" ? "Select Output Item" : "Select Input Item"}
         />
       )}
     </div>

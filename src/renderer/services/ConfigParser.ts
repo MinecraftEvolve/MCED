@@ -4,11 +4,7 @@ import { JsonParser } from "./parsers/JsonParser";
 import { YamlParser } from "./parsers/YamlParser";
 import { PropertiesParser } from "./parsers/PropertiesParser";
 import { CfgParser } from "./parsers/CfgParser";
-import {
-  ConfigSection,
-  ConfigContent,
-  ConfigSectionObject,
-} from "@/types/config.types";
+import { ConfigSection, ConfigContent, ConfigSectionObject } from "@/types/config.types";
 
 export class ConfigParser {
   private tomlParser = new TomlParser();

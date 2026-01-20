@@ -46,12 +46,12 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
 
   // Load recent searches from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('mced-recent-searches');
+    const saved = localStorage.getItem("mced-recent-searches");
     if (saved) {
       try {
         setRecentSearches(JSON.parse(saved));
       } catch (e) {
-        console.error('Failed to load recent searches:', e);
+        console.error("Failed to load recent searches:", e);
       }
     }
   }, []);
@@ -111,24 +111,19 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
     }
   };
 
-  const exampleQueries = [
-    "settings about performance",
-    "mod:create",
-    "type:boolean",
-    "value:true",
-  ];
+  const exampleQueries = ["settings about performance", "mod:create", "type:boolean", "value:true"];
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center pt-20"
       onClick={onClose}
     >
-      <div 
-        className="w-full max-w-2xl bg-background border border-border rounded-lg shadow-2xl"
+      <div
+        className="w-full max-w-2xl bg-background border border-primary/20 rounded-lg shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input */}
-        <div className="p-4 border-b border-border">
+        <div className="p-4 border-b border-primary/20">
           <div className="relative">
             <input
               ref={inputRef}
@@ -137,7 +132,7 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search all configs... (try 'settings about performance')"
-              className="w-full px-4 py-3 pl-12 bg-secondary border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-lg"
+              className="w-full px-4 py-3 pl-12 bg-secondary border border-primary/20 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-lg"
             />
             <svg
               className="absolute left-4 top-3.5 h-6 w-6 text-muted-foreground"
@@ -208,9 +203,7 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium truncate">
-                        {result.item.setting.key}
-                      </h4>
+                      <h4 className="font-medium truncate">{result.item.setting.key}</h4>
                       <p className="text-sm text-muted-foreground mt-1">
                         {result.item.modName} • {result.item.configFile}
                       </p>
@@ -235,15 +228,13 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
           ) : query && !isSearching ? (
             <div className="p-8 text-center text-muted-foreground">
               <p>No results found for "{query}"</p>
-              <p className="text-sm mt-2">
-                Try different keywords or check the examples above
-              </p>
+              <p className="text-sm mt-2">Try different keywords or check the examples above</p>
             </div>
           ) : null}
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+        <div className="p-3 border-t border-primary/20 flex items-center justify-between text-xs text-muted-foreground">
           <span>
             {results.length > 0 && `${results.length} results`}
             {smartSearchService.getIndexedCount() > 0 &&

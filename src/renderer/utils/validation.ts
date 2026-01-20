@@ -8,7 +8,7 @@ export function validateConfigValue(
   type: string,
   min?: number,
   max?: number,
-  pattern?: string,
+  pattern?: string
 ): ValidationResult {
   // Type validation
   switch (type) {

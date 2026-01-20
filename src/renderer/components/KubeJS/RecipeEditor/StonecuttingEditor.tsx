@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Package, Plus, X } from 'lucide-react';
-import { ItemPicker } from '../ItemPicker/ItemPicker';
+import React, { useState } from "react";
+import { Package, Plus, X } from "lucide-react";
+import { ItemPicker } from "../ItemPicker/ItemPicker";
 
 interface Item {
   id: string;
@@ -19,27 +19,27 @@ interface StonecuttingEditorProps {
 export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
   instancePath,
   onSave,
-  initialRecipe
+  initialRecipe,
 }) => {
   const [input, setInput] = useState<Item | null>(null);
   const [output, setOutput] = useState<Item | null>(null);
   const [showItemPicker, setShowItemPicker] = useState(false);
-  const [pickingType, setPickingType] = useState<'input' | 'output' | null>(null);
+  const [pickingType, setPickingType] = useState<"input" | "output" | null>(null);
 
   const handleInputSlotClick = () => {
-    setPickingType('input');
+    setPickingType("input");
     setShowItemPicker(true);
   };
 
   const handleOutputSlotClick = () => {
-    setPickingType('output');
+    setPickingType("output");
     setShowItemPicker(true);
   };
 
   const handleItemSelected = async (itemId: string) => {
     try {
       const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-      
+
       let item: Item;
       if (result.success && result.data) {
         item = {
@@ -47,40 +47,40 @@ export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
           name: result.data.name,
           modId: result.data.modId,
           texture: result.data.texture,
-          count: 1
+          count: 1,
         };
       } else {
         item = {
           id: itemId,
-          name: itemId.split(':')[1] || itemId,
-          modId: itemId.split(':')[0] || 'minecraft',
-          count: 1
+          name: itemId.split(":")[1] || itemId,
+          modId: itemId.split(":")[0] || "minecraft",
+          count: 1,
         };
       }
-      
-      if (pickingType === 'output') {
+
+      if (pickingType === "output") {
         setOutput(item);
-      } else if (pickingType === 'input') {
+      } else if (pickingType === "input") {
         setInput(item);
       }
       setShowItemPicker(false);
       setPickingType(null);
     } catch (error) {
-      console.error('Failed to fetch item data:', error);
+      console.error("Failed to fetch item data:", error);
     }
   };
 
   const handleSave = () => {
     if (!input || !output) {
-      alert('Please provide input item, and output item');
+      alert("Please provide input item, and output item");
       return;
     }
 
     const recipe = {
-      type: 'minecraft:stonecutting',
+      type: "minecraft:stonecutting",
       ingredient: { item: input.id },
       result: output.id,
-      count: output.count || 1
+      count: output.count || 1,
     };
 
     onSave(recipe);
@@ -93,9 +93,7 @@ export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
         <div className="flex items-center gap-3">
           <div>
             <h3 className="text-lg font-semibold text-foreground">Stonecutter Recipe</h3>
-            <p className="text-sm text-muted-foreground">
-              Cut stone blocks into different shapes
-            </p>
+            <p className="text-sm text-muted-foreground">Cut stone blocks into different shapes</p>
           </div>
         </div>
       </div>
@@ -114,7 +112,11 @@ export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
                   <div className="absolute inset-0 flex items-center justify-center p-2">
                     {input.texture ? (
                       <img
-                        src={input.texture.startsWith('data:') ? input.texture : `data:image/png;base64,${input.texture}`}
+                        src={
+                          input.texture.startsWith("data:")
+                            ? input.texture
+                            : `data:image/png;base64,${input.texture}`
+                        }
                         alt={input.name}
                         className="w-full h-full object-contain pixelated"
                       />
@@ -165,7 +167,11 @@ export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
                   <div className="absolute inset-0 flex items-center justify-center p-2">
                     {output.texture ? (
                       <img
-                        src={output.texture.startsWith('data:') ? output.texture : `data:image/png;base64,${output.texture}`}
+                        src={
+                          output.texture.startsWith("data:")
+                            ? output.texture
+                            : `data:image/png;base64,${output.texture}`
+                        }
                         alt={output.name}
                         className="w-full h-full object-contain pixelated"
                       />
@@ -174,7 +180,7 @@ export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
                     )}
                   </div>
                   {output.count && output.count > 1 && (
-                    <div className="absolute bottom-1 right-1 bg-gray-900/90 text-white text-xs px-1 rounded">
+                    <div className="absolute bottom-1 right-1 bg-background/90 text-white text-xs px-1 rounded">
                       {output.count}
                     </div>
                   )}
@@ -241,11 +247,11 @@ export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
       {input && output && (
         <div className="bg-muted/30 border border-border rounded-lg p-4">
           <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-            <span className="text-primary">{'</>'}</span>
+            <span className="text-primary">{"</>"}</span>
             Generated Code
           </h3>
           <pre className="text-xs font-mono text-foreground bg-background/50 p-3 rounded border border-border overflow-x-auto">
-{`event.stonecutting('${output.id}'${output.count && output.count > 1 ? ` * ${output.count}` : ''}, '${input.id}')`}
+            {`event.stonecutting('${output.id}'${output.count && output.count > 1 ? ` * ${output.count}` : ""}, '${input.id}')`}
           </pre>
         </div>
       )}
@@ -259,7 +265,7 @@ export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
             setShowItemPicker(false);
             setPickingType(null);
           }}
-          title={pickingType === 'output' ? 'Select Output Item' : 'Select Input Item'}
+          title={pickingType === "output" ? "Select Output Item" : "Select Input Item"}
         />
       )}
     </div>

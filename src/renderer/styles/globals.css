@@ -3,6 +3,41 @@
 @tailwind utilities;
 
 @layer base {
+  *,
+  *::before,
+  *::after {
+    border-width: 0;
+    border-style: none;
+    border-color: transparent;
+    outline: none;
+    box-sizing: border-box;
+  }
+  
+  button,
+  input,
+  select,
+  textarea,
+  div,
+  aside,
+  section,
+  nav,
+  main,
+  header,
+  footer {
+    outline: none !important;
+    border: none !important;
+  }
+  
+  button:focus,
+  input:focus,
+  select:focus,
+  textarea:focus,
+  div:focus,
+  aside:focus {
+    outline: none !important;
+    border: none !important;
+  }
+  
   :root {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
@@ -23,7 +58,7 @@
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 271 81% 56%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Custom Properties for Settings */
     --bg-primary: #0d0d0d;
@@ -71,15 +106,15 @@
     --color-primary: #9333ea;
   }
   .dark {
-    --background: 240 10% 3.9%;
+    --background: 240 10% 5%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
+    --card: 240 10% 8%;
     --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
+    --popover: 240 10% 8%;
     --popover-foreground: 0 0% 98%;
     --primary: 271 81% 56%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 240 3.7% 18%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
@@ -87,7 +122,7 @@
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
+    --border: 271 30% 18%;
     --input: 240 3.7% 15.9%;
     --ring: 271 81% 56%;
     --chart-1: 220 70% 50%;
@@ -107,9 +142,6 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings:
@@ -163,11 +195,60 @@
   animation: fadeIn 0.3s ease-out;
 }
 
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(147, 51, 234, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 1000px 100%;
+}
+
 /* Glassmorphism effect */
 .glass {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Modern card effect */
+.card-modern {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+}
+
+.card-modern:hover {
+  border-color: hsl(var(--primary) / 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px hsl(var(--primary) / 0.2);
 }
 
 /* Selection */

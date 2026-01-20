@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, Tag } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Plus, Trash2, Save, Tag } from "lucide-react";
 
 interface TagData {
   id: string;
-  type: 'items' | 'blocks' | 'fluids' | 'entity_types';
+  type: "items" | "blocks" | "fluids" | "entity_types";
   values: string[];
   replace?: boolean;
 }
@@ -15,9 +15,9 @@ interface TagEditorProps {
 export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
   const [tags, setTags] = useState<TagData[]>([]);
   const [selectedTag, setSelectedTag] = useState<TagData | null>(null);
-  const [newTagId, setNewTagId] = useState('');
-  const [newTagType, setNewTagType] = useState<TagData['type']>('items');
-  const [newValue, setNewValue] = useState('');
+  const [newTagId, setNewTagId] = useState("");
+  const [newTagType, setNewTagType] = useState<TagData["type"]>("items");
+  const [newValue, setNewValue] = useState("");
 
   useEffect(() => {
     loadTags();
@@ -29,22 +29,22 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
       if (result.success && result.data) {
         const loadedTags = result.data.map((tag: any) => ({
           id: tag.id,
-          type: tag.type as TagData['type'],
+          type: tag.type as TagData["type"],
           values: tag.values,
-          replace: false
+          replace: false,
         }));
         setTags(loadedTags);
       }
     } catch (error) {
-      console.error('Error loading tags:', error);
+      console.error("Error loading tags:", error);
     }
   };
 
-  const tagTypes: Array<{ value: TagData['type']; label: string }> = [
-    { value: 'items', label: 'Items' },
-    { value: 'blocks', label: 'Blocks' },
-    { value: 'fluids', label: 'Fluids' },
-    { value: 'entity_types', label: 'Entity Types' },
+  const tagTypes: Array<{ value: TagData["type"]; label: string }> = [
+    { value: "items", label: "Items" },
+    { value: "blocks", label: "Blocks" },
+    { value: "fluids", label: "Fluids" },
+    { value: "entity_types", label: "Entity Types" },
   ];
 
   const createNewTag = () => {
@@ -59,7 +59,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
 
     setTags([...tags, tag]);
     setSelectedTag(tag);
-    setNewTagId('');
+    setNewTagId("");
   };
 
   const addValue = () => {
@@ -70,9 +70,9 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
       values: [...selectedTag.values, newValue],
     };
 
-    setTags(tags.map(t => (t.id === selectedTag.id ? updatedTag : t)));
+    setTags(tags.map((t) => (t.id === selectedTag.id ? updatedTag : t)));
     setSelectedTag(updatedTag);
-    setNewValue('');
+    setNewValue("");
   };
 
   const removeValue = (value: string) => {
@@ -80,15 +80,15 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
 
     const updatedTag = {
       ...selectedTag,
-      values: selectedTag.values.filter(v => v !== value),
+      values: selectedTag.values.filter((v) => v !== value),
     };
 
-    setTags(tags.map(t => (t.id === selectedTag.id ? updatedTag : t)));
+    setTags(tags.map((t) => (t.id === selectedTag.id ? updatedTag : t)));
     setSelectedTag(updatedTag);
   };
 
   const deleteTag = (tagId: string) => {
-    setTags(tags.filter(t => t.id !== tagId));
+    setTags(tags.filter((t) => t.id !== tagId));
     if (selectedTag?.id === tagId) {
       setSelectedTag(null);
     }
@@ -102,39 +102,39 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
         id: selectedTag.id,
         type: selectedTag.type,
         values: selectedTag.values,
-        replace: selectedTag.replace
+        replace: selectedTag.replace,
       });
 
       if (result.success) {
-        console.log('Tag saved successfully to:', result.data);
+        console.log("Tag saved successfully to:", result.data);
         // Optionally show a success notification
       } else {
-        console.error('Failed to save tag:', result.error);
+        console.error("Failed to save tag:", result.error);
       }
     } catch (error) {
-      console.error('Error saving tag:', error);
+      console.error("Error saving tag:", error);
     }
   };
 
   return (
     <div className="flex h-full">
       {/* Tags List */}
-      <div className="w-64 border-r border-border bg-secondary/20 flex flex-col">
-        <div className="p-3 border-b border-border">
+      <div className="w-64 border-r border-primary/20 bg-secondary/20 flex flex-col">
+        <div className="p-3 border-b border-primary/20">
           <div className="space-y-2">
             <input
               type="text"
               value={newTagId}
-              onChange={e => setNewTagId(e.target.value)}
+              onChange={(e) => setNewTagId(e.target.value)}
               placeholder="Tag ID (e.g., forge:ores/copper)"
-              className="w-full px-3 py-2 bg-background border border-border rounded text-sm text-foreground"
+              className="w-full px-3 py-2 bg-background border border-primary/20 rounded text-sm text-foreground"
             />
             <select
               value={newTagType}
-              onChange={e => setNewTagType(e.target.value as TagData['type'])}
-              className="w-full px-3 py-2 bg-background border border-border rounded text-sm text-foreground"
+              onChange={(e) => setNewTagType(e.target.value as TagData["type"])}
+              className="w-full px-3 py-2 bg-background border border-primary/20 rounded text-sm text-foreground"
             >
-              {tagTypes.map(type => (
+              {tagTypes.map((type) => (
                 <option key={type.value} value={type.value}>
                   {type.label}
                 </option>
@@ -151,13 +151,13 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
         </div>
 
         <div className="flex-1 overflow-auto p-2">
-          {tags.map(tag => (
+          {tags.map((tag) => (
             <div
               key={tag.id}
               className={`p-3 mb-2 rounded cursor-pointer transition-colors flex items-start justify-between gap-2 ${
                 selectedTag?.id === tag.id
-                  ? 'bg-primary/20 border border-primary'
-                  : 'bg-secondary/40 hover:bg-secondary/60 border border-border'
+                  ? "bg-primary/20 border border-primary"
+                  : "bg-secondary/40 hover:bg-secondary/60 border border-primary/20"
               }`}
               onClick={() => setSelectedTag(tag)}
             >
@@ -169,7 +169,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
                 <span className="text-xs text-muted-foreground">{tag.type}</span>
               </div>
               <button
-                onClick={e => {
+                onClick={(e) => {
                   e.stopPropagation();
                   deleteTag(tag.id);
                 }}
@@ -186,7 +186,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
       <div className="flex-1 flex flex-col bg-background">
         {selectedTag ? (
           <>
-            <div className="p-4 border-b border-border bg-secondary/20">
+            <div className="p-4 border-b border-primary/20 bg-secondary/20">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">{selectedTag.id}</h3>
@@ -205,12 +205,12 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
                 <input
                   type="checkbox"
                   checked={selectedTag.replace}
-                  onChange={e => {
+                  onChange={(e) => {
                     const updated = { ...selectedTag, replace: e.target.checked };
-                    setTags(tags.map(t => (t.id === selectedTag.id ? updated : t)));
+                    setTags(tags.map((t) => (t.id === selectedTag.id ? updated : t)));
                     setSelectedTag(updated);
                   }}
-                  className="rounded border-border"
+                  className="rounded border-primary/20"
                 />
                 <label className="text-sm text-foreground">Replace existing tag values</label>
               </div>
@@ -222,10 +222,10 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
                   <input
                     type="text"
                     value={newValue}
-                    onChange={e => setNewValue(e.target.value)}
-                    onKeyPress={e => e.key === 'Enter' && addValue()}
+                    onChange={(e) => setNewValue(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && addValue()}
                     placeholder="Item/Block ID (e.g., minecraft:copper_ore)"
-                    className="flex-1 px-3 py-2 bg-background border border-border rounded text-sm text-foreground"
+                    className="flex-1 px-3 py-2 bg-background border border-primary/20 rounded text-sm text-foreground"
                   />
                   <button
                     onClick={addValue}
@@ -244,7 +244,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
                 {selectedTag.values.map((value, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 bg-secondary/40 border border-border rounded"
+                    className="flex items-center justify-between p-3 bg-secondary/40 border border-primary/20 rounded"
                   >
                     <code className="text-sm text-foreground">{value}</code>
                     <button

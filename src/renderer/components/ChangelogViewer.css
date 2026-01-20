@@ -182,7 +182,7 @@
   font-size: 13px;
   color: #9333ea;
   margin-bottom: 8px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 .changelog-change {
@@ -190,7 +190,7 @@
   align-items: center;
   gap: 12px;
   font-size: 13px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 .changelog-old {

@@ -9,29 +9,14 @@ export interface ConfigFile {
   configType?: "client" | "server" | "server-default";
 }
 
-export type ConfigValue =
-  | string
-  | number
-  | boolean
-  | string[]
-  | number[]
-  | unknown;
+export type ConfigValue = string | number | boolean | string[] | number[] | unknown;
 
 export interface ConfigSetting {
   key: string;
   value: ConfigValue;
   default?: ConfigValue;
   defaultValue?: ConfigValue;
-  type:
-    | "string"
-    | "integer"
-    | "float"
-    | "number"
-    | "boolean"
-    | "array"
-    | "enum"
-    | "list"
-    | "range";
+  type: "string" | "integer" | "float" | "number" | "boolean" | "array" | "enum" | "list" | "range";
   description?: string;
   comment?: string;
   section?: string;

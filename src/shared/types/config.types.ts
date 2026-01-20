@@ -10,14 +10,7 @@ export interface ConfigFile {
   hasChanges?: boolean;
 }
 
-export type ConfigFormat =
-  | "toml"
-  | "json"
-  | "json5"
-  | "yaml"
-  | "cfg"
-  | "properties"
-  | "txt";
+export type ConfigFormat = "toml" | "json" | "json5" | "yaml" | "cfg" | "properties" | "txt";
 
 export interface ConfigContent {
   [key: string]: ConfigValue | ConfigSection;
@@ -27,12 +20,7 @@ export interface ConfigSection {
   [key: string]: ConfigValue | ConfigSection;
 }
 
-export type ConfigValue =
-  | string
-  | number
-  | boolean
-  | Array<string | number | boolean>
-  | null;
+export type ConfigValue = string | number | boolean | Array<string | number | boolean> | null;
 
 export interface ConfigSetting {
   key: string;

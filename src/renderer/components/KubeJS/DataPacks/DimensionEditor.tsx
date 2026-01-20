@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Save, Layers } from 'lucide-react';
+import React, { useState } from "react";
+import { Save, Layers } from "lucide-react";
 
 interface DimensionEditorProps {
   instancePath: string;
@@ -7,9 +7,9 @@ interface DimensionEditorProps {
 
 export const DimensionEditor: React.FC<DimensionEditorProps> = ({ instancePath }) => {
   const [dimConfig, setDimConfig] = useState({
-    id: '',
-    generator: 'minecraft:noise',
-    effects: 'minecraft:overworld',
+    id: "",
+    generator: "minecraft:noise",
+    effects: "minecraft:overworld",
     hasRain: true,
     hasSkylight: true,
     hasCeiling: false,
@@ -35,10 +35,10 @@ StartupEvents.registry('dimension', event => {
     try {
       const scriptPath = `startup/dimension_${dimConfig.id}.js`;
       await window.api.kubeJSWriteScript(scriptPath, code);
-      alert('Dimension saved successfully!');
+      alert("Dimension saved successfully!");
     } catch (error) {
-      console.error('Failed to save dimension:', error);
-      alert('Failed to save dimension');
+      console.error("Failed to save dimension:", error);
+      alert("Failed to save dimension");
     }
   };
 
@@ -58,9 +58,7 @@ StartupEvents.registry('dimension', event => {
             Save
           </button>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Create a custom dimension for your modpack
-        </p>
+        <p className="text-sm text-muted-foreground">Create a custom dimension for your modpack</p>
       </div>
 
       <div className="space-y-4 bg-secondary/20 border border-border rounded-lg p-6">
@@ -69,7 +67,7 @@ StartupEvents.registry('dimension', event => {
           <input
             type="text"
             value={dimConfig.id}
-            onChange={e => setDimConfig({ ...dimConfig, id: e.target.value })}
+            onChange={(e) => setDimConfig({ ...dimConfig, id: e.target.value })}
             placeholder="my_dimension"
             className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
           />
@@ -79,7 +77,7 @@ StartupEvents.registry('dimension', event => {
           <label className="block text-sm font-medium text-foreground mb-2">Generator Type</label>
           <select
             value={dimConfig.generator}
-            onChange={e => setDimConfig({ ...dimConfig, generator: e.target.value })}
+            onChange={(e) => setDimConfig({ ...dimConfig, generator: e.target.value })}
             className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
           >
             <option value="minecraft:noise">Noise (Normal World)</option>
@@ -92,7 +90,7 @@ StartupEvents.registry('dimension', event => {
           <label className="block text-sm font-medium text-foreground mb-2">Visual Effects</label>
           <select
             value={dimConfig.effects}
-            onChange={e => setDimConfig({ ...dimConfig, effects: e.target.value })}
+            onChange={(e) => setDimConfig({ ...dimConfig, effects: e.target.value })}
             className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
           >
             <option value="minecraft:overworld">Overworld</option>
@@ -102,35 +100,37 @@ StartupEvents.registry('dimension', event => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Ambient Light (0-1)</label>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Ambient Light (0-1)
+          </label>
           <input
             type="number"
             step="0.1"
             min="0"
             max="1"
             value={dimConfig.ambientLight}
-            onChange={e => setDimConfig({ ...dimConfig, ambientLight: parseFloat(e.target.value) })}
+            onChange={(e) =>
+              setDimConfig({ ...dimConfig, ambientLight: parseFloat(e.target.value) })
+            }
             className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
           />
         </div>
 
         <div className="space-y-3 pt-4 border-t border-border">
           <h4 className="text-sm font-semibold text-foreground">Features</h4>
-          
+
           {[
-            { key: 'hasSkylight', label: 'Has Skylight' },
-            { key: 'hasRain', label: 'Has Rain/Snow' },
-            { key: 'hasCeiling', label: 'Has Bedrock Ceiling' },
-            { key: 'ultraWarm', label: 'Ultra Warm (like Nether)' },
-            { key: 'natural', label: 'Natural (mob spawning, etc)' },
+            { key: "hasSkylight", label: "Has Skylight" },
+            { key: "hasRain", label: "Has Rain/Snow" },
+            { key: "hasCeiling", label: "Has Bedrock Ceiling" },
+            { key: "ultraWarm", label: "Ultra Warm (like Nether)" },
+            { key: "natural", label: "Natural (mob spawning, etc)" },
           ].map(({ key, label }) => (
             <div key={key} className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={dimConfig[key as keyof typeof dimConfig] as boolean}
-                onChange={e =>
-                  setDimConfig({ ...dimConfig, [key]: e.target.checked })
-                }
+                onChange={(e) => setDimConfig({ ...dimConfig, [key]: e.target.checked })}
                 className="rounded border-border"
               />
               <label className="text-sm text-foreground">{label}</label>
@@ -143,7 +143,7 @@ StartupEvents.registry('dimension', event => {
         <h4 className="text-sm font-semibold text-foreground mb-2">Preview</h4>
         <pre className="text-xs text-muted-foreground overflow-auto">
           {`StartupEvents.registry('dimension', event => {
-  event.create('kubejs:${dimConfig.id || '<id>'}')
+  event.create('kubejs:${dimConfig.id || "<id>"}')
     .generator('${dimConfig.generator}')
     .effects('${dimConfig.effects}')
     .hasSkyLight(${dimConfig.hasSkylight})

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface TagDisplayProps {
   tag: string;
@@ -8,7 +8,12 @@ interface TagDisplayProps {
   onClick?: () => void;
 }
 
-export const TagDisplay: React.FC<TagDisplayProps> = ({ tag, instancePath, size = 48, onClick }) => {
+export const TagDisplay: React.FC<TagDisplayProps> = ({
+  tag,
+  instancePath,
+  size = 48,
+  onClick,
+}) => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -37,7 +42,7 @@ export const TagDisplay: React.FC<TagDisplayProps> = ({ tag, instancePath, size 
         setItems([]);
       }
     } catch (error) {
-      console.error('Failed to load tag items:', error);
+      console.error("Failed to load tag items:", error);
       setItems([]);
     } finally {
       setLoading(false);
@@ -78,10 +83,13 @@ export const TagDisplay: React.FC<TagDisplayProps> = ({ tag, instancePath, size 
           src={`data:image/png;base64,${items[currentIndex].texture}`}
           alt={items[currentIndex].id}
           className="w-full h-full pixelated"
-          style={{ imageRendering: 'pixelated' }}
+          style={{ imageRendering: "pixelated" }}
         />
-        <div className="absolute top-0 right-0 w-3 h-3 bg-blue-500 rounded-full border border-background" title="Tag" />
-        
+        <div
+          className="absolute top-0 right-0 w-3 h-3 bg-blue-500 rounded-full border border-background"
+          title="Tag"
+        />
+
         {items.length > 1 && (
           <div className="absolute inset-0 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
             <button
@@ -111,7 +119,7 @@ export const TagDisplay: React.FC<TagDisplayProps> = ({ tag, instancePath, size 
       title={tag}
     >
       <span className="text-xs font-mono text-blue-400 p-1 text-center break-all">
-        #{tag.split(':')[1] || tag}
+        #{tag.split(":")[1] || tag}
       </span>
     </div>
   );
