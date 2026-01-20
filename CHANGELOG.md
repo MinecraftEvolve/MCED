@@ -5,6 +5,17 @@ All notable changes to MCED will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-01-20
+
+### Fixed
+
+- **GitHub Actions Build**: Fixed build failure on Windows, macOS, and Linux by adding Python 3.11 setup for better-sqlite3 native module compilation
+- Resolved `ModuleNotFoundError: No module named 'distutils'` error in GitHub Actions workflow
+
+### Notes
+
+- **KubeJS Editor**: Currently experimental - may have bugs or incomplete functionality
+
 ## [1.2.0] - 2026-01-20
 
 ### Added
