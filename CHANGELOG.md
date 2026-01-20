@@ -5,6 +5,44 @@ All notable changes to MCED will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-20
+
+### Added
+
+- **Instance Menu** - New dropdown menu in header for quick access to open/close instance actions
+- **Modern UI Design** - Complete redesign with rounded corners, smooth animations, and modern styling
+- **Purple Theme** - Consistent purple accent color throughout the app (with green for Minecraft versions)
+- **Enhanced Notifications** - Improved toast notifications with gradients and better visibility
+- **Better Hover Effects** - Clear visual feedback on all interactive elements
+- **Animated Background Elements** - Subtle pulsing gradients on landing page
+- **Glassmorphism Effects** - Modern card effects with backdrop blur
+
+### Improved
+
+- **Landing Page**: Cleaner, more compact design with better sized buttons and improved recent instances cards
+- **Header**: Better organized with instance dropdown menu, purple color scheme, removed redundant buttons
+- **ModCard**: Better borders, shadows, and hover effects with rounded-2xl corners
+- **ModListItem**: Modern card design with rounded corners and improved selected state
+- **ModSearch**: Enhanced input styling with better focus states
+- **StatusBar**: Enhanced dialog design with improved animations
+- **Loading Overlay**: Better backdrop and animations
+- **Sidebar**: Gradient background and improved spacing
+- **Buttons**: All buttons now have consistent hover effects and scale animations
+- **KubeJS Button**: Changed from blue to purple to match theme
+
+### Changed
+
+- **Color Palette**: Unified purple and black theme throughout (green kept for Minecraft versions)
+- **Border Radius**: Increased globally from 0.5rem to 0.75rem
+- **Animations**: Added fadeIn, slideInRight, and improved transitions
+- **Shadows**: Enhanced with colored glows matching element colors
+
+### Fixed
+
+- Fixed instance name not displaying properly above version badges in header
+- Fixed text gradient visibility issues on landing page
+- Fixed instance menu positioning to open next to the button
+
 ## [1.1.1] - 2026-01-13
 
 ### Added
