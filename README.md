@@ -39,10 +39,15 @@ Grab the latest version for your OS:
 ### How to use
 
 1. Launch MCED and click "Open Instance"
-2. Navigate to your Minecraft instance folder
-3. Pick a mod from the sidebar
-4. Edit settings with actual UI controls instead of typing strings into a text file like a caveman
-5. Hit save - it'll backup your old config automatically, just in case
+<img src="assets/Screenshot-Start-Screen.png" alt="MCED Start Screen"  align="center"/> 
+3. Navigate to your Minecraft instance folder
+<img src="assets/Screenshot-Instance-Loading.png" alt="MCED Instance Loading"  align="center"/> 
+<img src="assets/Screenshot-Instance Opened.png" alt="MCED Instance Opened"  align="center"/>
+5. Pick a mod from the sidebar
+<img src="assets/Screenshot-Mod-Info.png" alt="MCED Mod Opened"  align="center"/>
+7. Edit settings with actual UI controls instead of typing strings into a text file like a caveman
+<img src="assets/Screenshot-Value-Editor.png" alt="MCED Value Editor"  align="center"/>
+9. Hit save - it'll backup your old config automatically, just in case
 
 ### Building from source
 
