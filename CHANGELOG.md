@@ -5,6 +5,36 @@ All notable changes to MCED will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-01-21
+
+### Fixed
+
+- **Boolean Toggle Visibility**: Fixed boolean toggles not being visible in dark mode
+  - Added bright purple border for better contrast
+  - White knob on both ON and OFF states with proper shadows
+  - Improved background colors for visibility in both themes
+- **Boolean Type Detection**: Fixed `TRUE`/`FALSE` string values being incorrectly classified as enum types instead of boolean
+- **Theme Initialization**: Removed forced dark mode on app startup that was overriding user preferences
+- **Light Mode Support**: Fixed light mode being completely dark due to incorrect CSS variable defaults
+
+### Added
+
+- **Comprehensive Light Mode Styling**: Complete light mode support across entire application
+  - Landing page with light blue gradients and appropriate text colors
+  - All UI components (modals, cards, badges) properly styled for light theme
+  - Color badges now use darker variants in light mode for readability
+  - Settings, changelog, stats, and backup dialogs support both themes
+
+### Improved
+
+- **Toggle Switch Design**: Enhanced visibility with purple borders and better contrast
+- **Color Badge Readability**: 
+  - Orange (CurseForge): `text-orange-600` (light) / `text-orange-400` (dark)
+  - Green (Minecraft version): `text-green-600` (light) / `text-green-400` (dark)
+  - Blue (Loader): `text-blue-600` (light) / `text-blue-400` (dark)
+  - Purple (Forge/Fabric): `text-purple-600` (light) / `text-purple-400` (dark)
+- **CSS Variables**: Root variables now default to light mode, with `.dark` class for dark mode
+
 ## [1.2.1] - 2026-01-20
 
 ### Fixed
