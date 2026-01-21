@@ -335,8 +335,6 @@ function App() {
   });
 
   useEffect(() => {
-    document.documentElement.classList.add("dark");
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();

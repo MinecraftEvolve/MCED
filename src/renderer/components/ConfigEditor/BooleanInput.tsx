@@ -21,14 +21,16 @@ export function BooleanInput({ setting, onChange }: BooleanInputProps) {
       <button
         onClick={() => onChange(!value)}
         className={`
-          relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-          ${value ? "bg-primary" : "bg-secondary"}
+          relative inline-flex h-6 w-11 items-center rounded-full transition-colors border-2
+          ${value 
+            ? "bg-purple-600 border-purple-500 shadow-lg shadow-purple-500/50" 
+            : "bg-gray-300 dark:bg-gray-700 border-purple-500"}
         `}
       >
         <span
           className={`
-            inline-block h-4 w-4 transform rounded-full bg-background transition-transform
-            ${value ? "translate-x-6" : "translate-x-1"}
+            inline-block h-4 w-4 transform rounded-full transition-transform shadow-lg
+            ${value ? "translate-x-6 bg-white" : "translate-x-1 bg-white dark:bg-gray-200"}
           `}
         />
       </button>

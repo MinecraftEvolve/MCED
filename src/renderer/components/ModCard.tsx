@@ -107,7 +107,7 @@ export function ModCard({ mod }: ModCardProps) {
             href={curseforgeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 text-sm bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 shadow-md font-semibold border-2 border-orange-500/20 hover:border-orange-500/40"
+            className="px-4 py-2 text-sm bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 shadow-md font-semibold border-2 border-orange-500/20 hover:border-orange-500/40"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18.326 9.2c-.288 0-.564.058-.817.164v-.001a2.213 2.213 0 00-.717.478 2.23 2.23 0 00-.48.718 2.206 2.206 0 00-.163.817v2.84c0 .287.058.563.163.817.105.253.265.48.48.718.215.237.464.423.717.478.253.106.529.164.817.164h1.99v-.879h-1.99a1.33 1.33 0 01-.49-.098 1.324 1.324 0 01-.43-.286 1.323 1.323 0 01-.287-.43 1.33 1.33 0 01-.098-.49v-2.84c0-.175.033-.343.098-.49.065-.147.159-.279.287-.43.128-.15.278-.27.43-.286.147-.065.315-.098.49-.098h1.99V9.2zm-4.645.879a1.33 1.33 0 00-.49-.098h-3.11v.879h3.11c.174 0 .342.033.49.098.147.065.278.159.43.286.15.128.27.278.286.43.065.147.098.315.098.49v2.84c0 .175-.033.343-.098.49a1.324 1.324 0 01-.287.43c-.128.15-.278.27-.43.286-.147.065-.315.098-.49.098h-3.11v.879h3.11c.288 0 .564-.058.817-.164.253-.105.48-.265.718-.478.237-.215.423-.464.478-.718.106-.253.164-.529.164-.817v-2.84a2.206 2.206 0 00-.164-.817 2.23 2.23 0 00-.478-.718 2.213 2.213 0 00-.718-.478 2.206 2.206 0 00-.817-.164zm-5.27 5.876h.888V9.2h-.888z" />
@@ -119,7 +119,7 @@ export function ModCard({ mod }: ModCardProps) {
             href={modrinthUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 text-sm bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 shadow-md font-semibold border-2 border-green-500/20 hover:border-green-500/40"
+            className="px-4 py-2 text-sm bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 shadow-md font-semibold border-2 border-green-500/20 hover:border-green-500/40"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 512 512">
               <path d="M331 201a49 49 0 1098 0 49 49 0 10-98 0zm-158 0a49 49 0 1098 0 49 49 0 10-98 0zm265 0C438 90 348 0 238 0S38 90 38 201c0 82 50 153 122 184l-24 85c-3 9 8 17 16 11l84-59c95 38 206 0 262-102 11-19 17-41 17-64zm-60 0c0 85-77 154-173 154-96 0-173-69-173-154S142 47 238 47s173 69 173 154z" />

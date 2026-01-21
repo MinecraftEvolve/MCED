@@ -128,12 +128,12 @@ export function LandingPage({ onSelectInstance, recentInstances = [] }: LandingP
                   </div>
                   <div className="instance-info">
                     {instance.minecraftVersion && (
-                      <span className="instance-version px-2 py-0.5 bg-green-500/10 text-green-400 rounded text-xs font-medium">
+                      <span className="instance-version px-2 py-0.5 bg-green-500/10 text-green-600 dark:text-green-400 rounded text-xs font-medium">
                         MC {instance.minecraftVersion}
                       </span>
                     )}
                     {instance.loader && (
-                      <span className="instance-loader px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded text-xs font-medium">
+                      <span className="instance-loader px-2 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-xs font-medium">
                         {instance.loader
                           .split(" ")
                           .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))

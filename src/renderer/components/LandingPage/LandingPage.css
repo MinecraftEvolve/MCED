@@ -9,6 +9,7 @@
   align-items: center;
 }
 
+:root:not(.dark) .landing-page,
 :root.light .landing-page {
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%);
 }
@@ -57,6 +58,11 @@
   font-size: 20px;
   color: #9ca3af;
   margin-bottom: 32px;
+}
+
+:root:not(.dark) .landing-subtitle,
+:root.light .landing-subtitle {
+  color: #64748b;
 }
 
 .landing-cta-button {
@@ -112,6 +118,12 @@
   animation: fadeInUp 0.6s ease-out backwards;
 }
 
+:root:not(.dark) .landing-feature-card,
+:root.light .landing-feature-card {
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
 .landing-feature-card:nth-child(1) {
   animation-delay: 0.1s;
 }
@@ -144,10 +156,20 @@
   margin-bottom: 8px;
 }
 
+:root:not(.dark) .landing-feature-card h3,
+:root.light .landing-feature-card h3 {
+  color: #1e293b;
+}
+
 .landing-feature-card p {
   font-size: 14px;
   color: #9ca3af;
   line-height: 1.5;
+}
+
+:root:not(.dark) .landing-feature-card p,
+:root.light .landing-feature-card p {
+  color: #64748b;
 }
 
 /* Recent Instances */
@@ -164,6 +186,11 @@
   gap: 12px;
   margin-bottom: 20px;
   color: white;
+}
+
+:root:not(.dark) .recent-header,
+:root.light .recent-header {
+  color: #1e293b;
 }
 
 .recent-header h2 {
@@ -189,6 +216,13 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
+}
+
+:root:not(.dark) .recent-instance-card,
+:root.light .recent-instance-card {
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  color: #1e293b;
 }
 
 .recent-instance-card:hover {
@@ -245,6 +279,11 @@
   margin-left: 30px;
 }
 
+:root:not(.dark) .instance-path,
+:root.light .instance-path {
+  color: #64748b;
+}
+
 /* Quick Actions */
 .landing-quick-actions {
   max-width: 500px;
@@ -259,6 +298,11 @@
   color: white;
   margin-bottom: 16px;
   text-align: center;
+}
+
+:root:not(.dark) .landing-quick-actions h3,
+:root.light .landing-quick-actions h3 {
+  color: #1e293b;
 }
 
 .quick-actions-grid {
@@ -281,6 +325,13 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+:root:not(.dark) .quick-action-btn,
+:root.light .quick-action-btn {
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  color: #1e293b;
 }
 
 .quick-action-btn:hover {

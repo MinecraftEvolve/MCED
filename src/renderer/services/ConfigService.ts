@@ -646,6 +646,11 @@ export class ConfigService {
 
     // String could be enum if it matches common patterns
     if (typeof value === "string") {
+      // Check for boolean strings (TRUE, FALSE, true, false)
+      const upperValue = value.toUpperCase();
+      if (upperValue === "TRUE" || upperValue === "FALSE") {
+        return "boolean";
+      }
       // Common enum patterns: UPPERCASE_WITH_UNDERSCORES
       if (/^[A-Z][A-Z0-9_]*$/.test(value)) {
         return "enum"; // Likely enum

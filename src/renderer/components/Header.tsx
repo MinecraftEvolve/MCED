@@ -104,10 +104,10 @@ export function Header({
                   <LauncherIcon launcher={launcherType} className="w-4 h-4" />
                 </div>
               )}
-              <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded-md font-semibold border border-green-500/20 hover:bg-green-500/20 transition-colors">
+              <span className="px-2 py-0.5 bg-green-500/10 text-green-600 dark:text-green-400 rounded-md font-semibold border border-green-500/20 hover:bg-green-500/20 transition-colors">
                 MC {currentInstance.minecraftVersion}
               </span>
-              <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-md font-semibold border border-purple-500/20 hover:bg-purple-500/20 transition-colors">
+              <span className="px-2 py-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-md font-semibold border border-purple-500/20 hover:bg-purple-500/20 transition-colors">
                 {currentInstance.loader.type.charAt(0).toUpperCase() +
                   currentInstance.loader.type.slice(1)}{" "}
                 {currentInstance.loader.version}
