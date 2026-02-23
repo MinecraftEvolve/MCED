@@ -12,8 +12,7 @@ import { ItemRegistryService } from "./services/ItemRegistryService";
 import { FluidRegistryService } from "./services/FluidRegistryService";
 import { RecipeService } from "./services/RecipeService";
 import { JarLoaderService } from "./services/JarLoaderService";
-// Game launchers removed due to Java compatibility issues
-// TODO: Re-implement in future when stable solution is found
+import { LaunchService } from './LaunchService';
 import "../shared/config"; // Import to silence console.logs in production
 
 const execAsync = promisify(exec);
@@ -969,8 +968,42 @@ ipcMain.handle("shell:openExternal", async (_event, url: string) => {
 
 // ===== Game Launcher Handlers =====
 
-// Game launch functionality removed due to Java compatibility issues
-// TODO: Re-implement in future when stable solution is found
+const launchService = new LaunchService();
+
+ipcMain.handle(
+  "game:launch",
+  async (
+    _event,
+    instancePath: string,
+    launcher: string,
+    mcVersion: string,
+    loaderVersion: string
+  ) => {
+    try {
+      const result = await launchService.launch(instancePath, launcher, mcVersion, loaderVersion);
+      return result;
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+);
+
+ipcMain.handle("game:kill", async (_event, instancePath: string) => {
+  try {
+    const killed = LaunchService.kill(instancePath);
+    return { success: killed };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+ipcMain.handle("game:isRunning", async (_event, instancePath: string) => {
+  return LaunchService.isRunning(instancePath);
+});
+
+ipcMain.handle("game:getRunning", async () => {
+  return LaunchService.getRunningInstances();
+});
 
 // Update Checker Handler
 ipcMain.handle("check-for-updates", async () => {

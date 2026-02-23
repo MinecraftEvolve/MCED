@@ -4,7 +4,7 @@ import { useSettingsStore } from "./store/settingsStore";
 import { useStatsStore } from "./store/statsStore";
 import { useChangelogStore } from "./store/changelogStore";
 import { NotificationProvider } from "./components/common/Notifications";
-import { Loader2, Settings as SettingsIcon, FolderOpen } from "lucide-react";
+import { Loader2, Settings as SettingsIcon, FolderOpen, Play } from "lucide-react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { MainPanel } from "./components/MainPanel";
@@ -358,6 +358,27 @@ function App() {
     }
   }, [mods, currentInstance]);
 
+  const handleLaunchInstance = async (
+    instancePath: string,
+    launcher?: string,
+    mcVersion?: string,
+    loaderVersion?: string
+  ) => {
+    try {
+      const result = await window.api.launchGame(
+        instancePath,
+        launcher || 'unknown',
+        mcVersion || '',
+        loaderVersion || ''
+      );
+      if (!result.success) {
+        setError(`Launch failed: ${result.error}`);
+      }
+    } catch (e) {
+      setError(`Launch failed: ${String(e)}`);
+    }
+  };
+
   // Loading overlay (doesn't block window interaction)
   const LoadingOverlay = isLoading ? (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-none animate-fadeIn">
@@ -427,41 +448,63 @@ function App() {
                         instancePath.split(/[/\\]/).pop() ||
                         instancePath;
                       return (
-                        <button
+                        <div
                           key={idx}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleOpenInstance(instancePath);
-                          }}
-                          className="w-full px-4 py-3 bg-card/50 backdrop-blur-sm hover:bg-purple-900/30 rounded-xl text-left
-                                   transition-all duration-200 border-2 border-purple-500/20 hover:border-purple-500/50 group overflow-hidden hover:shadow-lg transform hover:scale-[1.01]"
+                          className="relative group/card"
                           style={{ animationDelay: `${0.3 + idx * 0.1}s` }}
                         >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">
-                              {instanceName}
-                            </div>
-                            {typeof instance === "object" && instance.launcher && (
-                              <LauncherIcon launcher={instance.launcher} size={18} />
-                            )}
-                          </div>
-                          {typeof instance === "object" &&
-                            instance.minecraftVersion &&
-                            instance.loader && (
-                              <div className="flex items-center gap-2 text-xs mt-1.5">
-                                <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded-md text-xs font-semibold border border-green-500/30">
-                                  MC {instance.minecraftVersion}
-                                </span>
-                                <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-md text-xs font-semibold border border-purple-500/30">
-                                  {instance.loader}
-                                </span>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleOpenInstance(instancePath);
+                            }}
+                            className="w-full px-4 py-3 bg-card/50 backdrop-blur-sm hover:bg-purple-900/30 rounded-xl text-left
+                                     transition-all duration-200 border-2 border-purple-500/20 hover:border-purple-500/50 group overflow-hidden hover:shadow-lg transform hover:scale-[1.01]"
+                          >
+                            <div className="flex items-center justify-between gap-2 pr-8">
+                              <div className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">
+                                {instanceName}
                               </div>
-                            )}
-                          <div className="text-xs text-muted-foreground truncate mt-1.5 font-mono opacity-70">
-                            {instancePath}
-                          </div>
-                        </button>
+                              {typeof instance === "object" && instance.launcher && (
+                                <LauncherIcon launcher={instance.launcher} size={18} />
+                              )}
+                            </div>
+                            {typeof instance === "object" &&
+                              instance.minecraftVersion &&
+                              instance.loader && (
+                                <div className="flex items-center gap-2 text-xs mt-1.5">
+                                  <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded-md text-xs font-semibold border border-green-500/30">
+                                    MC {instance.minecraftVersion}
+                                  </span>
+                                  <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-md text-xs font-semibold border border-purple-500/30">
+                                    {instance.loader}
+                                  </span>
+                                </div>
+                              )}
+                            <div className="text-xs text-muted-foreground truncate mt-1.5 font-mono opacity-70">
+                              {instancePath}
+                            </div>
+                          </button>
+                          {/* Play button overlay */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLaunchInstance(
+                                instancePath,
+                                typeof instance === "object" ? instance.launcher : undefined,
+                                typeof instance === "object" ? instance.minecraftVersion : undefined,
+                                typeof instance === "object" && instance.loader
+                                  ? instance.loader
+                                  : undefined
+                              );
+                            }}
+                            className="absolute top-1/2 right-3 -translate-y-1/2 p-1.5 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-lg opacity-0 group-hover/card:opacity-100 transition-all border border-green-500/30 hover:scale-110"
+                            title="Launch Minecraft"
+                          >
+                            <Play className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       );
                     })}
                   </div>

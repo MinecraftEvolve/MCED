@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppStore } from "@/store";
 import { BackupModal } from "./Backup/BackupModal";
 import { Settings } from "./Settings";
@@ -13,6 +13,9 @@ import {
   ChevronDown,
   Folder,
   FolderX,
+  Play,
+  Square,
+  Loader2,
 } from "lucide-react";
 import { LauncherIcon } from "./LauncherIcon";
 
@@ -35,6 +38,55 @@ export function Header({
   const [showSettings, setShowSettings] = useState(false);
   const [showBackups, setShowBackups] = useState(false);
   const [showInstanceMenu, setShowInstanceMenu] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
+
+  // Poll running state every 3s while an instance is open
+  useEffect(() => {
+    if (!currentInstance) {
+      setIsRunning(false);
+      return;
+    }
+    let cancelled = false;
+    const check = async () => {
+      const running = await window.api.isGameRunning(currentInstance.path);
+      if (!cancelled) setIsRunning(running);
+    };
+    check();
+    const interval = setInterval(check, 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [currentInstance?.path]);
+
+  const handleLaunch = async () => {
+    if (!currentInstance || isLaunching || isRunning) return;
+    setIsLaunching(true);
+    setLaunchError(null);
+    try {
+      const result = await window.api.launchGame(
+        currentInstance.path,
+        launcherType || 'unknown',
+        currentInstance.minecraftVersion,
+        currentInstance.loader?.version || ''
+      );
+      if (result.success) {
+        setIsRunning(true);
+      } else {
+        setLaunchError(result.error || 'Launch failed');
+      }
+    } finally {
+      setIsLaunching(false);
+    }
+  };
+
+  const handleStop = async () => {
+    if (!currentInstance) return;
+    await window.api.killGame(currentInstance.path);
+    setIsRunning(false);
+  };
 
   // If no instance, show minimal header with just settings button
   if (!currentInstance) {
@@ -168,6 +220,36 @@ export function Header({
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {/* Launch / Stop button */}
+          {isRunning ? (
+            <button
+              onClick={handleStop}
+              className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-semibold group shadow-lg hover:shadow-red-500/20 border border-red-500/20"
+              title="Stop Minecraft"
+            >
+              <Square className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              Running
+            </button>
+          ) : (
+            <button
+              onClick={handleLaunch}
+              disabled={isLaunching}
+              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-sm font-semibold group shadow-lg border ${
+                isLaunching
+                  ? 'bg-green-500/5 text-green-500/50 border-green-500/10 cursor-not-allowed'
+                  : 'bg-green-500/10 hover:bg-green-500/20 text-green-400 hover:scale-105 hover:shadow-green-500/20 border-green-500/20'
+              }`}
+              title={launchError ? `Last error: ${launchError}` : 'Launch Minecraft'}
+            >
+              {isLaunching ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              )}
+              {isLaunching ? 'Starting…' : 'Play'}
+            </button>
+          )}
+
           <button
             onClick={() => onSearchClick()}
             className="px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-semibold group shadow-lg hover:shadow-purple-500/20 border border-purple-500/20"

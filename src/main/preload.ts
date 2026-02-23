@@ -67,8 +67,15 @@ contextBridge.exposeInMainWorld("api", {
   discordClearInstance: () => ipcRenderer.invoke("discord:clear-instance"),
 
   // Game Launcher
-  // Launch game APIs removed due to Java compatibility issues
-  // TODO: Re-implement in future when stable solution is found
+  launchGame: (
+    instancePath: string,
+    launcher: string,
+    mcVersion: string,
+    loaderVersion: string
+  ) => ipcRenderer.invoke("game:launch", instancePath, launcher, mcVersion, loaderVersion),
+  killGame: (instancePath: string) => ipcRenderer.invoke("game:kill", instancePath),
+  isGameRunning: (instancePath: string) => ipcRenderer.invoke("game:isRunning", instancePath),
+  getRunningGames: () => ipcRenderer.invoke("game:getRunning"),
 
   // Update Checker
   checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
@@ -245,8 +252,16 @@ declare global {
       discordClearMod: () => Promise<{ success: boolean; error?: string }>;
       discordClearInstance: () => Promise<{ success: boolean; error?: string }>;
 
-      // Game Launcher APIs removed due to Java compatibility issues
-      // TODO: Re-implement in future when stable solution is found
+      // Game Launcher
+      launchGame: (
+        instancePath: string,
+        launcher: string,
+        mcVersion: string,
+        loaderVersion: string
+      ) => Promise<{ success: boolean; pid?: number; error?: string }>;
+      killGame: (instancePath: string) => Promise<{ success: boolean; error?: string }>;
+      isGameRunning: (instancePath: string) => Promise<boolean>;
+      getRunningGames: () => Promise<string[]>;
 
       checkForUpdates: () => Promise<{ success: boolean; updateInfo?: UpdateInfo; error?: string }>;
       downloadUpdate: () => Promise<{ success: boolean; error?: string }>;
