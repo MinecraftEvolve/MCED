@@ -76,6 +76,12 @@ contextBridge.exposeInMainWorld("api", {
   killGame: (instancePath: string) => ipcRenderer.invoke("game:kill", instancePath),
   isGameRunning: (instancePath: string) => ipcRenderer.invoke("game:isRunning", instancePath),
   getRunningGames: () => ipcRenderer.invoke("game:getRunning"),
+  onGameLog: (callback: (data: { line: string; type: 'stdout' | 'stderr' | 'system'; instancePath: string; timestamp: number }) => void) => {
+    ipcRenderer.on('game:log', (_event, data) => callback(data));
+  },
+  removeGameLogListener: () => {
+    ipcRenderer.removeAllListeners('game:log');
+  },
 
   // Update Checker
   checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
@@ -262,6 +268,8 @@ declare global {
       killGame: (instancePath: string) => Promise<{ success: boolean; error?: string }>;
       isGameRunning: (instancePath: string) => Promise<boolean>;
       getRunningGames: () => Promise<string[]>;
+      onGameLog: (callback: (data: { line: string; type: 'stdout' | 'stderr' | 'system'; instancePath: string; timestamp: number }) => void) => void;
+      removeGameLogListener: () => void;
 
       checkForUpdates: () => Promise<{ success: boolean; updateInfo?: UpdateInfo; error?: string }>;
       downloadUpdate: () => Promise<{ success: boolean; error?: string }>;

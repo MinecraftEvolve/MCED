@@ -970,6 +970,12 @@ ipcMain.handle("shell:openExternal", async (_event, url: string) => {
 
 const launchService = new LaunchService();
 
+launchService.on('log', (data) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('game:log', data);
+  }
+});
+
 ipcMain.handle(
   "game:launch",
   async (

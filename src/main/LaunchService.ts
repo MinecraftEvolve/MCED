@@ -5,8 +5,16 @@ import os from 'os';
 import Database from 'better-sqlite3';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { EventEmitter } from 'events';
 
 const execAsync = promisify(exec);
+
+export interface GameLogEntry {
+  line: string;
+  type: 'stdout' | 'stderr' | 'system';
+  instancePath: string;
+  timestamp: number;
+}
 
 interface AuthInfo {
   playerName: string;
@@ -34,7 +42,7 @@ interface VersionData {
   libsDir: string;
 }
 
-export class LaunchService {
+export class LaunchService extends EventEmitter {
   private static runningProcesses = new Map<string, GameProcess>();
 
   async launch(
@@ -127,11 +135,27 @@ export class LaunchService {
         detached: false,
       });
 
+      const emitLog = (line: string, type: GameLogEntry['type']) => {
+        this.emit('log', { line, type, instancePath, timestamp: Date.now() } as GameLogEntry);
+      };
+
       childProcess.stdout?.on('data', (data: Buffer) => {
-        console.log(`[MC] ${data.toString().trimEnd()}`);
+        data.toString().split('\n').forEach((l) => {
+          const trimmed = l.trimEnd();
+          if (trimmed) {
+            console.log(`[MC] ${trimmed}`);
+            emitLog(trimmed, 'stdout');
+          }
+        });
       });
       childProcess.stderr?.on('data', (data: Buffer) => {
-        console.log(`[MC ERR] ${data.toString().trimEnd()}`);
+        data.toString().split('\n').forEach((l) => {
+          const trimmed = l.trimEnd();
+          if (trimmed) {
+            console.log(`[MC ERR] ${trimmed}`);
+            emitLog(trimmed, 'stderr');
+          }
+        });
       });
 
       LaunchService.runningProcesses.set(instancePath, {
@@ -142,13 +166,16 @@ export class LaunchService {
       });
 
       childProcess.on('exit', (code) => {
-        console.log(`[MCED Launch] Game exited with code ${code}`);
+        const msg = `Game exited with code ${code}`;
+        console.log(`[MCED Launch] ${msg}`);
         LaunchService.runningProcesses.delete(instancePath);
+        emitLog(msg, 'system');
       });
 
       childProcess.on('error', (err) => {
         console.error('[MCED Launch] Process error:', err);
         LaunchService.runningProcesses.delete(instancePath);
+        emitLog(`Process error: ${err.message}`, 'system');
       });
 
       // Allow MCED to close without terminating Minecraft
