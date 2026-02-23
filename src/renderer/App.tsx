@@ -3,8 +3,9 @@ import { useAppStore } from "./store";
 import { useSettingsStore } from "./store/settingsStore";
 import { useStatsStore } from "./store/statsStore";
 import { useChangelogStore } from "./store/changelogStore";
+import { useChangeTrackingStore } from "./store/changeTrackingStore";
 import { NotificationProvider } from "./components/common/Notifications";
-import { Loader2, Settings as SettingsIcon, FolderOpen, Play } from "lucide-react";
+import { Loader2, Settings as SettingsIcon, FolderOpen, Play, Clock } from "lucide-react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { MainPanel } from "./components/MainPanel";
@@ -17,6 +18,7 @@ import { ChangelogViewer } from "./components/ChangelogViewer";
 import { LauncherIcon } from "./components/LauncherIcon";
 import { smartSearchService } from "./services/SmartSearchService";
 import { configService } from "./services/ConfigService";
+import { updateCheckerService } from "./services/UpdateCheckerService";
 import modrinthAPI from "./services/api/ModrinthAPI";
 import curseForgeAPI from "./services/api/CurseForgeAPI";
 import { ModInfo } from "../shared/types/mod.types";
@@ -110,6 +112,7 @@ function App() {
     setLauncherType,
   } = useAppStore();
   const { settings } = useSettingsStore();
+  const { changes } = useChangeTrackingStore();
   const { startSession, endSession } = useStatsStore();
   const { startSession: startChangelogSession } = useChangelogStore();
   const [error, setError] = useState<string | null>(null);
@@ -230,6 +233,9 @@ function App() {
         instanceInfo.serverConfigFolder
       );
       setMods(modsWithConfigs);
+
+      // Trigger update check in the background
+      updateCheckerService.checkUpdates(modsWithConfigs, instanceInfo.minecraftVersion).catch(() => {});
 
       // Detect KubeJS and load item registry if present
       const hasKubeJS = modsList.some(
@@ -369,7 +375,9 @@ function App() {
         instancePath,
         launcher || 'unknown',
         mcVersion || '',
-        loaderVersion || ''
+        loaderVersion || '',
+        settings.jvmMaxMemory ?? 4096,
+        settings.jvmMinMemory ?? 1024
       );
       if (!result.success) {
         setError(`Launch failed: ${result.error}`);
@@ -513,10 +521,45 @@ function App() {
             </div>
           </div>
 
+          {/* Recently Changed Settings */}
+          {(() => {
+            interface CC { key: string; originalValue: unknown; currentValue: unknown; isModified: boolean; modifiedAt?: Date; }
+            const recentChanges = (Array.from(changes.entries()) as [string, CC][])
+              .filter(([, c]) => c.isModified && c.modifiedAt)
+              .sort((a, b) => new Date(b[1].modifiedAt as Date).getTime() - new Date(a[1].modifiedAt as Date).getTime())
+              .slice(0, 5);
+            if (recentChanges.length === 0) return null;
+            return (
+              <div className="mt-6 w-full max-w-sm animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+                <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2 flex items-center gap-2">
+                  <Clock className="w-3 h-3 text-orange-400" />
+                  Recently Changed
+                </h3>
+                <div className="space-y-1">
+                  {recentChanges.map(([key, change]: [string, CC]) => {
+                    const [modId, ...keyParts] = key.split(":");
+                    const settingKey = keyParts.join(":").split(".").pop() || keyParts.join(":");
+                    return (
+                      <div key={key} className="flex items-center justify-between px-3 py-2 bg-card/40 rounded-lg border border-orange-500/10 text-xs gap-3">
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-mono text-orange-300 truncate">{settingKey}</span>
+                          <span className="text-muted-foreground/60 truncate">{modId}</span>
+                        </div>
+                        <span className="text-muted-foreground/70 shrink-0 font-mono">
+                          {String(change.currentValue).substring(0, 12)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Settings Button */}
           <button
             onClick={() => setShowSettings(true)}
-            className="absolute top-4 right-4 p-3 rounded-xl bg-card/50 backdrop-blur-sm hover:bg-card/80 border-2 border-primary/20 
+            className="absolute top-4 right-4 p-3 rounded-xl bg-card/50 backdrop-blur-sm hover:bg-card/80 border-2 border-primary/20
                      hover:border-primary/50 transition-all duration-200 group shadow-lg hover:shadow-primary/20 transform hover:scale-105"
             title="Settings (Ctrl+,)"
           >

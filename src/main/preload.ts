@@ -71,8 +71,10 @@ contextBridge.exposeInMainWorld("api", {
     instancePath: string,
     launcher: string,
     mcVersion: string,
-    loaderVersion: string
-  ) => ipcRenderer.invoke("game:launch", instancePath, launcher, mcVersion, loaderVersion),
+    loaderVersion: string,
+    jvmXmx?: number,
+    jvmXms?: number
+  ) => ipcRenderer.invoke("game:launch", instancePath, launcher, mcVersion, loaderVersion, jvmXmx ?? 4096, jvmXms ?? 1024),
   killGame: (instancePath: string) => ipcRenderer.invoke("game:kill", instancePath),
   isGameRunning: (instancePath: string) => ipcRenderer.invoke("game:isRunning", instancePath),
   getRunningGames: () => ipcRenderer.invoke("game:getRunning"),
@@ -187,6 +189,12 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("recipe:delete", instancePath, scriptPath, recipeId),
   recipeSearch: (instancePath: string, query: string) =>
     ipcRenderer.invoke("recipe:search", instancePath, query),
+
+  analyzeCrashLog: (content: string, knownModIds: string[]) =>
+    ipcRenderer.invoke("crash:analyze", content, knownModIds),
+
+  exportModpack: (instancePath: string, packName: string, mcVersion: string, loaderType: string, loaderVersion: string) =>
+    ipcRenderer.invoke("export:modpack", instancePath, packName, mcVersion, loaderType, loaderVersion),
 });
 
 declare global {
@@ -258,12 +266,25 @@ declare global {
       discordClearMod: () => Promise<{ success: boolean; error?: string }>;
       discordClearInstance: () => Promise<{ success: boolean; error?: string }>;
 
+      analyzeCrashLog: (content: string, knownModIds: string[]) => Promise<{
+        success: boolean;
+        mainCause?: string | null;
+        issues?: Array<{ modId: string; reason: string; line: string }>;
+        suspectedMods?: string[];
+        totalLines?: number;
+        error?: string;
+      }>;
+      exportModpack: (instancePath: string, packName: string, mcVersion: string, loaderType: string, loaderVersion: string) =>
+        Promise<{ success: boolean; outputPath?: string; error?: string }>;
+
       // Game Launcher
       launchGame: (
         instancePath: string,
         launcher: string,
         mcVersion: string,
-        loaderVersion: string
+        loaderVersion: string,
+        jvmXmx?: number,
+        jvmXms?: number
       ) => Promise<{ success: boolean; pid?: number; error?: string }>;
       killGame: (instancePath: string) => Promise<{ success: boolean; error?: string }>;
       isGameRunning: (instancePath: string) => Promise<boolean>;

@@ -49,7 +49,9 @@ export class LaunchService extends EventEmitter {
     instancePath: string,
     launcher: string,
     mcVersion: string,
-    loaderVersion: string
+    loaderVersion: string,
+    xmx: number = 4096,
+    xms: number = 1024
   ): Promise<{ success: boolean; pid?: number; error?: string }> {
     try {
       if (LaunchService.isRunning(instancePath)) {
@@ -119,8 +121,8 @@ export class LaunchService extends EventEmitter {
         : [];
 
       const fullArgs = [
-        '-Xmx4G',
-        '-Xms1G',
+        `-Xmx${xmx}m`,
+        `-Xms${xms}m`,
         ...expandedJvm,
         versionData.mainClass,
         ...expandedGame,

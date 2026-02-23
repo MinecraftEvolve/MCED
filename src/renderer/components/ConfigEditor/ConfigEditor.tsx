@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Settings, FileText } from "lucide-react";
+import { Settings, FileText, RotateCcw, BookmarkPlus, BookOpen } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { ConfigFile, ConfigSetting } from "@/types/config.types";
 import { configService } from "@/services/ConfigService";
@@ -31,6 +31,53 @@ export function ConfigEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [internalViewMode, setInternalViewMode] = useState<"visual" | "raw">("visual");
   const [rawContent, setRawContent] = useState<string>("");
+  const [showPresetMenu, setShowPresetMenu] = useState(false);
+  const [presets, setPresets] = useState<Array<{ name: string; settings: Record<string, unknown> }>>([]);
+
+  const presetsKey = `mced-presets-${modId}`;
+
+  const loadPresets = () => {
+    try {
+      const saved = localStorage.getItem(presetsKey);
+      if (saved) setPresets(JSON.parse(saved));
+    } catch {}
+  };
+
+  const savePreset = () => {
+    if (!selectedConfig) return;
+    const name = prompt("Preset name:");
+    if (!name) return;
+    const settingsMap: Record<string, unknown> = {};
+    selectedConfig.settings.forEach((s) => { settingsMap[s.key] = s.value; });
+    const updated = [...presets.filter((p) => p.name !== name), { name, settings: settingsMap }];
+    setPresets(updated);
+    localStorage.setItem(presetsKey, JSON.stringify(updated));
+  };
+
+  const applyPreset = (preset: { name: string; settings: Record<string, unknown> }) => {
+    if (!selectedConfig) return;
+    const updatedSettings = selectedConfig.settings.map((s) =>
+      preset.settings[s.key] !== undefined ? { ...s, value: preset.settings[s.key] } : s
+    );
+    const updatedConfig = { ...selectedConfig, settings: updatedSettings };
+    setSelectedConfig(updatedConfig);
+    setConfigs(configs.map((c) => (c.path === updatedConfig.path ? updatedConfig : c)));
+    setHasUnsavedChanges(true);
+    setShowPresetMenu(false);
+  };
+
+  const handleResetToDefaults = () => {
+    if (!selectedConfig) return;
+    if (!confirm(`Reset all settings in "${selectedConfig.name}" to defaults?`)) return;
+    const updatedSettings = selectedConfig.settings.map((s) => ({
+      ...s,
+      value: s.defaultValue !== undefined ? s.defaultValue : s.value,
+    }));
+    const updatedConfig = { ...selectedConfig, settings: updatedSettings };
+    setSelectedConfig(updatedConfig);
+    setConfigs(configs.map((c) => (c.path === updatedConfig.path ? updatedConfig : c)));
+    setHasUnsavedChanges(true);
+  };
 
   const currentViewMode = viewMode ?? internalViewMode;
 
@@ -104,6 +151,7 @@ export function ConfigEditor({
 
   useEffect(() => {
     loadConfigs();
+    loadPresets();
   }, [modId, instancePath]);
 
   useEffect(() => {
@@ -317,9 +365,60 @@ export function ConfigEditor({
           </div>
         )}
 
-        {/* View Mode Toggle - Right Side */}
+        {/* View Mode Toggle + Actions - Right Side */}
         {selectedConfig && (
           <div className="flex items-center gap-2 px-4 py-1.5 flex-shrink-0">
+            {/* Reset to Defaults */}
+            <button
+              onClick={handleResetToDefaults}
+              className="px-2 py-1 text-xs font-medium rounded transition-colors text-muted-foreground hover:text-orange-400 hover:bg-orange-500/10"
+              title="Reset all settings to default values"
+            >
+              <RotateCcw size={13} className="inline mr-1" />
+              Reset
+            </button>
+
+            {/* Presets */}
+            <div className="relative">
+              <button
+                onClick={() => { setShowPresetMenu(!showPresetMenu); loadPresets(); }}
+                className="px-2 py-1 text-xs font-medium rounded transition-colors text-muted-foreground hover:text-primary hover:bg-primary/10"
+                title="Manage config presets"
+              >
+                <BookOpen size={13} className="inline mr-1" />
+                Presets
+              </button>
+              {showPresetMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowPresetMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-primary/20 rounded-lg shadow-xl z-50 py-1">
+                    <button
+                      onClick={savePreset}
+                      className="w-full px-3 py-2 text-xs text-left hover:bg-primary/10 flex items-center gap-2 text-primary"
+                    >
+                      <BookmarkPlus size={12} /> Save current as preset
+                    </button>
+                    {presets.length > 0 && (
+                      <>
+                        <div className="h-px bg-primary/10 my-1" />
+                        {presets.map((p) => (
+                          <button
+                            key={p.name}
+                            onClick={() => applyPreset(p)}
+                            className="w-full px-3 py-2 text-xs text-left hover:bg-primary/10 truncate"
+                          >
+                            {p.name}
+                          </button>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="w-px h-4 bg-primary/20" />
+
             <button
               onClick={() => handleViewModeToggle("visual")}
               className={`px-3 py-1 text-xs font-medium rounded transition-colors ${

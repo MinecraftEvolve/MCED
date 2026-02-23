@@ -21,7 +21,7 @@ export class ConfigService {
 
       // Load from main config folder (recursively)
       const mainResult = await window.api.readdirRecursive(`${instancePath}/config`, {
-        extensions: [".toml", ".json", ".json5", ".yml", ".yaml", ".cfg", ".properties", ".txt"],
+        extensions: [".toml", ".json", ".json5", ".yml", ".yaml", ".cfg", ".properties", ".txt", ".conf"],
       });
 
       if (mainResult.success && mainResult.files) {
@@ -51,7 +51,7 @@ export class ConfigService {
       // Load from defaultconfigs folder FIRST (highest priority) - recursively
       if (defaultConfigsFolder) {
         const defaultResult = await window.api.readdirRecursive(defaultConfigsFolder, {
-          extensions: [".toml", ".json", ".json5", ".yml", ".yaml", ".cfg", ".properties"],
+          extensions: [".toml", ".json", ".json5", ".yml", ".yaml", ".cfg", ".properties", ".conf"],
         });
 
         if (defaultResult.success && defaultResult.files) {
@@ -88,7 +88,7 @@ export class ConfigService {
       // Only load if NOT already loaded from defaultconfigs or main config
       if (serverConfigFolder) {
         const serverResult = await window.api.readdirRecursive(serverConfigFolder, {
-          extensions: [".toml", ".json", ".json5", ".yml", ".yaml", ".cfg", ".properties"],
+          extensions: [".toml", ".json", ".json5", ".yml", ".yaml", ".cfg", ".properties", ".conf"],
         });
 
         if (serverResult.success && serverResult.files) {
@@ -262,6 +262,7 @@ export class ConfigService {
     if (lower.endsWith(".cfg")) return "cfg";
     if (lower.endsWith(".properties")) return "properties";
     if (lower.endsWith(".txt")) return "properties"; // Treat .txt files as properties format
+    if (lower.endsWith(".conf")) return "cfg"; // Treat .conf files as cfg format (HOCON)
     return "toml";
   }
 

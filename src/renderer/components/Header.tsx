@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAppStore } from "@/store";
+import { useSettingsStore } from "@/store/settingsStore";
 import { BackupModal } from "./Backup/BackupModal";
 import { Settings } from "./Settings";
 import { GameConsole } from "./GameConsole";
@@ -19,7 +20,10 @@ import {
   Loader2,
   Info,
   Terminal,
+  AlertTriangle,
+  Download,
 } from "lucide-react";
+import { CrashAnalyzer } from "./CrashAnalyzer";
 import { LauncherIcon } from "./LauncherIcon";
 
 interface HeaderProps {
@@ -38,6 +42,7 @@ export function Header({
   onChangelogClick,
 }: HeaderProps) {
   const { currentInstance, launcherType } = useAppStore();
+  const { settings: appSettings } = useSettingsStore();
   const [showSettings, setShowSettings] = useState(false);
   const [showBackups, setShowBackups] = useState(false);
   const [showInstanceMenu, setShowInstanceMenu] = useState(false);
@@ -46,6 +51,8 @@ export function Header({
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [showConsole, setShowConsole] = useState(false);
   const [hasLogs, setHasLogs] = useState(false);
+  const [showCrashAnalyzer, setShowCrashAnalyzer] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Poll running state every 3s while an instance is open
   useEffect(() => {
@@ -89,7 +96,9 @@ export function Header({
         currentInstance.path,
         launcherType || 'unknown',
         currentInstance.minecraftVersion,
-        currentInstance.loader?.version || ''
+        currentInstance.loader?.version || '',
+        appSettings.jvmMaxMemory ?? 4096,
+        appSettings.jvmMinMemory ?? 1024
       );
       if (result.success) {
         setIsRunning(true);
@@ -105,6 +114,29 @@ export function Header({
     if (!currentInstance) return;
     await window.api.killGame(currentInstance.path);
     setIsRunning(false);
+  };
+
+  const handleExportModpack = async () => {
+    if (!currentInstance) return;
+    const packName = prompt("Modpack name:", currentInstance.name || "My Modpack");
+    if (!packName) return;
+    setIsExporting(true);
+    try {
+      const result = await window.api.exportModpack(
+        currentInstance.path,
+        packName,
+        currentInstance.minecraftVersion,
+        currentInstance.loader?.type || "forge",
+        currentInstance.loader?.version || ""
+      );
+      if (result.success) {
+        alert(`Exported to: ${result.outputPath}`);
+      } else {
+        alert(`Export failed: ${result.error}`);
+      }
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // If no instance, show minimal header with just settings button
@@ -344,6 +376,21 @@ export function Header({
           )}
 
           <button
+            onClick={() => setShowCrashAnalyzer(true)}
+            className="px-3 py-2 bg-secondary hover:bg-orange-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-md hover:shadow-orange-500/20 border border-border hover:border-orange-500/30"
+            title="Crash Log Analyzer"
+          >
+            <AlertTriangle className="w-4 h-4 group-hover:scale-110 transition-transform text-orange-400" />
+          </button>
+          <button
+            onClick={handleExportModpack}
+            disabled={isExporting}
+            className="px-3 py-2 bg-secondary hover:bg-blue-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-md hover:shadow-blue-500/20 border border-border hover:border-blue-500/30 disabled:opacity-50"
+            title="Export as .mrpack"
+          >
+            <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          </button>
+          <button
             onClick={() => setShowSettings(true)}
             className="px-3 py-2 bg-secondary hover:bg-purple-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-md hover:shadow-purple-500/20 border border-border hover:border-purple-500/30"
             title="Settings"
@@ -358,6 +405,7 @@ export function Header({
       {showConsole && currentInstance && (
         <GameConsole instancePath={currentInstance.path} onClose={() => setShowConsole(false)} />
       )}
+      {showCrashAnalyzer && <CrashAnalyzer onClose={() => setShowCrashAnalyzer(false)} />}
     </header>
   );
 }

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAppStore } from "@/store";
+import { useChangeTrackingStore } from "@/store/changeTrackingStore";
 import { smartSearchService } from "@/services/SmartSearchService";
 
 interface SearchableItem {
@@ -43,6 +44,29 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const { mods } = useAppStore();
+  const { changes } = useChangeTrackingStore();
+
+  // Filter results by active filters
+  const filteredResults = useMemo(() => {
+    let res = results;
+    if (filters.types.length > 0) {
+      res = res.filter((r) => filters.types.includes(r.item.setting.type));
+    }
+    if (filters.modifiedOnly) {
+      const modifiedKeys = new Set(
+        (Array.from(changes.entries()) as [string, { isModified: boolean }][])
+          .filter(([, c]) => c.isModified)
+          .map(([k]) => k)
+      );
+      res = res.filter((r) => {
+        const key = `${r.item.modId}:${r.item.setting.key}`;
+        return modifiedKeys.has(key);
+      });
+    }
+    return res;
+  }, [results, filters, changes]);
+
+  const TYPE_FILTERS = ["boolean", "integer", "float", "string", "enum", "array"] as const;
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -154,6 +178,47 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
             )}
           </div>
 
+          {/* Filter Pills */}
+          <div className="mt-3 flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-muted-foreground">Filter:</span>
+            {TYPE_FILTERS.map((t) => (
+              <button
+                key={t}
+                onClick={() =>
+                  setFilters((f) => ({
+                    ...f,
+                    types: f.types.includes(t) ? f.types.filter((x) => x !== t) : [...f.types, t],
+                  }))
+                }
+                className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                  filters.types.includes(t)
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-secondary border-primary/20 hover:border-primary/50 text-muted-foreground"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+            <button
+              onClick={() => setFilters((f) => ({ ...f, modifiedOnly: !f.modifiedOnly }))}
+              className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                filters.modifiedOnly
+                  ? "bg-orange-500/20 text-orange-400 border-orange-500/40"
+                  : "bg-secondary border-primary/20 hover:border-primary/50 text-muted-foreground"
+              }`}
+            >
+              Changed only
+            </button>
+            {(filters.types.length > 0 || filters.modifiedOnly) && (
+              <button
+                onClick={() => setFilters({ types: [], searchInValues: false, modifiedOnly: false })}
+                className="px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+
           {/* Examples */}
           {!query && (
             <div className="mt-4">
@@ -193,9 +258,9 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
 
         {/* Results */}
         <div className="max-h-96 overflow-y-auto">
-          {results.length > 0 ? (
+          {filteredResults.length > 0 ? (
             <div className="divide-y divide-border">
-              {results.map((result, i) => (
+              {filteredResults.map((result, i) => (
                 <button
                   key={i}
                   onClick={() => handleResultClick(result)}
@@ -228,7 +293,11 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
           ) : query && !isSearching ? (
             <div className="p-8 text-center text-muted-foreground">
               <p>No results found for "{query}"</p>
-              <p className="text-sm mt-2">Try different keywords or check the examples above</p>
+              <p className="text-sm mt-2">
+                {filters.types.length > 0 || filters.modifiedOnly
+                  ? "Try clearing the filters or different keywords"
+                  : "Try different keywords or check the examples above"}
+              </p>
             </div>
           ) : null}
         </div>
@@ -236,7 +305,8 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
         {/* Footer */}
         <div className="p-3 border-t border-primary/20 flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            {results.length > 0 && `${results.length} results`}
+            {filteredResults.length > 0 && `${filteredResults.length} results`}
+            {filteredResults.length !== results.length && results.length > 0 && ` (${results.length} total)`}
             {smartSearchService.getIndexedCount() > 0 &&
               ` • ${smartSearchService.getIndexedCount()} settings indexed`}
           </span>
