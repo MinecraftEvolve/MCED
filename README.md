@@ -41,7 +41,7 @@ Grab the latest version for your OS:
 1. Launch MCED and click "Open Instance"
 <img src="assets/Screenshot-Start-Screen.png" alt="MCED Start Screen"  align="center"/> 
 3. Navigate to your Minecraft instance folder
-<img src="assets/Screenshot-Instance-Loading.png" alt="MCED Instance Loading"  align="center"/> 
+<img src="assets/Screenshot-Instace-Loading.png" alt="MCED Instance Loading"  align="center"/> 
 <img src="assets/Screenshot-Instance Opened.png" alt="MCED Instance Opened"  align="center"/>
 5. Pick a mod from the sidebar
 <img src="assets/Screenshot-Mod-Info.png" alt="MCED Mod Opened"  align="center"/>
