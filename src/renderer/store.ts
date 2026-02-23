@@ -36,8 +36,8 @@ interface AppState {
   setConfigFiles: (files: ConfigFile[]) => void;
 
   // KubeJS
-  viewMode: "mods" | "kubejs";
-  setViewMode: (mode: "mods" | "kubejs") => void;
+  viewMode: "mods" | "kubejs" | "remote";
+  setViewMode: (mode: "mods" | "kubejs" | "remote") => void;
   kubeJSDetected: boolean;
   setKubeJSDetected: (detected: boolean) => void;
 

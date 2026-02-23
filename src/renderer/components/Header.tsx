@@ -13,8 +13,10 @@ import {
   ChevronDown,
   Folder,
   FolderX,
+  Server,
 } from "lucide-react";
 import { LauncherIcon } from "./LauncherIcon";
+import { useRemoteConnectionStore } from "../store/remoteConnectionStore";
 
 interface HeaderProps {
   onSearchClick: () => void;
@@ -31,7 +33,8 @@ export function Header({
   onStatsClick,
   onChangelogClick,
 }: HeaderProps) {
-  const { currentInstance, launcherType } = useAppStore();
+  const { currentInstance, launcherType, viewMode, setViewMode } = useAppStore();
+  const { connectionStatus } = useRemoteConnectionStore();
   const [showSettings, setShowSettings] = useState(false);
   const [showBackups, setShowBackups] = useState(false);
   const [showInstanceMenu, setShowInstanceMenu] = useState(false);
@@ -206,6 +209,21 @@ export function Header({
               <History className="w-4 h-4 group-hover:scale-110 transition-transform" />
             </button>
           )}
+
+          <button
+            onClick={() => setViewMode(viewMode === "remote" ? "mods" : "remote")}
+            className={`px-3 py-2 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-md border ${
+              viewMode === "remote"
+                ? "bg-purple-500/20 text-purple-300 border-purple-500/40"
+                : "bg-secondary hover:bg-purple-500/20 border-border hover:border-purple-500/30"
+            }`}
+            title="Remote Config (MCED-Remote)"
+          >
+            <Server className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            {connectionStatus === "connected" && (
+              <span className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_6px_2px_rgba(74,222,128,0.4)]" />
+            )}
+          </button>
 
           <button
             onClick={() => setShowSettings(true)}
