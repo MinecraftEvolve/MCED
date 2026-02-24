@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { RemoteConnection, RemoteConnectionStatus, RemoteServerInfo } from "../../shared/types/remote.types";
 
+const POLL_INTERVAL_MS = 30_000;
+
 interface RemoteConnectionStore {
   // Cached from main process (no API keys)
   savedConnections: Omit<RemoteConnection, "apiKey">[];
@@ -18,6 +20,35 @@ interface RemoteConnectionStore {
   connect: (connectionId: string) => Promise<{ success: boolean; error?: string }>;
   disconnect: () => Promise<void>;
   setConnectionStatus: (status: RemoteConnectionStatus, error?: string) => void;
+}
+
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+function stopPolling() {
+  if (pollTimer !== null) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+}
+
+function startPolling(store: RemoteConnectionStore) {
+  stopPolling();
+  pollTimer = setInterval(async () => {
+    // Only poll if still connected
+    const state = useRemoteConnectionStore.getState();
+    if (state.connectionStatus !== "connected" || !state.activeConnectionId) {
+      stopPolling();
+      return;
+    }
+    const result = await window.api.remoteGetInfo();
+    if (!result.success) {
+      useRemoteConnectionStore.setState({
+        connectionStatus: "error",
+        connectionError: "Connection lost: " + (result.error ?? "server unreachable"),
+      });
+      stopPolling();
+    }
+  }, POLL_INTERVAL_MS);
 }
 
 export const useRemoteConnectionStore = create<RemoteConnectionStore>((set, get) => ({
@@ -46,8 +77,8 @@ export const useRemoteConnectionStore = create<RemoteConnectionStore>((set, get)
     const result = await window.api.remoteDeleteConnection(id);
     if (result.success) {
       await get().loadConnections();
-      // If we deleted the active connection, clear state
       if (get().activeConnectionId === id) {
+        stopPolling();
         set({ activeConnectionId: null, connectionStatus: "idle", connectionError: null, serverInfo: null });
       }
     }
@@ -59,13 +90,12 @@ export const useRemoteConnectionStore = create<RemoteConnectionStore>((set, get)
     const result = await window.api.remoteConnect(connectionId);
     if (result.success) {
       set({ activeConnectionId: connectionId, connectionStatus: "connected" });
-      // Fetch server info
       const infoResult = await window.api.remoteGetInfo();
       if (infoResult.success && infoResult.data) {
         set({ serverInfo: infoResult.data as RemoteServerInfo });
       }
-      // Reload connections to get updated lastConnected
       await get().loadConnections();
+      startPolling(get());
     } else {
       set({ connectionStatus: "error", connectionError: result.error ?? "Connection failed" });
     }
@@ -73,6 +103,7 @@ export const useRemoteConnectionStore = create<RemoteConnectionStore>((set, get)
   },
 
   disconnect: async () => {
+    stopPolling();
     await window.api.remoteDisconnect();
     set({ activeConnectionId: null, connectionStatus: "idle", connectionError: null, serverInfo: null });
   },

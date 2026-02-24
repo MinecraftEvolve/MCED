@@ -12,6 +12,20 @@ export function MainPanel() {
   const { selectedMod, currentInstance, viewMode } = useAppStore();
   const { connectionStatus } = useRemoteConnectionStore();
 
+  // Remote panel works independently of a local instance
+  if (viewMode === "remote") {
+    return (
+      <main className="flex-1 overflow-hidden bg-background flex">
+        <div className="w-80 flex-shrink-0 border-r border-primary/20 flex flex-col overflow-hidden">
+          <RemoteConnectionManager />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <RemoteFileBrowser />
+        </div>
+      </main>
+    );
+  }
+
   if (!currentInstance) return null;
 
   // Show KubeJS Editor when in KubeJS mode
@@ -19,22 +33,6 @@ export function MainPanel() {
     return (
       <main className="flex-1 overflow-auto bg-background">
         <KubeJSEditor instancePath={currentInstance.path} />
-      </main>
-    );
-  }
-
-  // Show Remote panel when in remote mode
-  if (viewMode === "remote") {
-    return (
-      <main className="flex-1 overflow-hidden bg-background flex">
-        {/* Left: connection manager */}
-        <div className="w-80 flex-shrink-0 border-r border-primary/20 flex flex-col overflow-hidden">
-          <RemoteConnectionManager />
-        </div>
-        {/* Right: file browser */}
-        <div className="flex-1 overflow-hidden">
-          <RemoteFileBrowser />
-        </div>
       </main>
     );
   }
