@@ -7,16 +7,65 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Build the MCED-Remote JAR first (single job, fast)
+  build-java:
+    name: Build MCED-Remote JAR
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Resolve version from tag
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(mvn -f mced-remote/pom.xml help:evaluate \
+              -Dexpression=project.version -q -DforceStdout)
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set version in pom.xml
+        run: |
+          mvn -f mced-remote/pom.xml versions:set \
+            -DnewVersion=${{ steps.version.outputs.version }} \
+            -DgenerateBackupPoms=false
+
+      - name: Build JAR
+        run: mvn -f mced-remote/pom.xml package -q --no-transfer-progress
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mced-remote-jar
+          path: |
+            mced-remote/target/mced-remote.jar
+            mced-remote/target/mced-remote-${{ steps.version.outputs.version }}.jar
+          retention-days: 1
+          if-no-files-found: error
+
+  # Build and publish the Electron app (matrix across OS)
   release:
+    needs: build-java
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
-    
+
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
-    
+
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
@@ -62,3 +111,28 @@ jobs:
         run: npx electron-builder --linux --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Attach the MCED-Remote JAR to the same GitHub Release
+  attach-jar:
+    name: Attach MCED-Remote JAR to Release
+    needs: [build-java, release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mced-remote-jar
+          path: dist/
+
+      - name: Upload JARs to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            dist/mced-remote.jar
+            dist/mced-remote-${{ needs.build-java.outputs.version }}.jar
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -4,7 +4,7 @@ import { useSettingsStore } from "./store/settingsStore";
 import { useStatsStore } from "./store/statsStore";
 import { useChangelogStore } from "./store/changelogStore";
 import { NotificationProvider } from "./components/common/Notifications";
-import { Loader2, Settings as SettingsIcon, FolderOpen } from "lucide-react";
+import { Loader2, Settings as SettingsIcon, FolderOpen, Server } from "lucide-react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { MainPanel } from "./components/MainPanel";
@@ -108,6 +108,8 @@ function App() {
     recentInstances,
     addRecentInstance,
     setLauncherType,
+    viewMode,
+    setViewMode,
   } = useAppStore();
   const { settings } = useSettingsStore();
   const { startSession, endSession } = useStatsStore();
@@ -369,6 +371,31 @@ function App() {
     </div>
   ) : null;
 
+  // Remote mode works without a local instance - show the full app shell
+  if (!currentInstance && viewMode === "remote") {
+    return (
+      <NotificationProvider>
+        <>
+          {LoadingOverlay}
+          <div className="flex flex-col h-screen bg-background text-foreground">
+            <Header
+              onSearchClick={() => setShowSearch(true)}
+              onOpenInstance={handleOpenInstance}
+              onCloseInstance={handleCloseInstance}
+              onStatsClick={() => setShowStats(true)}
+              onChangelogClick={() => setShowChangelog(true)}
+            />
+            <div className="flex flex-1 overflow-hidden">
+              <MainPanel />
+            </div>
+          </div>
+          <UpdateNotification />
+          {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+        </>
+      </NotificationProvider>
+    );
+  }
+
   if (!currentInstance) {
     return (
       <>
@@ -411,6 +438,15 @@ function App() {
               >
                 <FolderOpen size={20} className="group-hover:scale-110 transition-transform" />
                 <span>Open Instance</span>
+              </button>
+
+              <button
+                onClick={() => setViewMode("remote")}
+                className="w-full px-6 py-4 bg-card/60 hover:bg-purple-900/30 border-2 border-purple-500/30 hover:border-purple-500/60 text-foreground rounded-xl font-semibold text-base
+                         transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2 shadow-md group"
+              >
+                <Server size={20} className="text-purple-400 group-hover:scale-110 transition-transform" />
+                <span>Remote Config</span>
               </button>
 
               {recentInstances && recentInstances.length > 0 && (

@@ -174,6 +174,24 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("recipe:delete", instancePath, scriptPath, recipeId),
   recipeSearch: (instancePath: string, query: string) =>
     ipcRenderer.invoke("recipe:search", instancePath, query),
+
+  // Remote Config System (MCED-Remote)
+  remoteGetSavedConnections: () => ipcRenderer.invoke("remote:getSavedConnections"),
+  remoteSaveConnection: (connection: import("../shared/types/remote.types").RemoteConnection) =>
+    ipcRenderer.invoke("remote:saveConnection", connection),
+  remoteDeleteConnection: (id: string) => ipcRenderer.invoke("remote:deleteConnection", id),
+  remoteTestConnection: (connection: import("../shared/types/remote.types").RemoteConnection) =>
+    ipcRenderer.invoke("remote:testConnection", connection),
+  remoteConnect: (connectionId: string) => ipcRenderer.invoke("remote:connect", connectionId),
+  remoteDisconnect: () => ipcRenderer.invoke("remote:disconnect"),
+  remoteGetActiveConnectionId: () => ipcRenderer.invoke("remote:getActiveConnectionId"),
+  remoteGetInfo: () => ipcRenderer.invoke("remote:getInfo"),
+  remoteListFiles: (filePath?: string, recursive?: boolean) =>
+    ipcRenderer.invoke("remote:listFiles", filePath, recursive),
+  remoteReadFile: (filePath: string) => ipcRenderer.invoke("remote:readFile", filePath),
+  remoteWriteFile: (filePath: string, content: string) =>
+    ipcRenderer.invoke("remote:writeFile", filePath, content),
+  remoteDeleteFile: (filePath: string) => ipcRenderer.invoke("remote:deleteFile", filePath),
 });
 
 declare global {
@@ -439,6 +457,20 @@ declare global {
         instancePath: string,
         query: string
       ) => Promise<{ success: boolean; data: any[]; error?: string }>;
+
+      // Remote Config System (MCED-Remote)
+      remoteGetSavedConnections: () => Promise<{ success: boolean; data?: any[]; error?: string }>;
+      remoteSaveConnection: (connection: any) => Promise<{ success: boolean; error?: string }>;
+      remoteDeleteConnection: (id: string) => Promise<{ success: boolean; error?: string }>;
+      remoteTestConnection: (connection: any) => Promise<{ success: boolean; data?: any; error?: string }>;
+      remoteConnect: (connectionId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+      remoteDisconnect: () => Promise<{ success: boolean; error?: string }>;
+      remoteGetActiveConnectionId: () => Promise<{ success: boolean; data?: string | null; error?: string }>;
+      remoteGetInfo: () => Promise<{ success: boolean; data?: any; error?: string }>;
+      remoteListFiles: (path?: string, recursive?: boolean) => Promise<{ success: boolean; data?: any[]; error?: string }>;
+      remoteReadFile: (path: string) => Promise<{ success: boolean; data?: string; error?: string }>;
+      remoteWriteFile: (path: string, content: string) => Promise<{ success: boolean; error?: string }>;
+      remoteDeleteFile: (path: string) => Promise<{ success: boolean; error?: string }>;
     };
   }
 }

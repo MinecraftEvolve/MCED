@@ -1,0 +1,250 @@
+name: Build & Release MCED-Remote
+
+# Triggers:
+#   Branch push:  only when mced-remote/ files change (builds + stores artifact)
+#   Tag push:     runs full release pipeline (build + GitHub Release + Modrinth + CurseForge)
+#   Manual:       workflow_dispatch with optional version override and publish toggle
+#
+# Path filter applies to branch pushes; tag pushes always run regardless of changed files.
+on:
+  push:
+    branches: [main, master]
+    tags:
+      - 'v*'
+    paths:
+      - 'mced-remote/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. 1.0.1). Overrides pom.xml. Leave blank to use pom.xml.'
+        required: false
+        default: ''
+      publish:
+        description: 'Publish to GitHub Releases / Modrinth / CurseForge?'
+        type: boolean
+        required: false
+        default: false
+
+env:
+  POM: mced-remote/pom.xml
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────
+  # 1. Build the JAR
+  # ─────────────────────────────────────────────────────────────────
+  build:
+    name: Build JAR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # Resolve the version: dispatch input > git tag > pom.xml
+      - name: Resolve version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(mvn -f ${{ env.POM }} help:evaluate \
+              -Dexpression=project.version -q -DforceStdout)
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building version: $VERSION"
+
+      - name: Set version in pom.xml
+        run: |
+          mvn -f ${{ env.POM }} versions:set \
+            -DnewVersion=${{ steps.version.outputs.version }} \
+            -DgenerateBackupPoms=false
+
+      - name: Build with Maven
+        run: mvn -f ${{ env.POM }} package -q --no-transfer-progress
+
+      - name: List build output
+        run: ls -lh mced-remote/target/mced-remote*.jar
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mced-remote-${{ steps.version.outputs.version }}
+          path: |
+            mced-remote/target/mced-remote.jar
+            mced-remote/target/mced-remote-${{ steps.version.outputs.version }}.jar
+          retention-days: 30
+          if-no-files-found: error
+
+  # ─────────────────────────────────────────────────────────────────
+  # 2. GitHub Release
+  #    Runs on: version tags  OR  manual dispatch with publish=true
+  # ─────────────────────────────────────────────────────────────────
+  github-release:
+    name: GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: |
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true')
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mced-remote-${{ needs.build.outputs.version }}
+          path: dist/
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "MCED-Remote v${{ needs.build.outputs.version }}"
+          body: |
+            ## MCED-Remote v${{ needs.build.outputs.version }}
+
+            Standalone HTTP agent for **MCED Desktop** — place it on your Minecraft server
+            so the desktop app can remotely browse and edit config files.
+
+            ### Quick Start
+            1. Copy `mced-remote.jar` into your Minecraft server root directory
+            2. Run `java -jar mced-remote.jar`
+            3. On first run it creates `mced-remote.properties` with an auto-generated API key
+            4. In MCED Desktop → click the **Server** icon → **Add Connection** → paste the key
+
+            ### Requirements
+            - Java 17 or newer (no mod loader required)
+            - Works with Vanilla, Fabric, Forge, NeoForge, Paper, and any other server type
+
+            ### Files
+            | File | Description |
+            |------|-------------|
+            | `mced-remote.jar` | Drop this on your server and run it |
+            | `mced-remote-${{ needs.build.outputs.version }}.jar` | Same JAR, versioned filename |
+          files: |
+            dist/mced-remote.jar
+            dist/mced-remote-${{ needs.build.outputs.version }}.jar
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─────────────────────────────────────────────────────────────────
+  # 3. Modrinth Upload
+  #    Set repository variable MODRINTH_PROJECT_ID and secret MODRINTH_TOKEN to enable.
+  # ─────────────────────────────────────────────────────────────────
+  modrinth:
+    name: Upload to Modrinth
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: |
+      (startsWith(github.ref, 'refs/tags/v') ||
+       (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true')) &&
+      vars.MODRINTH_PROJECT_ID != ''
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mced-remote-${{ needs.build.outputs.version }}
+          path: dist/
+
+      - name: Upload to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          JAR="dist/mced-remote-${VERSION}.jar"
+
+          # Modrinth v2 API: POST /version with multipart form
+          # Docs: https://docs.modrinth.com/api/operations/createversion/
+          RESPONSE=$(curl -sf \
+            -X POST \
+            -H "Authorization: $MODRINTH_TOKEN" \
+            -F "data={
+              \"name\": \"v${VERSION}\",
+              \"version_number\": \"${VERSION}\",
+              \"changelog\": \"See the [GitHub release](https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}) for details.\",
+              \"dependencies\": [],
+              \"game_versions\": [],
+              \"version_type\": \"release\",
+              \"loaders\": [\"datapack\"],
+              \"featured\": true,
+              \"project_id\": \"${PROJECT_ID}\",
+              \"file_parts\": [\"mced-remote-${VERSION}.jar\"],
+              \"primary_file\": \"mced-remote-${VERSION}.jar\"
+            };type=application/json" \
+            -F "mced-remote-${VERSION}.jar=@${JAR}" \
+            "https://api.modrinth.com/v2/version") \
+            || { echo "::error::Modrinth upload failed"; exit 1; }
+
+          echo "Modrinth response: $RESPONSE"
+          echo "Modrinth upload complete"
+
+  # ─────────────────────────────────────────────────────────────────
+  # 4. CurseForge Upload
+  #    Set repository variable CURSEFORGE_PROJECT_ID and secret CURSEFORGE_TOKEN to enable.
+  # ─────────────────────────────────────────────────────────────────
+  curseforge:
+    name: Upload to CurseForge
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: |
+      (startsWith(github.ref, 'refs/tags/v') ||
+       (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true')) &&
+      vars.CURSEFORGE_PROJECT_ID != ''
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mced-remote-${{ needs.build.outputs.version }}
+          path: dist/
+
+      - name: Upload to CurseForge
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          JAR="dist/mced-remote-${VERSION}.jar"
+
+          # CurseForge Upload API: https://support.curseforge.com/en/support/solutions/articles/9000197321
+          METADATA=$(cat <<JSON
+          {
+            "changelog": "v${VERSION} — See [GitHub release](https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}) for details.",
+            "changelogType": "markdown",
+            "displayName": "MCED-Remote v${VERSION}",
+            "releaseType": "release"
+          }
+          JSON
+          )
+
+          RESPONSE=$(curl -sf \
+            -X POST \
+            -H "X-Api-Token: $CURSEFORGE_TOKEN" \
+            -F "metadata=${METADATA};type=application/json" \
+            -F "file=@${JAR}" \
+            "https://minecraft.curseforge.com/api/projects/${PROJECT_ID}/upload-file") \
+            || { echo "::error::CurseForge upload failed"; exit 1; }
+
+          echo "CurseForge response: $RESPONSE"
+          echo "CurseForge upload complete"

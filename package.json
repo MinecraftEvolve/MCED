@@ -10,6 +10,8 @@
     "build": "npm run build:main && npm run build:renderer",
     "build:main": "tsc --project src/main/tsconfig.main.json",
     "build:renderer": "vite build",
+    "build:java": "mvn -f mced-remote/pom.xml package -q --no-transfer-progress",
+    "build:all": "npm run build && npm run build:java",
     "package": "electron-builder",
     "package:win": "electron-builder --win --publish never",
     "package:mac": "electron-builder --mac --publish never",
