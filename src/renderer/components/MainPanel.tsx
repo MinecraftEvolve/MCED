@@ -10,7 +10,7 @@ import { useRemoteConnectionStore } from "../store/remoteConnectionStore";
 
 export function MainPanel() {
   const { selectedMod, currentInstance, viewMode } = useAppStore();
-  const { connectionStatus } = useRemoteConnectionStore();
+  useRemoteConnectionStore();
 
   // Remote panel works independently of a local instance
   if (viewMode === "remote") {
