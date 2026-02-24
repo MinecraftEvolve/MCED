@@ -29,6 +29,10 @@ export interface AppSettings {
 
   // Discord Rich Presence
   discordRpcEnabled: boolean;
+
+  // Game Launch (JVM)
+  jvmMaxMemory: number;
+  jvmMinMemory: number;
 }
 
 interface SettingsStore {
@@ -53,6 +57,8 @@ const defaultSettings: AppSettings = {
   maxRecentInstances: 10,
   modsWithoutConfigsAtEnd: true,
   discordRpcEnabled: true,
+  jvmMaxMemory: 4096,
+  jvmMinMemory: 1024,
 };
 
 export const useSettingsStore = create<SettingsStore>()(

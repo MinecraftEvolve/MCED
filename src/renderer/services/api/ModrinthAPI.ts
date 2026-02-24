@@ -123,6 +123,35 @@ class ModrinthAPIService {
     return mod?.icon_url || null;
   }
 
+  /**
+   * Get the latest version for a mod by project ID or slug
+   */
+  async getLatestVersion(modId: string, mcVersion?: string): Promise<{ version: string; versionId: string; changelog?: string } | null> {
+    try {
+      const cacheKey = `modrinth_versions_${modId}_${mcVersion || 'any'}`;
+      const cached = this.getFromCache(cacheKey);
+      if (cached) return cached;
+
+      const url = `${this.baseUrl}/project/${modId}/version${mcVersion ? `?game_versions=["${mcVersion}"]` : ''}`;
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'MCED/1.0' }
+      });
+      if (!response.ok) return null;
+      const versions = await response.json();
+      if (!Array.isArray(versions) || versions.length === 0) return null;
+      const latest = versions[0]; // API returns newest first
+      const result = {
+        version: latest.version_number,
+        versionId: latest.id,
+        changelog: latest.changelog?.substring(0, 500),
+      };
+      this.setCache(cacheKey, result);
+      return result;
+    } catch {
+      return null;
+    }
+  }
+
   private getFromCache(key: string): any | null {
     const cached = this.cache.get(key);
     if (cached && Date.now() - cached.timestamp < this.cacheDuration) {

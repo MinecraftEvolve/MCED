@@ -16,6 +16,7 @@ import {
   ArrowRightLeft,
   Download,
   FileText,
+  Cpu,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import "./Settings.css";
@@ -617,6 +618,58 @@ export function Settings({ onClose }: { onClose: () => void }) {
                 />
                 <span className="toggle-slider"></span>
               </label>
+            </div>
+          </section>
+
+          {/* Game Launch Section */}
+          <section className="settings-section">
+            <h3>
+              <Cpu className="icon" size={20} />
+              Game Launch
+            </h3>
+
+            <div className="setting-row">
+              <div className="setting-info">
+                <span className="setting-label">Max Memory (MB)</span>
+                <span className="setting-description">Maximum JVM heap size for Minecraft (e.g. 4096 = 4 GB)</span>
+              </div>
+              <input
+                type="number"
+                min="512"
+                max="32768"
+                step="512"
+                value={localSettings.jvmMaxMemory ?? 4096}
+                onChange={(e) =>
+                  setLocalSettings({
+                    ...localSettings,
+                    jvmMaxMemory: parseInt(e.target.value) || 4096,
+                  })
+                }
+                onBlur={() => applySettings(localSettings)}
+                className="setting-input-small"
+              />
+            </div>
+
+            <div className="setting-row">
+              <div className="setting-info">
+                <span className="setting-label">Min Memory (MB)</span>
+                <span className="setting-description">Initial JVM heap size for Minecraft (e.g. 1024 = 1 GB)</span>
+              </div>
+              <input
+                type="number"
+                min="256"
+                max="8192"
+                step="256"
+                value={localSettings.jvmMinMemory ?? 1024}
+                onChange={(e) =>
+                  setLocalSettings({
+                    ...localSettings,
+                    jvmMinMemory: parseInt(e.target.value) || 1024,
+                  })
+                }
+                onBlur={() => applySettings(localSettings)}
+                className="setting-input-small"
+              />
             </div>
           </section>
 
