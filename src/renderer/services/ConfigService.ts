@@ -1014,12 +1014,10 @@ export class ConfigService {
       const fileName = config.name.toLowerCase();
       const modIdLower = modId.toLowerCase();
 
-      // Direct match
-      if (fileName.includes(modIdLower)) return true;
-
-      // Match without version/numbers
-      const cleanModId = modIdLower.replace(/[-_]\d+/g, "");
-      if (fileName.includes(cleanModId)) return true;
+      // Exact prefix match (filename starts with modId or modId_)
+      if (fileName === modIdLower) return true;
+      if (fileName.startsWith(modIdLower + "-") || fileName.startsWith(modIdLower + "_")) return true;
+      if (fileName.startsWith(modIdLower + ".")) return true;
 
       return false;
     });

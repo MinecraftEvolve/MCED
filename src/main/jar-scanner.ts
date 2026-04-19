@@ -34,7 +34,7 @@ export class JarScanner {
       const zipEntries = zip.getEntries();
 
       // Try Forge/NeoForge first
-      let metadata = await this.tryForgeMetadata(zip, zipEntries);
+      let metadata = await this.tryForgeMetadata(zip, zipEntries, jarPath);
 
       // Try Fabric
       if (!metadata) {
@@ -43,7 +43,7 @@ export class JarScanner {
 
       // Try NeoForge
       if (!metadata) {
-        metadata = await this.tryNeoForgeMetadata(zip, zipEntries);
+        metadata = await this.tryNeoForgeMetadata(zip, zipEntries, jarPath);
       }
 
       if (!metadata) {
@@ -69,9 +69,37 @@ export class JarScanner {
     }
   }
 
+  /** Normalize a string for mod ID comparison: lowercase, no dashes/underscores, no version suffixes */
+  private normalizeForMatch(s: string): string {
+    return s.toLowerCase().replace(/[-_]/g, "").replace(/\d+.*$/, "");
+  }
+
+  /**
+   * Pick the best mod entry from a mods.toml [[mods]] array.
+   * Filters system entries (forge, minecraft, fml, neoforge) and prefers
+   * the entry whose modId most closely matches the jar filename.
+   */
+  private pickBestModEntry(mods: any[], jarPath: string): any {
+    const SYSTEM_MODS = new Set(["forge", "minecraft", "fml", "neoforge", "javafml", "forge_version_check"]);
+    const realMods = mods.filter((m) => m.modId && !SYSTEM_MODS.has(m.modId.toLowerCase()));
+    const candidates = realMods.length > 0 ? realMods : mods;
+
+    if (candidates.length === 1) return candidates[0];
+
+    // Prefer the entry whose modId best matches the jar filename
+    const jarBase = this.normalizeForMatch(path.basename(jarPath, path.extname(jarPath)));
+    const bestMatch = candidates.find((m) => {
+      const modIdNorm = this.normalizeForMatch(m.modId || "");
+      return jarBase.startsWith(modIdNorm) || modIdNorm.startsWith(jarBase);
+    });
+
+    return bestMatch ?? candidates[0];
+  }
+
   private async tryForgeMetadata(
     zip: AdmZip,
-    entries: AdmZip.IZipEntry[]
+    entries: AdmZip.IZipEntry[],
+    jarPath: string
   ): Promise<ModMetadata | null> {
     // Try mods.toml (modern Forge)
     const modsTomlEntry = entries.find((e) => e.entryName === "META-INF/mods.toml");
@@ -82,7 +110,7 @@ export class JarScanner {
         const parsed = toml.parse(content);
 
         if (parsed.mods && Array.isArray(parsed.mods) && parsed.mods.length > 0) {
-          const mod = parsed.mods[0];
+          const mod = this.pickBestModEntry(parsed.mods, jarPath);
 
           // Resolve version placeholders
           let version = mod.version || "0.0.0";
@@ -182,7 +210,8 @@ export class JarScanner {
 
   private async tryNeoForgeMetadata(
     zip: AdmZip,
-    entries: AdmZip.IZipEntry[]
+    entries: AdmZip.IZipEntry[],
+    jarPath: string
   ): Promise<ModMetadata | null> {
     const neoforgeModsTomlEntry = entries.find(
       (e) => e.entryName === "META-INF/neoforge.mods.toml"
@@ -195,7 +224,7 @@ export class JarScanner {
       const parsed = toml.parse(content);
 
       if (parsed.mods && Array.isArray(parsed.mods) && parsed.mods.length > 0) {
-        const mod = parsed.mods[0];
+        const mod = this.pickBestModEntry(parsed.mods, jarPath);
 
         // Resolve version placeholders
         let version = mod.version || "0.0.0";
