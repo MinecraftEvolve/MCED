@@ -67,8 +67,25 @@ contextBridge.exposeInMainWorld("api", {
   discordClearInstance: () => ipcRenderer.invoke("discord:clear-instance"),
 
   // Game Launcher
-  // Launch game APIs removed due to Java compatibility issues
-  // TODO: Re-implement in future when stable solution is found
+  launchGame: (
+    instancePath: string,
+    launcher: string,
+    mcVersion: string,
+    loaderVersion: string,
+    jvmXmx?: number,
+    jvmXms?: number
+  ) => ipcRenderer.invoke("game:launch", instancePath, launcher, mcVersion, loaderVersion, jvmXmx ?? 4096, jvmXms ?? 1024),
+  killGame: (instancePath: string) => ipcRenderer.invoke("game:kill", instancePath),
+  isGameRunning: (instancePath: string) => ipcRenderer.invoke("game:isRunning", instancePath),
+  getRunningGames: () => ipcRenderer.invoke("game:getRunning"),
+  onGameLog: (callback: (data: { line: string; type: 'stdout' | 'stderr' | 'system'; instancePath: string; timestamp: number }) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, data: any) => callback(data);
+    ipcRenderer.on('game:log', handler);
+    return () => ipcRenderer.removeListener('game:log', handler);
+  },
+  removeGameLogListener: () => {
+    ipcRenderer.removeAllListeners('game:log');
+  },
 
   // Update Checker
   checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
@@ -174,6 +191,12 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("recipe:delete", instancePath, scriptPath, recipeId),
   recipeSearch: (instancePath: string, query: string) =>
     ipcRenderer.invoke("recipe:search", instancePath, query),
+
+  analyzeCrashLog: (content: string, knownModIds: string[]) =>
+    ipcRenderer.invoke("crash:analyze", content, knownModIds),
+
+  exportModpack: (instancePath: string, packName: string, mcVersion: string, loaderType: string, loaderVersion: string) =>
+    ipcRenderer.invoke("export:modpack", instancePath, packName, mcVersion, loaderType, loaderVersion),
 });
 
 declare global {
@@ -200,7 +223,7 @@ declare global {
       listDirectory: (path: string) => Promise<string[]>;
       detectInstance: (
         path: string
-      ) => Promise<{ success: boolean; instance?: any; error?: string }>;
+      ) => Promise<{ success: boolean; instance?: any; launcherType?: string; error?: string }>;
       getServerConfigFolder: (instancePath: string) => Promise<string | null>;
       scanMods: (modsFolder: string) => Promise<{ success: boolean; mods?: any[]; error?: string }>;
       extractIcon: (
@@ -245,8 +268,31 @@ declare global {
       discordClearMod: () => Promise<{ success: boolean; error?: string }>;
       discordClearInstance: () => Promise<{ success: boolean; error?: string }>;
 
-      // Game Launcher APIs removed due to Java compatibility issues
-      // TODO: Re-implement in future when stable solution is found
+      analyzeCrashLog: (content: string, knownModIds: string[]) => Promise<{
+        success: boolean;
+        mainCause?: string | null;
+        issues?: Array<{ modId: string; reason: string; line: string }>;
+        suspectedMods?: string[];
+        totalLines?: number;
+        error?: string;
+      }>;
+      exportModpack: (instancePath: string, packName: string, mcVersion: string, loaderType: string, loaderVersion: string) =>
+        Promise<{ success: boolean; outputPath?: string; error?: string }>;
+
+      // Game Launcher
+      launchGame: (
+        instancePath: string,
+        launcher: string,
+        mcVersion: string,
+        loaderVersion: string,
+        jvmXmx?: number,
+        jvmXms?: number
+      ) => Promise<{ success: boolean; pid?: number; error?: string }>;
+      killGame: (instancePath: string) => Promise<{ success: boolean; error?: string }>;
+      isGameRunning: (instancePath: string) => Promise<boolean>;
+      getRunningGames: () => Promise<string[]>;
+      onGameLog: (callback: (data: { line: string; type: 'stdout' | 'stderr' | 'system'; instancePath: string; timestamp: number }) => void) => (() => void);
+      removeGameLogListener: () => void;
 
       checkForUpdates: () => Promise<{ success: boolean; updateInfo?: UpdateInfo; error?: string }>;
       downloadUpdate: () => Promise<{ success: boolean; error?: string }>;

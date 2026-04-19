@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import path from "path";
 import { promises as fs } from "fs";
+import { createHash } from "crypto";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { JarScanner } from "./jar-scanner";
@@ -12,8 +13,7 @@ import { ItemRegistryService } from "./services/ItemRegistryService";
 import { FluidRegistryService } from "./services/FluidRegistryService";
 import { RecipeService } from "./services/RecipeService";
 import { JarLoaderService } from "./services/JarLoaderService";
-// Game launchers removed due to Java compatibility issues
-// TODO: Re-implement in future when stable solution is found
+import { LaunchService } from './LaunchService';
 import "../shared/config"; // Import to silence console.logs in production
 
 const execAsync = promisify(exec);
@@ -757,59 +757,93 @@ ipcMain.handle("modrinth:getProject", async (_event, idOrSlug: string) => {
   }
 });
 
+// Returns the new (isolated) backup directory stored in app userData.
+function getInstanceBackupDir(instancePath: string): string {
+  const hash = createHash("sha1").update(instancePath).digest("hex").slice(0, 8);
+  const name = path.basename(instancePath).replace(/[^a-zA-Z0-9_-]/g, "_");
+  return path.join(app.getPath("userData"), "backups", `${name}-${hash}`);
+}
+
+// Legacy location — kept for backwards compatibility (read/restore/delete still work).
+function getLegacyBackupDir(instancePath: string): string {
+  return path.join(instancePath, ".mced-backups");
+}
+
+// Resolves a backup filename safely, rejecting any path traversal attempts.
+function resolveBackupFile(backupDir: string, backupId: string): string {
+  const safeId = path.basename(backupId); // strip any directory components
+  const resolved = path.resolve(backupDir, safeId);
+  if (!resolved.startsWith(path.resolve(backupDir) + path.sep)) {
+    throw new Error("Invalid backup ID");
+  }
+  return resolved;
+}
+
+async function readBackupsFromDir(backupDir: string): Promise<object[]> {
+  try {
+    await fs.access(backupDir);
+  } catch {
+    return [];
+  }
+  const files = await fs.readdir(backupDir);
+  const backups = [];
+  for (const file of files) {
+    if (!file.endsWith(".zip")) continue;
+    const match = file.match(/backup-(\d+)-(.+)\.zip/);
+    if (!match) continue;
+    try {
+      const stats = await fs.stat(path.join(backupDir, file));
+      backups.push({
+        id: file,
+        timestamp: parseInt(match[1]),
+        name: match[2].replace(/-/g, " "),
+        size: stats.size,
+        configCount: 0,
+      });
+    } catch {}
+  }
+  return backups;
+}
+
 // Backup management
 ipcMain.handle("backup:list", async (_event, instancePath: string) => {
   try {
-    const backupDir = path.join(instancePath, ".mced-backups");
-
-    try {
-      await fs.access(backupDir);
-    } catch {
-      return [];
-    }
-
-    const files = await fs.readdir(backupDir);
-    const backups = [];
-
-    for (const file of files) {
-      if (file.endsWith(".zip")) {
-        const filePath = path.join(backupDir, file);
-        const stats = await fs.stat(filePath);
-        const match = file.match(/backup-(\d+)-(.+)\.zip/);
-
-        if (match) {
-          backups.push({
-            id: file,
-            timestamp: parseInt(match[1]),
-            name: match[2].replace(/-/g, " "),
-            size: stats.size,
-            configCount: 0, // Will be calculated if needed
-          });
-        }
-      }
-    }
-
-    return backups.sort((a, b) => b.timestamp - a.timestamp);
+    const [newBackups, legacyBackups] = await Promise.all([
+      readBackupsFromDir(getInstanceBackupDir(instancePath)),
+      readBackupsFromDir(getLegacyBackupDir(instancePath)),
+    ]);
+    const all = [...newBackups, ...legacyBackups] as { timestamp: number }[];
+    return all.sort((a, b) => b.timestamp - a.timestamp);
   } catch (error) {
     return [];
   }
 });
 
-ipcMain.handle("backup:create", async (_event, instancePath: string) => {
+ipcMain.handle("backup:create", async (_event, instancePath: string, name?: string) => {
   try {
     const AdmZip = require("adm-zip");
     const zip = new AdmZip();
 
-    const configDir = path.join(instancePath, "config");
-    const backupDir = path.join(instancePath, ".mced-backups");
+    const backupDir = getInstanceBackupDir(instancePath);
 
     await fs.mkdir(backupDir, { recursive: true });
 
     const timestamp = Date.now();
-    const name = `Backup-${new Date(timestamp).toISOString().split("T")[0]}`;
-    const backupFile = path.join(backupDir, `backup-${timestamp}-${name.replace(/ /g, "-")}.zip`);
+    const backupName = name || `Backup-${new Date(timestamp).toISOString().split("T")[0]}`;
+    const backupFile = path.join(backupDir, `backup-${timestamp}-${backupName.replace(/ /g, "-")}.zip`);
 
-    zip.addLocalFolder(configDir);
+    // Add config/ folder with prefix preserved
+    const configDir = path.join(instancePath, "config");
+    try { await fs.access(configDir); zip.addLocalFolder(configDir, "config"); } catch {}
+
+    // Add kubejs/ folder if it exists
+    const kubejsDir = path.join(instancePath, "kubejs");
+    try { await fs.access(kubejsDir); zip.addLocalFolder(kubejsDir, "kubejs"); } catch {}
+
+    // Add defaultconfigs/ if it exists
+    const defaultConfigsDir = path.join(instancePath, "defaultconfigs");
+    try { await fs.access(defaultConfigsDir); zip.addLocalFolder(defaultConfigsDir, "defaultconfigs"); } catch {}
+
     zip.writeZip(backupFile);
 
     return { success: true };
@@ -832,11 +866,23 @@ ipcMain.handle("clear-api-cache", async () => {
 ipcMain.handle("backup:restore", async (_event, instancePath: string, backupId: string) => {
   try {
     const AdmZip = require("adm-zip");
-    const backupFile = path.join(instancePath, ".mced-backups", backupId);
     const configDir = path.join(instancePath, "config");
 
+    // Resolve file from new location first, fall back to legacy
+    const newDir = getInstanceBackupDir(instancePath);
+    const legacyDir = getLegacyBackupDir(instancePath);
+    let backupFile: string;
+    try {
+      backupFile = resolveBackupFile(newDir, backupId);
+      await fs.access(backupFile);
+    } catch {
+      backupFile = resolveBackupFile(legacyDir, backupId);
+      await fs.access(backupFile); // throws if not found in legacy either
+    }
+
     const zip = new AdmZip(backupFile);
-    zip.extractAllTo(configDir, true);
+    // Extract to instance root so config/, kubejs/, defaultconfigs/ are all restored correctly
+    zip.extractAllTo(instancePath, true);
 
     return { success: true };
   } catch (error) {
@@ -868,9 +914,46 @@ ipcMain.handle("load-config-profile", async (_event, profileId: string) => {
 
 ipcMain.handle("backup:delete", async (_event, instancePath: string, backupId: string) => {
   try {
-    const backupFile = path.join(instancePath, ".mced-backups", backupId);
+    // Try new location first, fall back to legacy
+    const newDir = getInstanceBackupDir(instancePath);
+    const legacyDir = getLegacyBackupDir(instancePath);
+    let backupFile: string;
+    try {
+      backupFile = resolveBackupFile(newDir, backupId);
+      await fs.access(backupFile);
+    } catch {
+      backupFile = resolveBackupFile(legacyDir, backupId);
+    }
     await fs.unlink(backupFile);
     return { success: true };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+ipcMain.handle("backup:rename", async (_event, instancePath: string, backupId: string, newName: string) => {
+  try {
+    // Try new location first, fall back to legacy
+    const newDir = getInstanceBackupDir(instancePath);
+    const legacyDir = getLegacyBackupDir(instancePath);
+    let backupDir: string;
+    try {
+      const candidate = resolveBackupFile(newDir, backupId);
+      await fs.access(candidate);
+      backupDir = newDir;
+    } catch {
+      backupDir = legacyDir;
+    }
+    const oldFile = resolveBackupFile(backupDir, backupId);
+
+    const match = backupId.match(/^backup-(\d+)-/);
+    const timestamp = match ? match[1] : String(Date.now());
+
+    const newId = `backup-${timestamp}-${newName.replace(/ /g, "-")}.zip`;
+    const newFile = path.join(backupDir, newId);
+
+    await fs.rename(oldFile, newFile);
+    return { success: true, newId };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
@@ -969,8 +1052,50 @@ ipcMain.handle("shell:openExternal", async (_event, url: string) => {
 
 // ===== Game Launcher Handlers =====
 
-// Game launch functionality removed due to Java compatibility issues
-// TODO: Re-implement in future when stable solution is found
+const launchService = new LaunchService();
+
+launchService.on('log', (data) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('game:log', data);
+  }
+});
+
+ipcMain.handle(
+  "game:launch",
+  async (
+    _event,
+    instancePath: string,
+    launcher: string,
+    mcVersion: string,
+    loaderVersion: string,
+    jvmXmx: number = 4096,
+    jvmXms: number = 1024
+  ) => {
+    try {
+      const result = await launchService.launch(instancePath, launcher, mcVersion, loaderVersion, jvmXmx, jvmXms);
+      return result;
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+);
+
+ipcMain.handle("game:kill", async (_event, instancePath: string) => {
+  try {
+    const killed = LaunchService.kill(instancePath);
+    return { success: killed };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+ipcMain.handle("game:isRunning", async (_event, instancePath: string) => {
+  return LaunchService.isRunning(instancePath);
+});
+
+ipcMain.handle("game:getRunning", async () => {
+  return LaunchService.getRunningInstances();
+});
 
 // Update Checker Handler
 ipcMain.handle("check-for-updates", async () => {
@@ -1861,6 +1986,111 @@ ipcMain.handle("kubejs:validateScript", async (_event, code: string) => {
       success: true,
       data: { isValid: errors.filter((e) => e.severity === "error").length === 0, errors },
     };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+ipcMain.handle("crash:analyze", async (_event, crashLogContent: string, knownModIds: string[]) => {
+  try {
+    const lines = crashLogContent.split("\n");
+    const issues: Array<{ modId: string; reason: string; line: string }> = [];
+    const mentionedMods = new Set<string>();
+
+    // Pattern matching for common crash types
+    const patterns = [
+      { regex: /java\.lang\.NullPointerException/i, reason: "Null Pointer Exception" },
+      { regex: /java\.lang\.StackOverflowError/i, reason: "Stack Overflow" },
+      { regex: /java\.lang\.OutOfMemoryError/i, reason: "Out of Memory - increase JVM heap" },
+      { regex: /java\.lang\.ClassNotFoundException:\s*(.+)/i, reason: "Missing class" },
+      { regex: /ModLoadingException/i, reason: "Mod loading failed" },
+      { regex: /FMLLoadingException/i, reason: "FML loading error" },
+      { regex: /mixin\.MixinApplyError/i, reason: "Mixin conflict" },
+      { regex: /CrashReport/i, reason: "Crash report entry" },
+    ];
+
+    // Check each line for mod mentions and error patterns
+    for (const line of lines) {
+      // Check for known mod IDs in the line
+      for (const modId of knownModIds) {
+        if (modId.length > 3 && line.toLowerCase().includes(modId.toLowerCase())) {
+          mentionedMods.add(modId);
+        }
+      }
+
+      // Check for error patterns
+      for (const pattern of patterns) {
+        if (pattern.regex.test(line)) {
+          issues.push({
+            modId: "unknown",
+            reason: pattern.reason,
+            line: line.trim().substring(0, 200),
+          });
+          break;
+        }
+      }
+    }
+
+    // Try to extract the main crash cause
+    const causeMatch = crashLogContent.match(/Caused by:\s*(.+)/);
+    const mainCause = causeMatch ? causeMatch[1].trim().substring(0, 300) : null;
+
+    // Match mentioned mods with issues (heuristic)
+    const suspectedMods = Array.from(mentionedMods).slice(0, 10);
+
+    return {
+      success: true,
+      mainCause,
+      issues: issues.slice(0, 20),
+      suspectedMods,
+      totalLines: lines.length,
+    };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+ipcMain.handle("export:modpack", async (_event, instancePath: string, packName: string, mcVersion: string, loaderType: string, loaderVersion: string) => {
+  try {
+    const AdmZip = require("adm-zip");
+    const zip = new AdmZip();
+
+    // Build mrpack manifest
+    const manifest = {
+      formatVersion: 1,
+      game: "minecraft",
+      versionId: `${packName}-1.0.0`,
+      name: packName,
+      dependencies: {
+        minecraft: mcVersion,
+        ...(loaderType === "forge" ? { forge: loaderVersion } : {}),
+        ...(loaderType === "fabric" ? { "fabric-loader": loaderVersion } : {}),
+        ...(loaderType === "neoforge" ? { neoforge: loaderVersion } : {}),
+        ...(loaderType === "quilt" ? { "quilt-loader": loaderVersion } : {}),
+      },
+      files: [] as any[],
+    };
+
+    zip.addFile("modrinth.index.json", Buffer.from(JSON.stringify(manifest, null, 2)));
+
+    // Add overrides/config folder
+    const configDir = path.join(instancePath, "config");
+    try {
+      await fs.access(configDir);
+      zip.addLocalFolder(configDir, "overrides/config");
+    } catch {}
+
+    // Add kubejs if present
+    const kubejsDir = path.join(instancePath, "kubejs");
+    try {
+      await fs.access(kubejsDir);
+      zip.addLocalFolder(kubejsDir, "overrides/kubejs");
+    } catch {}
+
+    const outputPath = path.join(instancePath, `${packName.replace(/ /g, "-")}.mrpack`);
+    zip.writeZip(outputPath);
+
+    return { success: true, outputPath };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   }

@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAppStore } from "./store";
 import { useSettingsStore } from "./store/settingsStore";
 import { useStatsStore } from "./store/statsStore";
 import { useChangelogStore } from "./store/changelogStore";
+import { useChangeTrackingStore } from "./store/changeTrackingStore";
 import { NotificationProvider } from "./components/common/Notifications";
-import { Loader2, Settings as SettingsIcon, FolderOpen } from "lucide-react";
+import { Loader2, Settings as SettingsIcon, FolderOpen, Play, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { MainPanel } from "./components/MainPanel";
@@ -17,6 +18,7 @@ import { ChangelogViewer } from "./components/ChangelogViewer";
 import { LauncherIcon } from "./components/LauncherIcon";
 import { smartSearchService } from "./services/SmartSearchService";
 import { configService } from "./services/ConfigService";
+import { updateCheckerService } from "./services/UpdateCheckerService";
 import modrinthAPI from "./services/api/ModrinthAPI";
 import curseForgeAPI from "./services/api/CurseForgeAPI";
 import { ModInfo } from "../shared/types/mod.types";
@@ -110,9 +112,18 @@ function App() {
     setLauncherType,
   } = useAppStore();
   const { settings } = useSettingsStore();
+  const { changes } = useChangeTrackingStore();
   const { startSession, endSession } = useStatsStore();
   const { startSession: startChangelogSession } = useChangelogStore();
   const [error, setError] = useState<string | null>(null);
+  const [launchingPath, setLaunchingPath] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ message, type });
+    toastTimer.current = setTimeout(() => setToast(null), 3500);
+  }, []);
   const [showSearch, setShowSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -197,10 +208,11 @@ function App() {
 
       const instanceInfo = result.instance;
       setCurrentInstance(instanceInfo);
-      setLauncherType(result.launcherType || "unknown");
+      setLauncherType((result.launcherType || "unknown") as "modrinth" | "curseforge" | "generic" | "packwiz" | "unknown");
       addRecentInstance({
         path: String(instanceInfo.path),
         name: instanceInfo.name,
+        lastOpened: Date.now(),
         minecraftVersion: instanceInfo.minecraftVersion,
         loader: instanceInfo.loader
           ? `${instanceInfo.loader.type} ${instanceInfo.loader.version}`.trim()
@@ -230,6 +242,9 @@ function App() {
         instanceInfo.serverConfigFolder
       );
       setMods(modsWithConfigs);
+
+      // Trigger update check in the background
+      updateCheckerService.checkUpdates(modsWithConfigs, instanceInfo.minecraftVersion).catch(() => {});
 
       // Detect KubeJS and load item registry if present
       const hasKubeJS = modsList.some(
@@ -358,6 +373,34 @@ function App() {
     }
   }, [mods, currentInstance]);
 
+  const handleLaunchInstance = async (
+    instancePath: string,
+    launcher?: string,
+    mcVersion?: string,
+    loaderVersion?: string
+  ) => {
+    setLaunchingPath(instancePath);
+    try {
+      const result = await window.api.launchGame(
+        instancePath,
+        launcher || 'unknown',
+        mcVersion || '',
+        loaderVersion || '',
+        settings.jvmMaxMemory ?? 4096,
+        settings.jvmMinMemory ?? 1024
+      );
+      if (!result.success) {
+        showToast(`Launch failed: ${result.error}`, 'error');
+      } else {
+        showToast('Minecraft is launching…', 'success');
+      }
+    } catch (e) {
+      showToast(`Launch failed: ${String(e)}`, 'error');
+    } finally {
+      setLaunchingPath(null);
+    }
+  };
+
   // Loading overlay (doesn't block window interaction)
   const LoadingOverlay = isLoading ? (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-none animate-fadeIn">
@@ -373,6 +416,19 @@ function App() {
     return (
       <>
         {LoadingOverlay}
+        {toast && (
+          <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-xl text-sm font-medium animate-fadeIn transition-all ${
+            toast.type === 'success'
+              ? 'bg-green-500/20 border-green-500/40 text-green-300'
+              : 'bg-red-500/20 border-red-500/40 text-red-300'
+          }`}>
+            {toast.type === 'success'
+              ? <CheckCircle className="w-4 h-4 shrink-0" />
+              : <XCircle className="w-4 h-4 shrink-0" />
+            }
+            {toast.message}
+          </div>
+        )}
         <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-background via-background to-primary/5 text-foreground relative overflow-hidden">
           {/* Animated background elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -427,41 +483,69 @@ function App() {
                         instancePath.split(/[/\\]/).pop() ||
                         instancePath;
                       return (
-                        <button
+                        <div
                           key={idx}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleOpenInstance(instancePath);
-                          }}
-                          className="w-full px-4 py-3 bg-card/50 backdrop-blur-sm hover:bg-purple-900/30 rounded-xl text-left
-                                   transition-all duration-200 border-2 border-purple-500/20 hover:border-purple-500/50 group overflow-hidden hover:shadow-lg transform hover:scale-[1.01]"
+                          className="relative group/card"
                           style={{ animationDelay: `${0.3 + idx * 0.1}s` }}
                         >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">
-                              {instanceName}
-                            </div>
-                            {typeof instance === "object" && instance.launcher && (
-                              <LauncherIcon launcher={instance.launcher} size={18} />
-                            )}
-                          </div>
-                          {typeof instance === "object" &&
-                            instance.minecraftVersion &&
-                            instance.loader && (
-                              <div className="flex items-center gap-2 text-xs mt-1.5">
-                                <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded-md text-xs font-semibold border border-green-500/30">
-                                  MC {instance.minecraftVersion}
-                                </span>
-                                <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-md text-xs font-semibold border border-purple-500/30">
-                                  {instance.loader}
-                                </span>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleOpenInstance(instancePath);
+                            }}
+                            className="w-full px-4 py-3 bg-card/50 backdrop-blur-sm hover:bg-purple-900/30 rounded-xl text-left
+                                     transition-all duration-200 border-2 border-purple-500/20 hover:border-purple-500/50 group overflow-hidden hover:shadow-lg transform hover:scale-[1.01]"
+                          >
+                            <div className="flex items-center justify-between gap-2 pr-8">
+                              <div className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">
+                                {instanceName}
                               </div>
-                            )}
-                          <div className="text-xs text-muted-foreground truncate mt-1.5 font-mono opacity-70">
-                            {instancePath}
-                          </div>
-                        </button>
+                              {typeof instance === "object" && instance.launcher && (
+                                <LauncherIcon launcher={instance.launcher} size={18} />
+                              )}
+                            </div>
+                            {typeof instance === "object" &&
+                              instance.minecraftVersion &&
+                              instance.loader && (
+                                <div className="flex items-center gap-2 text-xs mt-1.5">
+                                  <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded-md text-xs font-semibold border border-green-500/30">
+                                    MC {instance.minecraftVersion}
+                                  </span>
+                                  <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-md text-xs font-semibold border border-purple-500/30">
+                                    {instance.loader}
+                                  </span>
+                                </div>
+                              )}
+                            <div className="text-xs text-muted-foreground truncate mt-1.5 font-mono opacity-70">
+                              {instancePath}
+                            </div>
+                          </button>
+                          {/* Play button overlay */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (launchingPath) return;
+                              // loader is stored as "forge 47.4.1" — pass only the version part
+                              const loaderStr = typeof instance === "object" ? instance.loader : undefined;
+                              const loaderVersion = loaderStr ? loaderStr.split(' ').slice(1).join(' ') || loaderStr : undefined;
+                              handleLaunchInstance(
+                                instancePath,
+                                typeof instance === "object" ? instance.launcher : undefined,
+                                typeof instance === "object" ? instance.minecraftVersion : undefined,
+                                loaderVersion
+                              );
+                            }}
+                            disabled={!!launchingPath}
+                            className="absolute top-1/2 right-3 -translate-y-1/2 p-1.5 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-lg opacity-0 group-hover/card:opacity-100 transition-all border border-green-500/30 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={launchingPath === instancePath ? "Launching…" : "Launch Minecraft"}
+                          >
+                            {launchingPath === instancePath
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              : <Play className="w-3.5 h-3.5" />
+                            }
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -470,10 +554,45 @@ function App() {
             </div>
           </div>
 
+          {/* Recently Changed Settings */}
+          {(() => {
+            interface CC { key: string; originalValue: unknown; currentValue: unknown; isModified: boolean; modifiedAt?: Date; }
+            const recentChanges = (Array.from(changes.entries()) as [string, CC][])
+              .filter(([, c]) => c.isModified && c.modifiedAt)
+              .sort((a, b) => new Date(b[1].modifiedAt as Date).getTime() - new Date(a[1].modifiedAt as Date).getTime())
+              .slice(0, 5);
+            if (recentChanges.length === 0) return null;
+            return (
+              <div className="mt-6 w-full max-w-sm animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+                <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2 flex items-center gap-2">
+                  <Clock className="w-3 h-3 text-orange-400" />
+                  Recently Changed
+                </h3>
+                <div className="space-y-1">
+                  {recentChanges.map(([key, change]: [string, CC]) => {
+                    const [modId, ...keyParts] = key.split(":");
+                    const settingKey = keyParts.join(":").split(".").pop() || keyParts.join(":");
+                    return (
+                      <div key={key} className="flex items-center justify-between px-3 py-2 bg-card/40 rounded-lg border border-orange-500/10 text-xs gap-3">
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-mono text-orange-300 truncate">{settingKey}</span>
+                          <span className="text-muted-foreground/60 truncate">{modId}</span>
+                        </div>
+                        <span className="text-muted-foreground/70 shrink-0 font-mono">
+                          {String(change.currentValue).substring(0, 12)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Settings Button */}
           <button
             onClick={() => setShowSettings(true)}
-            className="absolute top-4 right-4 p-3 rounded-xl bg-card/50 backdrop-blur-sm hover:bg-card/80 border-2 border-primary/20 
+            className="absolute top-4 right-4 p-3 rounded-xl bg-card/50 backdrop-blur-sm hover:bg-card/80 border-2 border-primary/20
                      hover:border-primary/50 transition-all duration-200 group shadow-lg hover:shadow-primary/20 transform hover:scale-105"
             title="Settings (Ctrl+,)"
           >

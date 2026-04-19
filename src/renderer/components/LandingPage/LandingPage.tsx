@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { FolderOpen, Clock, Shield, Zap, Book, Github, Heart } from "lucide-react";
+import { FolderOpen, Clock, Shield, Zap, Book, Github, Heart, Play } from "lucide-react";
 import { RecentInstance } from "../../../shared/types/instance.types";
 import { LauncherIcon } from "../LauncherIcon";
 import "./LandingPage.css";
 
 interface LandingPageProps {
   onSelectInstance: () => void;
+  onLaunchInstance?: (instancePath: string, launcher?: string, mcVersion?: string, loaderVersion?: string) => void;
   recentInstances?: RecentInstance[];
 }
 
-export function LandingPage({ onSelectInstance, recentInstances = [] }: LandingPageProps) {
+export function LandingPage({ onSelectInstance, onLaunchInstance, recentInstances = [] }: LandingPageProps) {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   console.log("LandingPage recentInstances:", recentInstances);
@@ -115,34 +116,47 @@ export function LandingPage({ onSelectInstance, recentInstances = [] }: LandingP
               const instanceName =
                 instance.name || instance.path.split(/[\\/]/).pop() || instance.path;
               return (
-                <button
-                  key={index}
-                  className="recent-instance-card"
-                  onClick={() => handleRecentInstance(instance)}
-                >
-                  <div className="instance-header">
-                    {instance.launcher && (
-                      <LauncherIcon launcher={instance.launcher} className="w-5 h-5" />
-                    )}
-                    <span className="instance-name">{instanceName}</span>
-                  </div>
-                  <div className="instance-info">
-                    {instance.minecraftVersion && (
-                      <span className="instance-version px-2 py-0.5 bg-green-500/10 text-green-600 dark:text-green-400 rounded text-xs font-medium">
-                        MC {instance.minecraftVersion}
-                      </span>
-                    )}
-                    {instance.loader && (
-                      <span className="instance-loader px-2 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-xs font-medium">
-                        {instance.loader
-                          .split(" ")
-                          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-                          .join(" ")}
-                      </span>
-                    )}
-                  </div>
-                  <span className="instance-path">{instance.path}</span>
-                </button>
+                <div key={index} className="relative group/lcard">
+                  <button
+                    className="recent-instance-card w-full"
+                    onClick={() => handleRecentInstance(instance)}
+                  >
+                    <div className="instance-header" style={{ paddingRight: onLaunchInstance ? '2rem' : undefined }}>
+                      {instance.launcher && (
+                        <LauncherIcon launcher={instance.launcher} className="w-5 h-5" />
+                      )}
+                      <span className="instance-name">{instanceName}</span>
+                    </div>
+                    <div className="instance-info">
+                      {instance.minecraftVersion && (
+                        <span className="instance-version px-2 py-0.5 bg-green-500/10 text-green-600 dark:text-green-400 rounded text-xs font-medium">
+                          MC {instance.minecraftVersion}
+                        </span>
+                      )}
+                      {instance.loader && (
+                        <span className="instance-loader px-2 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-xs font-medium">
+                          {instance.loader
+                            .split(" ")
+                            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(" ")}
+                        </span>
+                      )}
+                    </div>
+                    <span className="instance-path">{instance.path}</span>
+                  </button>
+                  {onLaunchInstance && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onLaunchInstance(instance.path, instance.launcher, instance.minecraftVersion, instance.loader);
+                      }}
+                      className="absolute top-1/2 right-3 -translate-y-1/2 p-1.5 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-lg opacity-0 group-hover/lcard:opacity-100 transition-all border border-green-500/30 hover:scale-110"
+                      title="Launch Minecraft"
+                    >
+                      <Play className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>

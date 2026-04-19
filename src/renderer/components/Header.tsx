@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppStore } from "@/store";
+import { useSettingsStore } from "@/store/settingsStore";
 import { BackupModal } from "./Backup/BackupModal";
 import { Settings } from "./Settings";
+import { GameConsole } from "./GameConsole";
 import {
   Settings as SettingsIcon,
   Search as SearchIcon,
@@ -13,7 +15,15 @@ import {
   ChevronDown,
   Folder,
   FolderX,
+  Play,
+  Square,
+  Loader2,
+  Info,
+  Terminal,
+  AlertTriangle,
+  Download,
 } from "lucide-react";
+import { CrashAnalyzer } from "./CrashAnalyzer";
 import { LauncherIcon } from "./LauncherIcon";
 
 interface HeaderProps {
@@ -32,14 +42,105 @@ export function Header({
   onChangelogClick,
 }: HeaderProps) {
   const { currentInstance, launcherType } = useAppStore();
+  const { settings: appSettings } = useSettingsStore();
   const [showSettings, setShowSettings] = useState(false);
   const [showBackups, setShowBackups] = useState(false);
   const [showInstanceMenu, setShowInstanceMenu] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
+  const [showConsole, setShowConsole] = useState(false);
+  const [hasLogs, setHasLogs] = useState(false);
+  const [showCrashAnalyzer, setShowCrashAnalyzer] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Poll running state every 3s while an instance is open
+  useEffect(() => {
+    if (!currentInstance) {
+      setIsRunning(false);
+      return;
+    }
+    let cancelled = false;
+    const check = async () => {
+      const running = await window.api.isGameRunning(currentInstance.path);
+      if (!cancelled) setIsRunning(running);
+    };
+    check();
+    const interval = setInterval(check, 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [currentInstance?.path]);
+
+  // Track whether any log output has arrived so we can show the console button
+  useEffect(() => {
+    if (!currentInstance) return;
+    setHasLogs(false);
+    const unsubscribe = window.api.onGameLog((entry) => {
+      if (entry.instancePath === currentInstance.path) {
+        setHasLogs(true);
+      }
+    });
+    return () => unsubscribe();
+  }, [currentInstance?.path]);
+
+  const handleLaunch = async () => {
+    if (!currentInstance || isLaunching || isRunning) return;
+    setIsLaunching(true);
+    setLaunchError(null);
+    try {
+      const result = await window.api.launchGame(
+        currentInstance.path,
+        launcherType || 'unknown',
+        currentInstance.minecraftVersion,
+        currentInstance.loader?.version || '',
+        appSettings.jvmMaxMemory ?? 4096,
+        appSettings.jvmMinMemory ?? 1024
+      );
+      if (result.success) {
+        setIsRunning(true);
+      } else {
+        setLaunchError(result.error || 'Launch failed');
+      }
+    } finally {
+      setIsLaunching(false);
+    }
+  };
+
+  const handleStop = async () => {
+    if (!currentInstance) return;
+    // Just send the kill signal — the 3s poll will detect when the process actually exits.
+    await window.api.killGame(currentInstance.path);
+  };
+
+  const handleExportModpack = async () => {
+    if (!currentInstance) return;
+    const packName = prompt("Modpack name:", currentInstance.name || "My Modpack");
+    if (!packName) return;
+    setIsExporting(true);
+    try {
+      const result = await window.api.exportModpack(
+        currentInstance.path,
+        packName,
+        currentInstance.minecraftVersion,
+        currentInstance.loader?.type || "forge",
+        currentInstance.loader?.version || ""
+      );
+      if (result.success) {
+        alert(`Exported to: ${result.outputPath}`);
+      } else {
+        alert(`Export failed: ${result.error}`);
+      }
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // If no instance, show minimal header with just settings button
   if (!currentInstance) {
     return (
-      <header className="border-b border-primary/20 bg-card/50 backdrop-blur-xl">
+      <header className="border-b border-primary/20 bg-card/50 backdrop-blur-xl relative z-10">
         <div className="flex h-16 items-center px-6 gap-4">
           <div className="flex items-center gap-3">
             <img src="./icon.png" alt="Logo" className="w-10 h-10 rounded-lg shadow-lg" />
@@ -60,7 +161,7 @@ export function Header({
   }
 
   return (
-    <header className="border-b border-primary/20 bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-xl shadow-lg">
+    <header className="border-b border-primary/20 bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-xl shadow-lg relative z-10">
       <div className="flex h-16 px-6 gap-4">
         {/* App Logo & Title */}
         <div className="flex items-center gap-3 group">
@@ -86,17 +187,17 @@ export function Header({
                 <div
                   className="flex items-center hover:scale-110 transition-transform"
                   title={`Launcher: ${
-                    launcherType === "modrinth"
+                    (launcherType as string) === "modrinth"
                       ? "Modrinth App"
-                      : launcherType === "curseforge"
+                      : (launcherType as string) === "curseforge"
                         ? "CurseForge"
-                        : launcherType === "packwiz"
+                        : (launcherType as string) === "packwiz"
                           ? "Packwiz"
-                          : launcherType === "prism"
+                          : (launcherType as string) === "prism"
                             ? "Prism Launcher"
-                            : launcherType === "multimc"
+                            : (launcherType as string) === "multimc"
                               ? "MultiMC"
-                              : launcherType === "atlauncher"
+                              : (launcherType as string) === "atlauncher"
                                 ? "ATLauncher"
                                 : "Generic Launcher"
                   }`}
@@ -168,6 +269,81 @@ export function Header({
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {/* Launch / Stop button group */}
+          <div className="flex flex-col items-end gap-0.5">
+            <div className="flex items-center gap-1">
+            {isRunning ? (
+              <button
+                onClick={handleStop}
+                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-semibold group shadow-lg hover:shadow-red-500/20 border border-red-500/20"
+                title="Stop Minecraft"
+              >
+                <Square className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                Running
+              </button>
+            ) : (
+              <button
+                onClick={handleLaunch}
+                disabled={isLaunching}
+                className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-sm font-semibold group shadow-lg border ${
+                  launchError
+                    ? 'bg-red-500/10 text-red-400 border-red-500/30'
+                    : isLaunching
+                    ? 'bg-green-500/5 text-green-500/50 border-green-500/10 cursor-not-allowed'
+                    : 'bg-green-500/10 hover:bg-green-500/20 text-green-400 hover:scale-105 hover:shadow-green-500/20 border-green-500/20'
+                }`}
+                title="Launch Minecraft"
+              >
+                {isLaunching ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                )}
+                {isLaunching ? 'Launching…' : 'Play'}
+              </button>
+            )}
+
+
+            {/* Info icon with launch hint tooltip */}
+            <div className="relative group/info">
+              <button
+                className="p-1.5 text-blue-400/60 hover:text-blue-400 transition-colors rounded-lg hover:bg-blue-500/10"
+                tabIndex={-1}
+                aria-label="First-time launch info"
+              >
+                <Info className="w-3.5 h-3.5" />
+              </button>
+              <div className="absolute right-0 top-full mt-2 w-80 z-50 pointer-events-none opacity-0 group-hover/info:opacity-100 transition-opacity">
+                <div className="bg-card border border-blue-500/30 rounded-xl shadow-2xl p-3 text-xs text-muted-foreground leading-relaxed">
+                  <p className="font-semibold text-blue-400 mb-1">Good to know</p>
+                  <p>
+                    To play through MCED for the first time, the instance must have been <strong className="text-foreground">launched at least once via your launcher</strong> so that the version JARs and libraries are already downloaded.
+                  </p>
+                  <p className="mt-1.5 text-muted-foreground/70">
+                    If no auth tokens are found, MCED silently falls back to offline mode.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Console button — visible once logs exist or game is running */}
+            {(hasLogs || isRunning) && (
+              <button
+                onClick={() => setShowConsole(true)}
+                className="p-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-xl transition-all hover:scale-105 border border-purple-500/20 shadow-md"
+                title="Open Game Console"
+              >
+                <Terminal className="w-4 h-4" />
+              </button>
+            )}
+            </div>
+            {launchError && (
+              <span className="text-xs text-red-400/90 max-w-[200px] truncate" title={launchError}>
+                ⚠ {launchError}
+              </span>
+            )}
+          </div>
+
           <button
             onClick={() => onSearchClick()}
             className="px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-semibold group shadow-lg hover:shadow-purple-500/20 border border-purple-500/20"
@@ -179,46 +355,76 @@ export function Header({
             </kbd>
           </button>
 
-          <button
-            onClick={() => setShowBackups(true)}
-            className="px-3 py-2 bg-secondary hover:bg-purple-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-md hover:shadow-purple-500/20 border border-border hover:border-purple-500/30"
-            title="Backup Manager"
-          >
-            <Database className="w-4 h-4 group-hover:scale-110 transition-transform" />
-          </button>
+          {/* Divider */}
+          <div className="w-px h-6 bg-primary/20 self-center mx-1" />
 
-          {onStatsClick && (
+          {/* Tool buttons — grouped in a unified pill */}
+          <div className="flex items-center gap-0.5 bg-secondary/60 rounded-xl p-1 border border-border/50">
             <button
-              onClick={() => onStatsClick()}
-              className="px-3 py-2 bg-secondary hover:bg-purple-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-md hover:shadow-purple-500/20 border border-border hover:border-purple-500/30"
-              title="Statistics"
+              onClick={() => setShowBackups(true)}
+              className="p-2 rounded-lg hover:bg-purple-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-foreground"
+              title="Backup Manager"
             >
-              <BarChart3 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <Database className="w-4 h-4" />
             </button>
-          )}
 
-          {onChangelogClick && (
+            {onStatsClick && (
+              <button
+                onClick={() => onStatsClick()}
+                className="p-2 rounded-lg hover:bg-purple-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-foreground"
+                title="Statistics"
+              >
+                <BarChart3 className="w-4 h-4" />
+              </button>
+            )}
+
+            {onChangelogClick && (
+              <button
+                onClick={() => onChangelogClick()}
+                className="p-2 rounded-lg hover:bg-purple-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-foreground"
+                title="Change History"
+              >
+                <History className="w-4 h-4" />
+              </button>
+            )}
+
+            <div className="w-px h-4 bg-border/80 mx-0.5" />
+
             <button
-              onClick={() => onChangelogClick()}
-              className="px-3 py-2 bg-secondary hover:bg-purple-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-md hover:shadow-purple-500/20 border border-border hover:border-purple-500/30"
-              title="Change History"
+              onClick={() => setShowCrashAnalyzer(true)}
+              className="p-2 rounded-lg hover:bg-orange-500/15 transition-all hover:scale-105 text-orange-400/70 hover:text-orange-400"
+              title="Crash Log Analyzer"
             >
-              <History className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <AlertTriangle className="w-4 h-4" />
             </button>
-          )}
+            <button
+              onClick={handleExportModpack}
+              disabled={isExporting}
+              className="p-2 rounded-lg hover:bg-blue-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-foreground disabled:opacity-40"
+              title="Export as .mrpack"
+            >
+              <Download className="w-4 h-4" />
+            </button>
 
-          <button
-            onClick={() => setShowSettings(true)}
-            className="px-3 py-2 bg-secondary hover:bg-purple-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 text-sm font-medium group shadow-md hover:shadow-purple-500/20 border border-border hover:border-purple-500/30"
-            title="Settings"
-          >
-            <SettingsIcon className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
-          </button>
+            <div className="w-px h-4 bg-border/80 mx-0.5" />
+
+            <button
+              onClick={() => setShowSettings(true)}
+              className="p-2 rounded-lg hover:bg-purple-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-foreground group/settings"
+              title="Settings"
+            >
+              <SettingsIcon className="w-4 h-4 group-hover/settings:rotate-90 transition-transform duration-300" />
+            </button>
+          </div>
         </div>
       </div>
 
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
       {showBackups && <BackupModal onClose={() => setShowBackups(false)} />}
+      {showConsole && currentInstance && (
+        <GameConsole instancePath={currentInstance.path} onClose={() => setShowConsole(false)} />
+      )}
+      {showCrashAnalyzer && <CrashAnalyzer onClose={() => setShowCrashAnalyzer(false)} />}
     </header>
   );
 }

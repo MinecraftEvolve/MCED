@@ -1,6 +1,7 @@
 import React from "react";
 import { ModInfo } from "@shared/types/mod.types";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useUpdateStore } from "@/store/updateStore";
 
 interface ModListItemProps {
   mod: ModInfo;
@@ -15,6 +16,8 @@ export const ModListItem = React.memo(function ModListItem({
 }: ModListItemProps) {
   const { settings } = useSettingsStore();
   const isCompact = settings.compactMode;
+  const getUpdate = useUpdateStore((s) => s.getUpdate);
+  const hasUpdate = !!getUpdate(mod.modId);
 
   return (
     <div
@@ -49,11 +52,22 @@ export const ModListItem = React.memo(function ModListItem({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3
-            className={`font-semibold truncate group-hover:text-primary transition-colors ${isCompact ? "text-xs" : "text-sm"}`}
-          >
-            {mod.name}
-          </h3>
+          <div className="flex items-center gap-1.5">
+            <h3
+              className={`font-semibold truncate group-hover:text-primary transition-colors ${isCompact ? "text-xs" : "text-sm"}`}
+            >
+              {mod.name}
+            </h3>
+            {hasUpdate && (
+              <span
+                className="flex-shrink-0 inline-flex items-center rounded-full bg-orange-500/20 border border-orange-500/40 text-orange-400 font-semibold leading-none"
+                style={{ fontSize: "9px", padding: "2px 5px" }}
+                title={`Update available: ${getUpdate(mod.modId)?.latestVersion}`}
+              >
+                Update
+              </span>
+            )}
+          </div>
           {!isCompact && <p className="text-xs text-muted-foreground truncate">v{mod.version}</p>}
         </div>
 
