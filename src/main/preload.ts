@@ -79,7 +79,9 @@ contextBridge.exposeInMainWorld("api", {
   isGameRunning: (instancePath: string) => ipcRenderer.invoke("game:isRunning", instancePath),
   getRunningGames: () => ipcRenderer.invoke("game:getRunning"),
   onGameLog: (callback: (data: { line: string; type: 'stdout' | 'stderr' | 'system'; instancePath: string; timestamp: number }) => void) => {
-    ipcRenderer.on('game:log', (_event, data) => callback(data));
+    const handler = (_event: Electron.IpcRendererEvent, data: any) => callback(data);
+    ipcRenderer.on('game:log', handler);
+    return () => ipcRenderer.removeListener('game:log', handler);
   },
   removeGameLogListener: () => {
     ipcRenderer.removeAllListeners('game:log');
@@ -221,7 +223,7 @@ declare global {
       listDirectory: (path: string) => Promise<string[]>;
       detectInstance: (
         path: string
-      ) => Promise<{ success: boolean; instance?: any; error?: string }>;
+      ) => Promise<{ success: boolean; instance?: any; launcherType?: string; error?: string }>;
       getServerConfigFolder: (instancePath: string) => Promise<string | null>;
       scanMods: (modsFolder: string) => Promise<{ success: boolean; mods?: any[]; error?: string }>;
       extractIcon: (
@@ -289,7 +291,7 @@ declare global {
       killGame: (instancePath: string) => Promise<{ success: boolean; error?: string }>;
       isGameRunning: (instancePath: string) => Promise<boolean>;
       getRunningGames: () => Promise<string[]>;
-      onGameLog: (callback: (data: { line: string; type: 'stdout' | 'stderr' | 'system'; instancePath: string; timestamp: number }) => void) => void;
+      onGameLog: (callback: (data: { line: string; type: 'stdout' | 'stderr' | 'system'; instancePath: string; timestamp: number }) => void) => (() => void);
       removeGameLogListener: () => void;
 
       checkForUpdates: () => Promise<{ success: boolean; updateInfo?: UpdateInfo; error?: string }>;

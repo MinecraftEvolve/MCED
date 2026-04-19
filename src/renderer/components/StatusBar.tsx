@@ -1,35 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAppStore } from "@/store";
-import { AlertTriangle, Play, Square } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 export function StatusBar() {
   const {
     hasUnsavedChanges,
     setHasUnsavedChanges,
     currentInstance,
-    launcherType,
-    setLauncherType,
   } = useAppStore();
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-  const [isGameRunning, setIsGameRunning] = useState(false);
-
-  const handleKillGame = async () => {
-    if (!currentInstance) return;
-
-    const confirm = window.confirm("Are you sure you want to stop the game?");
-    if (!confirm) return;
-
-    try {
-      const result = await window.api.launcherKillInstance(currentInstance.path);
-      if (result.success) {
-        setIsGameRunning(false);
-      } else {
-        alert(`Failed to stop game: ${result.error}`);
-      }
-    } catch (error) {
-      alert(`Error stopping game: ${error}`);
-    }
-  };
 
   const handleSaveAll = () => {
     // Trigger save event - components will handle their own saves
@@ -48,7 +27,7 @@ export function StatusBar() {
     setShowDiscardDialog(false);
   };
 
-  if (!currentInstance) return null;
+  if (!currentInstance || !hasUnsavedChanges) return null;
 
   return (
     <>

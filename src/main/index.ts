@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import path from "path";
 import { promises as fs } from "fs";
+import { createHash } from "crypto";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { JarScanner } from "./jar-scanner";
@@ -756,39 +757,63 @@ ipcMain.handle("modrinth:getProject", async (_event, idOrSlug: string) => {
   }
 });
 
+// Returns the new (isolated) backup directory stored in app userData.
+function getInstanceBackupDir(instancePath: string): string {
+  const hash = createHash("sha1").update(instancePath).digest("hex").slice(0, 8);
+  const name = path.basename(instancePath).replace(/[^a-zA-Z0-9_-]/g, "_");
+  return path.join(app.getPath("userData"), "backups", `${name}-${hash}`);
+}
+
+// Legacy location — kept for backwards compatibility (read/restore/delete still work).
+function getLegacyBackupDir(instancePath: string): string {
+  return path.join(instancePath, ".mced-backups");
+}
+
+// Resolves a backup filename safely, rejecting any path traversal attempts.
+function resolveBackupFile(backupDir: string, backupId: string): string {
+  const safeId = path.basename(backupId); // strip any directory components
+  const resolved = path.resolve(backupDir, safeId);
+  if (!resolved.startsWith(path.resolve(backupDir) + path.sep)) {
+    throw new Error("Invalid backup ID");
+  }
+  return resolved;
+}
+
+async function readBackupsFromDir(backupDir: string): Promise<object[]> {
+  try {
+    await fs.access(backupDir);
+  } catch {
+    return [];
+  }
+  const files = await fs.readdir(backupDir);
+  const backups = [];
+  for (const file of files) {
+    if (!file.endsWith(".zip")) continue;
+    const match = file.match(/backup-(\d+)-(.+)\.zip/);
+    if (!match) continue;
+    try {
+      const stats = await fs.stat(path.join(backupDir, file));
+      backups.push({
+        id: file,
+        timestamp: parseInt(match[1]),
+        name: match[2].replace(/-/g, " "),
+        size: stats.size,
+        configCount: 0,
+      });
+    } catch {}
+  }
+  return backups;
+}
+
 // Backup management
 ipcMain.handle("backup:list", async (_event, instancePath: string) => {
   try {
-    const backupDir = path.join(instancePath, ".mced-backups");
-
-    try {
-      await fs.access(backupDir);
-    } catch {
-      return [];
-    }
-
-    const files = await fs.readdir(backupDir);
-    const backups = [];
-
-    for (const file of files) {
-      if (file.endsWith(".zip")) {
-        const filePath = path.join(backupDir, file);
-        const stats = await fs.stat(filePath);
-        const match = file.match(/backup-(\d+)-(.+)\.zip/);
-
-        if (match) {
-          backups.push({
-            id: file,
-            timestamp: parseInt(match[1]),
-            name: match[2].replace(/-/g, " "),
-            size: stats.size,
-            configCount: 0, // Will be calculated if needed
-          });
-        }
-      }
-    }
-
-    return backups.sort((a, b) => b.timestamp - a.timestamp);
+    const [newBackups, legacyBackups] = await Promise.all([
+      readBackupsFromDir(getInstanceBackupDir(instancePath)),
+      readBackupsFromDir(getLegacyBackupDir(instancePath)),
+    ]);
+    const all = [...newBackups, ...legacyBackups] as { timestamp: number }[];
+    return all.sort((a, b) => b.timestamp - a.timestamp);
   } catch (error) {
     return [];
   }
@@ -799,7 +824,8 @@ ipcMain.handle("backup:create", async (_event, instancePath: string, name?: stri
     const AdmZip = require("adm-zip");
     const zip = new AdmZip();
 
-    const backupDir = path.join(instancePath, ".mced-backups");
+    const backupDir = getInstanceBackupDir(instancePath);
+
     await fs.mkdir(backupDir, { recursive: true });
 
     const timestamp = Date.now();
@@ -840,7 +866,19 @@ ipcMain.handle("clear-api-cache", async () => {
 ipcMain.handle("backup:restore", async (_event, instancePath: string, backupId: string) => {
   try {
     const AdmZip = require("adm-zip");
-    const backupFile = path.join(instancePath, ".mced-backups", backupId);
+    const configDir = path.join(instancePath, "config");
+
+    // Resolve file from new location first, fall back to legacy
+    const newDir = getInstanceBackupDir(instancePath);
+    const legacyDir = getLegacyBackupDir(instancePath);
+    let backupFile: string;
+    try {
+      backupFile = resolveBackupFile(newDir, backupId);
+      await fs.access(backupFile);
+    } catch {
+      backupFile = resolveBackupFile(legacyDir, backupId);
+      await fs.access(backupFile); // throws if not found in legacy either
+    }
 
     const zip = new AdmZip(backupFile);
     // Extract to instance root so config/, kubejs/, defaultconfigs/ are all restored correctly
@@ -876,7 +914,16 @@ ipcMain.handle("load-config-profile", async (_event, profileId: string) => {
 
 ipcMain.handle("backup:delete", async (_event, instancePath: string, backupId: string) => {
   try {
-    const backupFile = path.join(instancePath, ".mced-backups", backupId);
+    // Try new location first, fall back to legacy
+    const newDir = getInstanceBackupDir(instancePath);
+    const legacyDir = getLegacyBackupDir(instancePath);
+    let backupFile: string;
+    try {
+      backupFile = resolveBackupFile(newDir, backupId);
+      await fs.access(backupFile);
+    } catch {
+      backupFile = resolveBackupFile(legacyDir, backupId);
+    }
     await fs.unlink(backupFile);
     return { success: true };
   } catch (error) {
@@ -886,10 +933,19 @@ ipcMain.handle("backup:delete", async (_event, instancePath: string, backupId: s
 
 ipcMain.handle("backup:rename", async (_event, instancePath: string, backupId: string, newName: string) => {
   try {
-    const backupDir = path.join(instancePath, ".mced-backups");
-    const oldFile = path.join(backupDir, backupId);
+    // Try new location first, fall back to legacy
+    const newDir = getInstanceBackupDir(instancePath);
+    const legacyDir = getLegacyBackupDir(instancePath);
+    let backupDir: string;
+    try {
+      const candidate = resolveBackupFile(newDir, backupId);
+      await fs.access(candidate);
+      backupDir = newDir;
+    } catch {
+      backupDir = legacyDir;
+    }
+    const oldFile = resolveBackupFile(backupDir, backupId);
 
-    // Parse timestamp from existing ID: backup-TIMESTAMP-name.zip
     const match = backupId.match(/^backup-(\d+)-/);
     const timestamp = match ? match[1] : String(Date.now());
 

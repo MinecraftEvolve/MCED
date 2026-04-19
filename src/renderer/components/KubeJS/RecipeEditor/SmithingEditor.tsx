@@ -122,17 +122,15 @@ export const SmithingEditor: React.FC<SmithingEditorProps> = ({
               item={
                 template
                   ? {
-                      type: "item",
                       id: template.id,
                       name: template.name,
                       modId: template.modId,
                       texture: template.texture,
-                      amount: 1,
                     }
                   : null
               }
               onClick={() => handleSlotClick("template")}
-              onRemove={() => setTemplate(null)}
+              onClear={() => setTemplate(null)}
               size="lg"
             />
             <span className="text-xs text-muted-foreground mt-1">
@@ -149,17 +147,15 @@ export const SmithingEditor: React.FC<SmithingEditorProps> = ({
               item={
                 base
                   ? {
-                      type: "item",
                       id: base.id,
                       name: base.name,
                       modId: base.modId,
                       texture: base.texture,
-                      amount: 1,
                     }
                   : null
               }
               onClick={() => handleSlotClick("base")}
-              onRemove={() => setBase(null)}
+              onClear={() => setBase(null)}
               size="lg"
             />
             <span className="text-xs text-muted-foreground mt-1">
@@ -176,17 +172,15 @@ export const SmithingEditor: React.FC<SmithingEditorProps> = ({
               item={
                 addition
                   ? {
-                      type: "item",
                       id: addition.id,
                       name: addition.name,
                       modId: addition.modId,
                       texture: addition.texture,
-                      amount: 1,
                     }
                   : null
               }
               onClick={() => handleSlotClick("addition")}
-              onRemove={() => setAddition(null)}
+              onClear={() => setAddition(null)}
               size="lg"
             />
             <span className="text-xs text-muted-foreground mt-1">
@@ -203,17 +197,15 @@ export const SmithingEditor: React.FC<SmithingEditorProps> = ({
               item={
                 result
                   ? {
-                      type: "item",
                       id: result.id,
                       name: result.name,
                       modId: result.modId,
                       texture: result.texture,
-                      amount: 1,
                     }
                   : null
               }
               onClick={() => handleSlotClick("result")}
-              onRemove={() => setResult(null)}
+              onClear={() => setResult(null)}
               size="lg"
             />
             <span className="text-xs text-muted-foreground mt-1">

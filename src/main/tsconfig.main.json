@@ -15,7 +15,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "allowJs": true
+    "allowJs": true,
+    "ignoreDeprecations": "5.0"
   },
   "include": ["**/*", "../shared/**/*"],
   "exclude": ["../../node_modules", "../../dist"]

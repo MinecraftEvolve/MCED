@@ -87,6 +87,7 @@ export class LaunchService extends EventEmitter {
       // Natives dir
       const nativesDir = path.join(instancePath, '.mced', 'natives');
       await fs.mkdir(nativesDir, { recursive: true });
+      await this.extractNatives(versionData, nativesDir);
 
       // Variable map for ${variable} substitution
       const vars: Record<string, string> = {
@@ -160,8 +161,12 @@ export class LaunchService extends EventEmitter {
         });
       });
 
+      if (!childProcess.pid) {
+        throw new Error('Process spawned without a PID');
+      }
+
       LaunchService.runningProcesses.set(instancePath, {
-        pid: childProcess.pid!,
+        pid: childProcess.pid,
         instancePath,
         startTime: Date.now(),
         process: childProcess,
@@ -195,7 +200,8 @@ export class LaunchService extends EventEmitter {
     if (!proc) return false;
     try {
       proc.process.kill('SIGTERM');
-      this.runningProcesses.delete(instancePath);
+      // Don't remove from runningProcesses here — let the exit event handle cleanup
+      // so isRunning() stays accurate until the process actually terminates.
       return true;
     } catch {
       return false;
@@ -469,8 +475,11 @@ export class LaunchService extends EventEmitter {
   }
 
   private requiredJavaMajor(mcVersion: string): number {
-    const minor = parseInt(mcVersion.split('.')[1] || '0', 10);
-    if (minor >= 21) return 21;
+    const parts = mcVersion.split('.').map((p) => parseInt(p, 10));
+    const minor = parts[1] || 0;
+    const patch = parts[2] || 0;
+    // 1.20.5+ and 1.21+ require Java 21 (Mojang changed requirement at 1.20.5)
+    if (minor > 20 || (minor === 20 && patch >= 5)) return 21;
     if (minor >= 17) return 17;
     return 8;
   }
@@ -607,14 +616,37 @@ export class LaunchService extends EventEmitter {
   private async buildClasspath(versionData: VersionData): Promise<string> {
     const jars: string[] = [];
 
-    if (await this.fileExists(versionData.clientJar)) {
+    // Forge modlauncher (cpw.mods.bootstraplauncher.BootstrapLauncher) loads
+    // the Minecraft game JAR through its own JPMS module layer. If we also add
+    // the vanilla client JAR to the classpath, BootstrapLauncher picks it up as
+    // automatic module '_1._20._1' alongside its 'minecraft' module — both
+    // export the same packages → fatal ResolutionException.
+    // Detect Forge by mainClass (reliable; doesn't depend on version JSON format).
+    const isForgeModLauncher =
+      (versionData.mainClass ?? '').startsWith('cpw.mods.bootstraplauncher') ||
+      (versionData.mainClass ?? '').startsWith('net.minecraftforge.bootstrap');
+
+    if (!isForgeModLauncher && (await this.fileExists(versionData.clientJar))) {
       jars.push(versionData.clientJar);
     }
 
     for (const lib of versionData.libraries || []) {
       if (lib.include_in_classpath === false) continue;
       if (lib.rules && !this.checkRules(lib.rules)) continue;
-      if (lib.natives) continue; // Natives go to nativesDir, not classpath
+      if (lib.natives) continue;
+
+      // For Forge: also exclude the vanilla Minecraft client library entry.
+      // It shows up as 'com.mojang:minecraft:x.x.x' or 'net.minecraft:client:x.x.x'
+      // (no classifier). The -extra and -srg variants are fine — only the plain
+      // unclassified JAR creates the module collision.
+      if (isForgeModLauncher && lib.name) {
+        const parts: string[] = (lib.name as string).split(':');
+        const [group, artifact, , classifier] = parts;
+        const isMcClientJar =
+          (group === 'com.mojang' && artifact === 'minecraft' && !classifier) ||
+          (group === 'net.minecraft' && artifact === 'client' && !classifier);
+        if (isMcClientJar) continue;
+      }
 
       if (lib.downloads?.artifact?.path) {
         const libPath = path.join(versionData.libsDir, lib.downloads.artifact.path);
@@ -627,6 +659,11 @@ export class LaunchService extends EventEmitter {
         }
       }
     }
+
+    console.log(
+      `[MCED Launch] Classpath: ${jars.length} JARs` +
+        (jars.length > 0 ? ` (first: ${path.basename(jars[0])})` : '')
+    );
 
     if (jars.length === 0) {
       throw new Error(
@@ -679,24 +716,32 @@ export class LaunchService extends EventEmitter {
   }
 
   private checkRules(rules: any[]): boolean {
+    // Mojang spec: evaluate all rules in order, last matching rule wins.
+    // Default is deny (false) so a library with no matching rule is excluded.
+    let result = false;
     for (const rule of rules) {
-      if (rule.os) {
-        const match = this.osMatches(rule.os);
-        if (rule.action === 'allow' && !match) return false;
-        if (rule.action === 'disallow' && match) return false;
-      } else if (rule.action === 'allow') {
-        return true;
+      // Feature-gated rules (demo mode, quick-play, etc.) are skipped conservatively.
+      if (rule.features) continue;
+      const osMatches = rule.os ? this.osMatches(rule.os) : true;
+      if (osMatches) {
+        result = rule.action === 'allow';
       }
     }
-    return true;
+    return result;
   }
 
   private osMatches(osRule: any): boolean {
     const platform = os.platform();
-    if (osRule.name === 'windows' && platform !== 'win32') return false;
-    if (osRule.name === 'linux' && platform !== 'linux') return false;
-    if (osRule.name === 'osx' && platform !== 'darwin') return false;
-    return true;
+    if (!osRule.name) return true; // no OS constraint — matches all platforms
+
+    const name: string = osRule.name;
+    if (name === 'windows') return platform === 'win32';
+    if (name === 'linux') return platform === 'linux';
+    if (name === 'osx') return platform === 'darwin';
+    if (name === 'osx-arm64') return platform === 'darwin' && os.arch() === 'arm64';
+
+    // Unknown OS name (e.g. future entries) — don't match conservatively
+    return false;
   }
 
   private classpathSep(): string {
@@ -709,6 +754,56 @@ export class LaunchService extends EventEmitter {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  private async extractNatives(versionData: VersionData, nativesDir: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const AdmZip = require('adm-zip');
+    const platform = os.platform();
+    const osKey = platform === 'win32' ? 'windows' : platform === 'darwin' ? 'osx' : 'linux';
+    const newStyleSuffix =
+      platform === 'win32' ? 'natives-windows' :
+      platform === 'darwin' ? 'natives-macos' :
+      'natives-linux';
+    const altSuffix = platform === 'darwin' ? 'natives-osx' : null;
+
+    for (const lib of versionData.libraries || []) {
+      if (lib.rules && !this.checkRules(lib.rules)) continue;
+
+      let nativeJarPath: string | null = null;
+
+      if (lib.natives?.[osKey]) {
+        // Legacy format: lib.natives maps OS to classifier name
+        const classifier = lib.natives[osKey];
+        const classifierPath = lib.downloads?.classifiers?.[classifier]?.path;
+        if (classifierPath) {
+          nativeJarPath = path.join(versionData.libsDir, classifierPath);
+        }
+      } else if (lib.downloads?.classifiers) {
+        // Newer format: classifiers keyed directly by platform name
+        const entry =
+          lib.downloads.classifiers[newStyleSuffix] ??
+          (altSuffix ? lib.downloads.classifiers[altSuffix] : null);
+        if (entry?.path) {
+          nativeJarPath = path.join(versionData.libsDir, entry.path);
+        }
+      }
+
+      if (!nativeJarPath || !(await this.fileExists(nativeJarPath))) continue;
+
+      try {
+        const zip = new AdmZip(nativeJarPath);
+        for (const entry of zip.getEntries() as any[]) {
+          if (entry.isDirectory) continue;
+          if (entry.entryName.startsWith('META-INF/')) continue;
+          // Extract flat into nativesDir (no subdirectory structure)
+          zip.extractEntryTo(entry, nativesDir, false, true);
+        }
+        console.log(`[MCED Launch] Extracted natives: ${path.basename(nativeJarPath)}`);
+      } catch (e) {
+        console.warn(`[MCED Launch] Could not extract natives from ${nativeJarPath}:`, e);
+      }
     }
   }
 }

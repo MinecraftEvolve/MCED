@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAppStore } from "./store";
 import { useSettingsStore } from "./store/settingsStore";
 import { useStatsStore } from "./store/statsStore";
 import { useChangelogStore } from "./store/changelogStore";
 import { useChangeTrackingStore } from "./store/changeTrackingStore";
 import { NotificationProvider } from "./components/common/Notifications";
-import { Loader2, Settings as SettingsIcon, FolderOpen, Play, Clock } from "lucide-react";
+import { Loader2, Settings as SettingsIcon, FolderOpen, Play, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { MainPanel } from "./components/MainPanel";
@@ -116,6 +116,14 @@ function App() {
   const { startSession, endSession } = useStatsStore();
   const { startSession: startChangelogSession } = useChangelogStore();
   const [error, setError] = useState<string | null>(null);
+  const [launchingPath, setLaunchingPath] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ message, type });
+    toastTimer.current = setTimeout(() => setToast(null), 3500);
+  }, []);
   const [showSearch, setShowSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -200,10 +208,11 @@ function App() {
 
       const instanceInfo = result.instance;
       setCurrentInstance(instanceInfo);
-      setLauncherType(result.launcherType || "unknown");
+      setLauncherType((result.launcherType || "unknown") as "modrinth" | "curseforge" | "generic" | "packwiz" | "unknown");
       addRecentInstance({
         path: String(instanceInfo.path),
         name: instanceInfo.name,
+        lastOpened: Date.now(),
         minecraftVersion: instanceInfo.minecraftVersion,
         loader: instanceInfo.loader
           ? `${instanceInfo.loader.type} ${instanceInfo.loader.version}`.trim()
@@ -370,6 +379,7 @@ function App() {
     mcVersion?: string,
     loaderVersion?: string
   ) => {
+    setLaunchingPath(instancePath);
     try {
       const result = await window.api.launchGame(
         instancePath,
@@ -380,10 +390,14 @@ function App() {
         settings.jvmMinMemory ?? 1024
       );
       if (!result.success) {
-        setError(`Launch failed: ${result.error}`);
+        showToast(`Launch failed: ${result.error}`, 'error');
+      } else {
+        showToast('Minecraft is launching…', 'success');
       }
     } catch (e) {
-      setError(`Launch failed: ${String(e)}`);
+      showToast(`Launch failed: ${String(e)}`, 'error');
+    } finally {
+      setLaunchingPath(null);
     }
   };
 
@@ -402,6 +416,19 @@ function App() {
     return (
       <>
         {LoadingOverlay}
+        {toast && (
+          <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-xl text-sm font-medium animate-fadeIn transition-all ${
+            toast.type === 'success'
+              ? 'bg-green-500/20 border-green-500/40 text-green-300'
+              : 'bg-red-500/20 border-red-500/40 text-red-300'
+          }`}>
+            {toast.type === 'success'
+              ? <CheckCircle className="w-4 h-4 shrink-0" />
+              : <XCircle className="w-4 h-4 shrink-0" />
+            }
+            {toast.message}
+          </div>
+        )}
         <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-background via-background to-primary/5 text-foreground relative overflow-hidden">
           {/* Animated background elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -498,19 +525,25 @@ function App() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              if (launchingPath) return;
+                              // loader is stored as "forge 47.4.1" — pass only the version part
+                              const loaderStr = typeof instance === "object" ? instance.loader : undefined;
+                              const loaderVersion = loaderStr ? loaderStr.split(' ').slice(1).join(' ') || loaderStr : undefined;
                               handleLaunchInstance(
                                 instancePath,
                                 typeof instance === "object" ? instance.launcher : undefined,
                                 typeof instance === "object" ? instance.minecraftVersion : undefined,
-                                typeof instance === "object" && instance.loader
-                                  ? instance.loader
-                                  : undefined
+                                loaderVersion
                               );
                             }}
-                            className="absolute top-1/2 right-3 -translate-y-1/2 p-1.5 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-lg opacity-0 group-hover/card:opacity-100 transition-all border border-green-500/30 hover:scale-110"
-                            title="Launch Minecraft"
+                            disabled={!!launchingPath}
+                            className="absolute top-1/2 right-3 -translate-y-1/2 p-1.5 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-lg opacity-0 group-hover/card:opacity-100 transition-all border border-green-500/30 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={launchingPath === instancePath ? "Launching…" : "Launch Minecraft"}
                           >
-                            <Play className="w-3.5 h-3.5" />
+                            {launchingPath === instancePath
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              : <Play className="w-3.5 h-3.5" />
+                            }
                           </button>
                         </div>
                       );

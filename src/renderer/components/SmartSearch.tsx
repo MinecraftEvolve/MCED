@@ -143,11 +143,11 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl bg-background border border-primary/20 rounded-lg shadow-2xl"
+        className="w-full max-w-2xl bg-card border-2 border-primary/30 rounded-2xl shadow-2xl shadow-black/50"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input */}
-        <div className="p-4 border-b border-primary/20">
+        <div className="p-4 border-b-2 border-primary/20">
           <div className="relative">
             <input
               ref={inputRef}
@@ -156,7 +156,7 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search all configs... (try 'settings about performance')"
-              className="w-full px-4 py-3 pl-12 bg-secondary border border-primary/20 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-lg"
+              className="w-full px-4 py-3 pl-12 bg-secondary/60 border-2 border-primary/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-lg transition-colors"
             />
             <svg
               className="absolute left-4 top-3.5 h-6 w-6 text-muted-foreground"
@@ -246,7 +246,7 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
                   <button
                     key={i}
                     onClick={() => setQuery(suggestion)}
-                    className="px-2 py-1 text-xs bg-accent hover:bg-accent/80 rounded transition-colors"
+                    className="px-2 py-1 text-xs bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
                   >
                     {suggestion}
                   </button>
@@ -264,7 +264,7 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
                 <button
                   key={i}
                   onClick={() => handleResultClick(result)}
-                  className="w-full p-4 text-left hover:bg-accent transition-colors"
+                  className="w-full p-4 text-left hover:bg-primary/5 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -279,7 +279,7 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <span className="text-xs px-2 py-1 bg-secondary rounded">
+                      <span className="text-xs px-2 py-1 bg-secondary rounded-lg">
                         {result.item.setting.type}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -303,7 +303,7 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-primary/20 flex items-center justify-between text-xs text-muted-foreground">
+        <div className="p-3 border-t-2 border-primary/20 flex items-center justify-between text-xs text-muted-foreground">
           <span>
             {filteredResults.length > 0 && `${filteredResults.length} results`}
             {filteredResults.length !== results.length && results.length > 0 && ` (${results.length} total)`}
