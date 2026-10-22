@@ -53,6 +53,15 @@ export function ConfigSync({ onClose }: Props) {
           try {
             const content = await window.api.remoteReadFile(rf.path);
             const rel = rf.path.replace(/^config[\\/]/, "");
+            // Reject paths that could escape the config directory
+            const parts = rel.split(/[\\/]/);
+            if (
+              rel.startsWith("/") ||
+              /^[a-zA-Z]:/.test(rel) ||
+              parts.includes("..") ||
+              parts.includes("") ||
+              parts.some((p: string) => p.startsWith("."))
+            ) continue;
             remoteFiles.set(rel, content);
           } catch { /* skip */ }
         }
