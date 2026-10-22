@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Wand2, X, CheckCircle2, Copy, ExternalLink } from "lucide-react";
+import { Wand2, X, CheckCircle2, Copy, ExternalLink, AlertTriangle } from "lucide-react";
 
 interface TemplateEntry {
   key: string;
@@ -247,8 +247,9 @@ export function ConfigTemplates({ onClose }: Props) {
                   </div>
                 </div>
                 {selected.note && (
-                  <div className="mt-2 text-[11px] px-2.5 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-300/80">
-                    ⚠ {selected.note}
+                  <div className="mt-2 flex items-start gap-1.5 text-[11px] px-2.5 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-300/80">
+                    <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                    {selected.note}
                   </div>
                 )}
               </div>

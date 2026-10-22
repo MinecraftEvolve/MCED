@@ -224,7 +224,7 @@ export function DependencyGraph({ onClose }: Props) {
             <div className="absolute bottom-3 left-3 flex flex-col gap-1 text-[10px] text-muted-foreground">
               <div className="flex items-center gap-1.5"><span className="w-4 h-0.5 bg-orange-400 inline-block rounded" />Required</div>
               <div className="flex items-center gap-1.5"><span className="w-4 h-0.5 bg-indigo-400 inline-block rounded border-dashed border" style={{borderStyle:"dashed"}} />Optional</div>
-              <div className="flex items-center gap-1.5"><circle className="w-2.5 h-2.5 rounded-full bg-primary inline-block" />Installed</div>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary inline-block" />Installed</div>
               <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-neutral-500 inline-block" />Missing</div>
             </div>
           </div>
