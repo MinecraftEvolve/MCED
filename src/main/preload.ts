@@ -211,6 +211,16 @@ contextBridge.exposeInMainWorld("api", {
   remoteReadFile: (filePath: string) => ipcRenderer.invoke("remote:readFile", filePath),
   remoteWriteFile: (filePath: string, content: string) => ipcRenderer.invoke("remote:writeFile", filePath, content),
   remoteDeleteFile: (filePath: string) => ipcRenderer.invoke("remote:deleteFile", filePath),
+  remoteUploadFile: (localPath: string, remotePath: string) => ipcRenderer.invoke("remote:uploadFile", localPath, remotePath),
+
+  // MCP Server
+  mcpStart: (port: number) => ipcRenderer.invoke("mcp:start", port),
+  mcpStop: () => ipcRenderer.invoke("mcp:stop"),
+  mcpGetStatus: () => ipcRenderer.invoke("mcp:getStatus"),
+
+  // Instance data sync (renderer → main, for MCP server)
+  mcedNotifyInstanceLoaded: (data: { instance: any; mods: any[] }) =>
+    ipcRenderer.invoke("mced:setInstanceData", data),
 });
 
 declare global {
@@ -513,6 +523,13 @@ declare global {
       remoteReadFile: (filePath: string) => Promise<string>;
       remoteWriteFile: (filePath: string, content: string) => Promise<void>;
       remoteDeleteFile: (filePath: string) => Promise<void>;
+      remoteUploadFile: (localPath: string, remotePath: string) => Promise<void>;
+
+      // MCP Server
+      mcpStart: (port: number) => Promise<{ port: number }>;
+      mcpStop: () => Promise<void>;
+      mcpGetStatus: () => Promise<{ running: boolean; port: number | null }>;
+      mcedNotifyInstanceLoaded: (data: { instance: any; mods: any[] }) => Promise<void>;
     };
   }
 }

@@ -5,6 +5,8 @@ import { useStatsStore } from "./store/statsStore";
 import { useChangelogStore } from "./store/changelogStore";
 import { useChangeTrackingStore } from "./store/changeTrackingStore";
 import { NotificationProvider } from "./components/common/Notifications";
+import { CommandPalette } from "./components/CommandPalette";
+import { ProfileManager } from "./components/ProfileManager";
 import { Loader2, Settings as SettingsIcon, FolderOpen, Play, Clock, CheckCircle, XCircle, Server } from "lucide-react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
@@ -130,12 +132,24 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showPalette, setShowPalette] = useState(false);
+  const [showProfiles, setShowProfiles] = useState(false);
 
   useEffect(() => {
     if (settings.curseForgeApiKey) {
       curseForgeAPI.setApiKey(settings.curseForgeApiKey);
     }
   }, [settings.curseForgeApiKey]);
+
+  // MCP server lifecycle
+  useEffect(() => {
+    if (settings.mcpServerEnabled) {
+      window.api.mcpStart(settings.mcpServerPort ?? 25582).catch(() => {});
+    } else {
+      window.api.mcpStop?.().catch(() => {});
+    }
+    return () => { window.api.mcpStop?.().catch(() => {}); };
+  }, [settings.mcpServerEnabled, settings.mcpServerPort]);
 
   // Initialize Discord RPC when settings load
   useEffect(() => {
@@ -244,6 +258,8 @@ function App() {
         instanceInfo.serverConfigFolder
       );
       setMods(modsWithConfigs);
+      // Notify main process for MCP server access
+      window.api.mcedNotifyInstanceLoaded?.({ instance: instanceInfo, mods: modsWithConfigs }).catch(() => {});
 
       // Trigger update check in the background
       updateCheckerService.checkUpdates(modsWithConfigs, instanceInfo.minecraftVersion).catch(() => {});
@@ -357,6 +373,14 @@ function App() {
         e.preventDefault();
         setShowSearch(true);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setShowPalette((v) => !v);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+        e.preventDefault();
+        setShowProfiles((v) => !v);
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -431,6 +455,13 @@ function App() {
           </div>
         </div>
         {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+        {showPalette && (
+          <CommandPalette
+            onClose={() => setShowPalette(false)}
+            onOpenSettings={() => setShowSettings(true)}
+          />
+        )}
+        {showProfiles && <ProfileManager onClose={() => setShowProfiles(false)} />}
       </NotificationProvider>
     );
   }
@@ -633,6 +664,13 @@ function App() {
         </div>
 
         {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+        {showPalette && (
+          <CommandPalette
+            onClose={() => setShowPalette(false)}
+            onOpenSettings={() => setShowSettings(true)}
+          />
+        )}
+        {showProfiles && <ProfileManager onClose={() => setShowProfiles(false)} />}
       </>
     );
   }
@@ -660,6 +698,13 @@ function App() {
         {showChangelog && <ChangelogViewer onClose={() => setShowChangelog(false)} />}
         <UpdateNotification />
         {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+        {showPalette && (
+          <CommandPalette
+            onClose={() => setShowPalette(false)}
+            onOpenSettings={() => setShowSettings(true)}
+          />
+        )}
+        {showProfiles && <ProfileManager onClose={() => setShowProfiles(false)} />}
         {/* useKeyboardShortcuts() - temporarily disabled due to hooks order issue */}
       </>
     </NotificationProvider>

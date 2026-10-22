@@ -116,6 +116,7 @@ export function RemoteFileBrowser() {
   const [error, setError] = useState<string | null>(null);
 
   const isDirty = fileContent !== savedContent;
+  const [dragOver, setDragOver] = useState(false);
 
   // Keep a ref to handleSave so the Monaco onMount closure always calls the latest version
   const handleSaveRef = useRef<() => Promise<void>>(() => Promise.resolve());
@@ -208,6 +209,27 @@ export function RemoteFileBrowser() {
   }
   handleSaveRef.current = handleSave;
 
+  async function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (!files.length) return;
+    const targetDir = selectedPath
+      ? selectedPath.substring(0, selectedPath.lastIndexOf("/")) || "/"
+      : "/";
+    for (const file of files) {
+      const localPath = (file as any).path as string;
+      if (!localPath) continue;
+      const remotePath = targetDir === "/" ? `/${file.name}` : `${targetDir}/${file.name}`;
+      try {
+        await window.api.remoteUploadFile(localPath, remotePath);
+      } catch (e: any) {
+        setError(`Upload failed: ${e?.message}`);
+      }
+    }
+    await loadRoot();
+  }
+
   async function handleDelete() {
     if (!selectedPath) return;
     if (!confirm(`Delete ${selectedPath.split("/").pop()}? This cannot be undone.`)) return;
@@ -239,7 +261,12 @@ export function RemoteFileBrowser() {
   return (
     <div className="flex h-full">
       {/* File tree */}
-      <div className="w-64 flex-shrink-0 border-r border-primary/20 flex flex-col overflow-hidden">
+      <div
+        className={`w-64 flex-shrink-0 border-r border-primary/20 flex flex-col overflow-hidden transition-colors ${dragOver ? "bg-primary/10" : ""}`}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+      >
         <div className="flex items-center justify-between px-3 py-2 border-b border-primary/20">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Files</span>
           {loadingTree && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}

@@ -16,6 +16,7 @@ import { JarLoaderService } from "./services/JarLoaderService";
 import { LaunchService } from './LaunchService';
 import { RemoteConfigService } from "./services/RemoteConfigService";
 import { RemoteConnection } from "../shared/types/remote.types";
+import { MCEDMcpServer } from "./mcp-server";
 import "../shared/config"; // Import to silence console.logs in production
 
 const execAsync = promisify(exec);
@@ -2206,3 +2207,52 @@ ipcMain.handle("remote:deleteFile", async (_event, filePath: string) => {
   if (!activeRemoteService) throw new Error("Not connected");
   return activeRemoteService.deleteFile(filePath);
 });
+
+ipcMain.handle("remote:uploadFile", async (_event, localPath: string, remotePath: string) => {
+  if (!activeRemoteService) throw new Error("Not connected");
+  const content = await fs.readFile(localPath, "utf-8");
+  return activeRemoteService.writeFile(remotePath, content);
+});
+
+// ─── MCP Server ───────────────────────────────────────────────────────────
+let mcpServer: MCEDMcpServer | null = null;
+let cachedInstanceData: any = null;
+let cachedMods: any[] = [];
+
+ipcMain.handle("mced:setInstanceData", (_event, data: any) => {
+  cachedInstanceData = data?.instance ?? null;
+  cachedMods = data?.mods ?? [];
+});
+
+ipcMain.handle("mcp:start", async (_event, port: number) => {
+  if (mcpServer?.isRunning()) {
+    mcpServer.stop();
+    mcpServer = null;
+  }
+  mcpServer = new MCEDMcpServer(port);
+  mcpServer.getInstanceData = () => cachedInstanceData;
+  mcpServer.getMods = () => cachedMods;
+  mcpServer.isRemoteConnected = () => !!activeRemoteService;
+  mcpServer.listRemoteFiles = (path) =>
+    activeRemoteService ? activeRemoteService.listFiles(path, false) : Promise.resolve([]);
+  mcpServer.readRemoteFile = (path) => {
+    if (!activeRemoteService) throw new Error("Not connected");
+    return activeRemoteService.readFile(path);
+  };
+  mcpServer.writeRemoteFile = (path, content) => {
+    if (!activeRemoteService) throw new Error("Not connected");
+    return activeRemoteService.writeFile(path, content);
+  };
+  await mcpServer.start();
+  return { port: mcpServer.getPort() };
+});
+
+ipcMain.handle("mcp:stop", () => {
+  mcpServer?.stop();
+  mcpServer = null;
+});
+
+ipcMain.handle("mcp:getStatus", () => ({
+  running: mcpServer?.isRunning() ?? false,
+  port: mcpServer?.getPort() ?? null,
+}));

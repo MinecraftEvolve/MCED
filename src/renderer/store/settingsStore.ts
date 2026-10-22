@@ -33,6 +33,10 @@ export interface AppSettings {
   // Game Launch (JVM)
   jvmMaxMemory: number;
   jvmMinMemory: number;
+
+  // MCP Server
+  mcpServerEnabled: boolean;
+  mcpServerPort: number;
 }
 
 interface SettingsStore {
@@ -59,6 +63,8 @@ const defaultSettings: AppSettings = {
   discordRpcEnabled: true,
   jvmMaxMemory: 4096,
   jvmMinMemory: 1024,
+  mcpServerEnabled: false,
+  mcpServerPort: 25582,
 };
 
 export const useSettingsStore = create<SettingsStore>()(

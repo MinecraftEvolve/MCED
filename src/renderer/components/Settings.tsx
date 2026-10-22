@@ -17,6 +17,7 @@ import {
   Download,
   FileText,
   Cpu,
+  Server,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import "./Settings.css";
@@ -588,6 +589,64 @@ export function Settings({ onClose }: { onClose: () => void }) {
               </div>
             </section>
           )}
+
+          {/* MCP Server Section */}
+          <section className="settings-section">
+            <h3>
+              <Server className="icon" size={20} />
+              MCP Server
+            </h3>
+            <div className="setting-row">
+              <div className="setting-info">
+                <span className="setting-label">Enable MCP Server</span>
+                <span className="setting-description">
+                  Expose MCED as an MCP server so AI agents (Claude Code, etc.) can read and edit configs.{" "}
+                  <strong>Off by default.</strong>
+                </span>
+              </div>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={localSettings.mcpServerEnabled ?? false}
+                  onChange={(e) => {
+                    const newSettings = { ...localSettings, mcpServerEnabled: e.target.checked };
+                    setLocalSettings(newSettings);
+                    applySettings(newSettings);
+                  }}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+            {localSettings.mcpServerEnabled && (
+              <>
+                <div className="setting-row">
+                  <div className="setting-info">
+                    <span className="setting-label">Port</span>
+                    <span className="setting-description">Local port the MCP server listens on</span>
+                  </div>
+                  <input
+                    type="number"
+                    min="1024"
+                    max="65535"
+                    value={localSettings.mcpServerPort ?? 25582}
+                    onChange={(e) => {
+                      const newSettings = { ...localSettings, mcpServerPort: Number(e.target.value) };
+                      setLocalSettings(newSettings);
+                      applySettings(newSettings);
+                    }}
+                    className="settings-input"
+                    style={{ width: 90 }}
+                  />
+                </div>
+                <div className="setting-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
+                  <span className="setting-label" style={{ fontSize: 12 }}>Add to Claude Code config:</span>
+                  <code style={{ fontSize: 11, background: "var(--bg-secondary, #1a1a1a)", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", display: "block", width: "100%", userSelect: "all" }}>
+                    {`{ "type": "sse", "url": "http://localhost:${localSettings.mcpServerPort ?? 25582}/sse" }`}
+                  </code>
+                </div>
+              </>
+            )}
+          </section>
 
           {/* Discord Rich Presence Section */}
           <section className="settings-section">
