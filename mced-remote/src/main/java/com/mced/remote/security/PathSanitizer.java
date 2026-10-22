@@ -24,7 +24,9 @@ public class PathSanitizer {
             throw new IOException("Path traversal detected: " + inputPath);
         }
 
-        if (Files.exists(resolved) && !Files.isDirectory(resolved)) {
+        // Validate extension on the path itself (not just when file exists)
+        // so new files can't bypass the allowlist either.
+        if (!Files.isDirectory(resolved)) {
             String name = resolved.getFileName().toString();
             int dot = name.lastIndexOf('.');
             String ext = dot >= 0 ? name.substring(dot + 1).toLowerCase() : "";

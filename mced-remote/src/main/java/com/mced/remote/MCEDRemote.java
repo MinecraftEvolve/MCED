@@ -12,7 +12,7 @@ public class MCEDRemote {
         System.out.println("[MCED-Remote] Starting agent v1.0.0");
         System.out.println("[MCED-Remote] Root path : " + config.getRootPath());
         System.out.println("[MCED-Remote] Port      : " + config.getPort());
-        System.out.println("[MCED-Remote] API key   : " + config.getApiKey());
+        System.out.println("[MCED-Remote] API key   : see mced-remote.properties");
 
         FileManager fileManager = new FileManager(config.getRootPath());
         AgentHttpServer server = new AgentHttpServer(config, fileManager);
