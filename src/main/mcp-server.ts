@@ -361,9 +361,21 @@ export class MCEDMcpServer {
   }
 
   stop(): void {
+    // Close every open SSE stream so clients don't hang
+    for (const res of this.sseSessions.values()) {
+      try { res.end(); } catch { /* ignore */ }
+    }
     this.sseSessions.clear();
-    this.httpServer?.close();
+
+    const srv = this.httpServer;
     this.httpServer = null;
+    if (srv) {
+      // closeAllConnections() available in Node 18.2+; keeps idle keep-alive sockets from delaying stop
+      if (typeof (srv as any).closeAllConnections === "function") {
+        (srv as any).closeAllConnections();
+      }
+      srv.close();
+    }
   }
 
   isRunning(): boolean {

@@ -2218,6 +2218,8 @@ ipcMain.handle("remote:uploadFile", async (_event, localPath: string, remotePath
 let mcpServer: MCEDMcpServer | null = null;
 let cachedInstanceData: any = null;
 let cachedMods: any[] = [];
+/** Prevents concurrent mcp:start calls from racing each other. */
+let mcpStartLock: Promise<unknown> = Promise.resolve();
 
 ipcMain.handle("mced:setInstanceData", (_event, data: any) => {
   cachedInstanceData = data?.instance ?? null;
@@ -2225,26 +2227,43 @@ ipcMain.handle("mced:setInstanceData", (_event, data: any) => {
 });
 
 ipcMain.handle("mcp:start", async (_event, port: number) => {
-  if (mcpServer?.isRunning()) {
-    mcpServer.stop();
-    mcpServer = null;
+  if (!Number.isInteger(port) || port < 1024 || port > 65535) {
+    throw new Error(`Invalid port ${port}: must be an integer between 1024 and 65535`);
   }
-  mcpServer = new MCEDMcpServer(port);
-  mcpServer.getInstanceData = () => cachedInstanceData;
-  mcpServer.getMods = () => cachedMods;
-  mcpServer.isRemoteConnected = () => !!activeRemoteService;
-  mcpServer.listRemoteFiles = (path) =>
-    activeRemoteService ? activeRemoteService.listFiles(path, false) : Promise.resolve([]);
-  mcpServer.readRemoteFile = (path) => {
-    if (!activeRemoteService) throw new Error("Not connected");
-    return activeRemoteService.readFile(path);
-  };
-  mcpServer.writeRemoteFile = (path, content) => {
-    if (!activeRemoteService) throw new Error("Not connected");
-    return activeRemoteService.writeFile(path, content);
-  };
-  await mcpServer.start();
-  return { port: mcpServer.getPort() };
+
+  // Serialize starts so concurrent IPC calls don't race each other
+  let resolve!: () => void;
+  const thisLock = new Promise<void>((r) => { resolve = r; });
+  const prev = mcpStartLock;
+  mcpStartLock = thisLock;
+
+  try {
+    await prev; // wait for any in-flight start to finish
+
+    // Stop whatever is running
+    if (mcpServer) {
+      mcpServer.stop();
+      mcpServer = null;
+    }
+    mcpServer = new MCEDMcpServer(port);
+    mcpServer.getInstanceData = () => cachedInstanceData;
+    mcpServer.getMods = () => cachedMods;
+    mcpServer.isRemoteConnected = () => !!activeRemoteService;
+    mcpServer.listRemoteFiles = (path) =>
+      activeRemoteService ? activeRemoteService.listFiles(path, false) : Promise.resolve([]);
+    mcpServer.readRemoteFile = (path) => {
+      if (!activeRemoteService) throw new Error("Not connected");
+      return activeRemoteService.readFile(path);
+    };
+    mcpServer.writeRemoteFile = (path, content) => {
+      if (!activeRemoteService) throw new Error("Not connected");
+      return activeRemoteService.writeFile(path, content);
+    };
+    await mcpServer.start();
+    return { port: mcpServer.getPort() };
+  } finally {
+    resolve();
+  }
 });
 
 ipcMain.handle("mcp:stop", () => {
