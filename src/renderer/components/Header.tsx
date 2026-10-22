@@ -22,7 +22,9 @@ import {
   Terminal,
   AlertTriangle,
   Download,
+  Server,
 } from "lucide-react";
+import { useRemoteConnectionStore } from "@/store/remoteConnectionStore";
 import { CrashAnalyzer } from "./CrashAnalyzer";
 import { LauncherIcon } from "./LauncherIcon";
 
@@ -41,8 +43,9 @@ export function Header({
   onStatsClick,
   onChangelogClick,
 }: HeaderProps) {
-  const { currentInstance, launcherType } = useAppStore();
+  const { currentInstance, launcherType, viewMode, setViewMode } = useAppStore();
   const { settings: appSettings } = useSettingsStore();
+  const { connectionStatus } = useRemoteConnectionStore();
   const [showSettings, setShowSettings] = useState(false);
   const [showBackups, setShowBackups] = useState(false);
   const [showInstanceMenu, setShowInstanceMenu] = useState(false);
@@ -404,6 +407,23 @@ export function Header({
               title="Export as .mrpack"
             >
               <Download className="w-4 h-4" />
+            </button>
+
+            <div className="w-px h-4 bg-border/80 mx-0.5" />
+
+            <button
+              onClick={() => setViewMode(viewMode === "remote" ? "mods" : "remote")}
+              className={`p-2 rounded-lg transition-all hover:scale-105 relative ${
+                viewMode === "remote"
+                  ? "bg-green-500/15 text-green-400"
+                  : "hover:bg-primary/15 text-muted-foreground hover:text-foreground"
+              }`}
+              title="Remote Config (MCED-Remote)"
+            >
+              <Server className="w-4 h-4" />
+              {connectionStatus === "connected" && (
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_4px_1px_rgba(74,222,128,0.5)]" />
+              )}
             </button>
 
             <div className="w-px h-4 bg-border/80 mx-0.5" />

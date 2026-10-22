@@ -197,6 +197,20 @@ contextBridge.exposeInMainWorld("api", {
 
   exportModpack: (instancePath: string, packName: string, mcVersion: string, loaderType: string, loaderVersion: string) =>
     ipcRenderer.invoke("export:modpack", instancePath, packName, mcVersion, loaderType, loaderVersion),
+
+  // Remote Config (MCED-Remote)
+  remoteGetSavedConnections: () => ipcRenderer.invoke("remote:getSavedConnections"),
+  remoteSaveConnection: (connection: any) => ipcRenderer.invoke("remote:saveConnection", connection),
+  remoteDeleteConnection: (id: string) => ipcRenderer.invoke("remote:deleteConnection", id),
+  remoteTestConnection: (connection: any) => ipcRenderer.invoke("remote:testConnection", connection),
+  remoteConnect: (connectionId: string) => ipcRenderer.invoke("remote:connect", connectionId),
+  remoteDisconnect: () => ipcRenderer.invoke("remote:disconnect"),
+  remoteGetActiveConnectionId: () => ipcRenderer.invoke("remote:getActiveConnectionId"),
+  remoteGetInfo: () => ipcRenderer.invoke("remote:getInfo"),
+  remoteListFiles: (filePath?: string, recursive?: boolean) => ipcRenderer.invoke("remote:listFiles", filePath, recursive),
+  remoteReadFile: (filePath: string) => ipcRenderer.invoke("remote:readFile", filePath),
+  remoteWriteFile: (filePath: string, content: string) => ipcRenderer.invoke("remote:writeFile", filePath, content),
+  remoteDeleteFile: (filePath: string) => ipcRenderer.invoke("remote:deleteFile", filePath),
 });
 
 declare global {
@@ -485,6 +499,20 @@ declare global {
         instancePath: string,
         query: string
       ) => Promise<{ success: boolean; data: any[]; error?: string }>;
+
+      // Remote Config (MCED-Remote)
+      remoteGetSavedConnections: () => Promise<any[]>;
+      remoteSaveConnection: (connection: any) => Promise<void>;
+      remoteDeleteConnection: (id: string) => Promise<void>;
+      remoteTestConnection: (connection: any) => Promise<{ success: boolean; error?: string }>;
+      remoteConnect: (connectionId: string) => Promise<void>;
+      remoteDisconnect: () => Promise<void>;
+      remoteGetActiveConnectionId: () => Promise<string | null>;
+      remoteGetInfo: () => Promise<any>;
+      remoteListFiles: (filePath?: string, recursive?: boolean) => Promise<any[]>;
+      remoteReadFile: (filePath: string) => Promise<string>;
+      remoteWriteFile: (filePath: string, content: string) => Promise<void>;
+      remoteDeleteFile: (filePath: string) => Promise<void>;
     };
   }
 }

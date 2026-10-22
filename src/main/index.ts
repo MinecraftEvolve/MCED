@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, shell, safeStorage } from "electron";
 import path from "path";
 import { promises as fs } from "fs";
 import { createHash } from "crypto";
@@ -14,6 +14,8 @@ import { FluidRegistryService } from "./services/FluidRegistryService";
 import { RecipeService } from "./services/RecipeService";
 import { JarLoaderService } from "./services/JarLoaderService";
 import { LaunchService } from './LaunchService';
+import { RemoteConfigService } from "./services/RemoteConfigService";
+import { RemoteConnection } from "../shared/types/remote.types";
 import "../shared/config"; // Import to silence console.logs in production
 
 const execAsync = promisify(exec);
@@ -2094,4 +2096,115 @@ ipcMain.handle("export:modpack", async (_event, instancePath: string, packName: 
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
+});
+
+// ─── Remote Config (MCED-Remote) ─────────────────────────────────────────────
+
+const REMOTE_CONNECTIONS_FILE = path.join(app.getPath("userData"), "remote-connections.json");
+let activeRemoteService: RemoteConfigService | null = null;
+let activeRemoteConnectionId: string | null = null;
+
+async function loadStoredConnections(): Promise<RemoteConnection[]> {
+  try {
+    const raw = await fs.readFile(REMOTE_CONNECTIONS_FILE, "utf-8");
+    const data = JSON.parse(raw) as Array<RemoteConnection & { apiKeyEncrypted?: string }>;
+    return data.map((c) => {
+      let apiKey = c.apiKey || "";
+      if (c.apiKeyEncrypted && safeStorage.isEncryptionAvailable()) {
+        try {
+          apiKey = safeStorage.decryptString(Buffer.from(c.apiKeyEncrypted, "base64"));
+        } catch {}
+      }
+      const { apiKeyEncrypted: _, ...rest } = c;
+      return { ...rest, apiKey };
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function storeConnections(connections: RemoteConnection[]): Promise<void> {
+  const data = connections.map((c) => {
+    if (safeStorage.isEncryptionAvailable()) {
+      const { apiKey, ...rest } = c;
+      return { ...rest, apiKey: "", apiKeyEncrypted: safeStorage.encryptString(apiKey).toString("base64") };
+    }
+    return c;
+  });
+  await fs.writeFile(REMOTE_CONNECTIONS_FILE, JSON.stringify(data, null, 2), "utf-8");
+}
+
+ipcMain.handle("remote:getSavedConnections", async () => {
+  const conns = await loadStoredConnections();
+  return conns.map(({ apiKey: _, ...rest }) => ({ ...rest, apiKey: "" }));
+});
+
+ipcMain.handle("remote:saveConnection", async (_event, connection: RemoteConnection) => {
+  const connections = await loadStoredConnections();
+  const idx = connections.findIndex((c) => c.id === connection.id);
+  if (idx >= 0) {
+    connections[idx] = { ...connections[idx], ...connection };
+  } else {
+    connections.push(connection);
+  }
+  await storeConnections(connections);
+});
+
+ipcMain.handle("remote:deleteConnection", async (_event, id: string) => {
+  const connections = await loadStoredConnections();
+  await storeConnections(connections.filter((c) => c.id !== id));
+  if (activeRemoteConnectionId === id) {
+    activeRemoteService = null;
+    activeRemoteConnectionId = null;
+  }
+});
+
+ipcMain.handle("remote:testConnection", async (_event, connection: RemoteConnection) => {
+  const svc = new RemoteConfigService(connection);
+  return svc.testConnection(connection);
+});
+
+ipcMain.handle("remote:connect", async (_event, connectionId: string) => {
+  const connections = await loadStoredConnections();
+  const conn = connections.find((c) => c.id === connectionId);
+  if (!conn) throw new Error(`Connection ${connectionId} not found`);
+  const svc = new RemoteConfigService(conn);
+  await svc.getStatus();
+  activeRemoteService = svc;
+  activeRemoteConnectionId = connectionId;
+  // persist lastConnected
+  conn.lastConnected = Date.now();
+  await storeConnections(connections);
+});
+
+ipcMain.handle("remote:disconnect", async () => {
+  activeRemoteService = null;
+  activeRemoteConnectionId = null;
+});
+
+ipcMain.handle("remote:getActiveConnectionId", () => activeRemoteConnectionId);
+
+ipcMain.handle("remote:getInfo", async () => {
+  if (!activeRemoteService) throw new Error("Not connected");
+  return activeRemoteService.getInfo();
+});
+
+ipcMain.handle("remote:listFiles", async (_event, filePath?: string, recursive?: boolean) => {
+  if (!activeRemoteService) throw new Error("Not connected");
+  return activeRemoteService.listFiles(filePath, recursive ?? false);
+});
+
+ipcMain.handle("remote:readFile", async (_event, filePath: string) => {
+  if (!activeRemoteService) throw new Error("Not connected");
+  return activeRemoteService.readFile(filePath);
+});
+
+ipcMain.handle("remote:writeFile", async (_event, filePath: string, content: string) => {
+  if (!activeRemoteService) throw new Error("Not connected");
+  return activeRemoteService.writeFile(filePath, content);
+});
+
+ipcMain.handle("remote:deleteFile", async (_event, filePath: string) => {
+  if (!activeRemoteService) throw new Error("Not connected");
+  return activeRemoteService.deleteFile(filePath);
 });

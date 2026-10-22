@@ -1,0 +1,42 @@
+name: Build MCED-Remote Agent
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mced-remote/**'
+  pull_request:
+    paths:
+      - 'mced-remote/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('mced-remote/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build with Maven
+        working-directory: mced-remote
+        run: mvn package -B -DskipTests
+
+      - name: Upload JAR artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mced-remote-jars
+          path: |
+            mced-remote/target/mced-remote.jar
+            mced-remote/target/mced-remote-*.jar
