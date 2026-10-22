@@ -27,6 +27,15 @@ import {
   GitCompare,
   GitBranch,
   Wand2,
+  Replace,
+  RotateCcw,
+  Cpu,
+  ArrowLeftRight,
+  StickyNote,
+  Rss,
+  PackagePlus,
+  Zap,
+  FileDiff,
 } from "lucide-react";
 import { useRemoteConnectionStore } from "@/store/remoteConnectionStore";
 import { CrashAnalyzer } from "./CrashAnalyzer";
@@ -34,6 +43,15 @@ import { StartupLog } from "./StartupLog";
 import { InstanceDiff } from "./InstanceDiff";
 import { DependencyGraph } from "./DependencyGraph";
 import { ConfigTemplates } from "./ConfigTemplates";
+import { BulkConfigReplace } from "./BulkConfigReplace";
+import { ConfigReset } from "./ConfigReset";
+import { JvmOptimizer } from "./JvmOptimizer";
+import { ConfigSync } from "./ConfigSync";
+import { ModNotes } from "./ModNotes";
+import { ChangelogFeed } from "./ChangelogFeed";
+import { ModInstaller } from "./ModInstaller";
+import { PerformanceQuickApply } from "./PerformanceQuickApply";
+import { LocalRemoteDiff } from "./LocalRemoteDiff";
 import { LauncherIcon } from "./LauncherIcon";
 
 interface HeaderProps {
@@ -67,6 +85,15 @@ export function Header({
   const [showInstanceDiff, setShowInstanceDiff] = useState(false);
   const [showDependencyGraph, setShowDependencyGraph] = useState(false);
   const [showConfigTemplates, setShowConfigTemplates] = useState(false);
+  const [showBulkReplace, setShowBulkReplace] = useState(false);
+  const [showConfigReset, setShowConfigReset] = useState(false);
+  const [showJvmOptimizer, setShowJvmOptimizer] = useState(false);
+  const [showConfigSync, setShowConfigSync] = useState(false);
+  const [showModNotes, setShowModNotes] = useState(false);
+  const [showChangelogFeed, setShowChangelogFeed] = useState(false);
+  const [showModInstaller, setShowModInstaller] = useState(false);
+  const [showPerfQuickApply, setShowPerfQuickApply] = useState(false);
+  const [showLocalRemoteDiff, setShowLocalRemoteDiff] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   // Poll running state every 3s while an instance is open
@@ -446,6 +473,86 @@ export function Header({
             >
               <Wand2 className="w-4 h-4" />
             </button>
+            {currentInstance && (
+              <button
+                onClick={() => setShowBulkReplace(true)}
+                className="p-2 rounded-lg hover:bg-primary/15 transition-all hover:scale-105 text-muted-foreground hover:text-primary"
+                title="Bulk Find & Replace"
+              >
+                <Replace className="w-4 h-4" />
+              </button>
+            )}
+            {currentInstance && (
+              <button
+                onClick={() => setShowConfigReset(true)}
+                className="p-2 rounded-lg hover:bg-orange-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-orange-400"
+                title="Reset Configs to Defaults"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            )}
+            {currentInstance && (
+              <button
+                onClick={() => setShowJvmOptimizer(true)}
+                className="p-2 rounded-lg hover:bg-primary/15 transition-all hover:scale-105 text-muted-foreground hover:text-primary"
+                title="JVM Optimizer"
+              >
+                <Cpu className="w-4 h-4" />
+              </button>
+            )}
+            {currentInstance && (
+              <button
+                onClick={() => setShowModNotes(true)}
+                className="p-2 rounded-lg hover:bg-yellow-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-yellow-400"
+                title="Mod Notes"
+              >
+                <StickyNote className="w-4 h-4" />
+              </button>
+            )}
+            {currentInstance && (
+              <button
+                onClick={() => setShowPerfQuickApply(true)}
+                className="p-2 rounded-lg hover:bg-yellow-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-yellow-400"
+                title="Performance Quick-Apply"
+              >
+                <Zap className="w-4 h-4" />
+              </button>
+            )}
+
+            <div className="w-px h-4 bg-border/80 mx-0.5" />
+
+            <button
+              onClick={() => setShowChangelogFeed(true)}
+              className="p-2 rounded-lg hover:bg-primary/15 transition-all hover:scale-105 text-muted-foreground hover:text-primary"
+              title="Changelog Feed"
+            >
+              <Rss className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowModInstaller(true)}
+              className="p-2 rounded-lg hover:bg-primary/15 transition-all hover:scale-105 text-muted-foreground hover:text-primary"
+              title="Mod Installer (Modrinth / CurseForge / GitHub)"
+            >
+              <PackagePlus className="w-4 h-4" />
+            </button>
+            {currentInstance && (
+              <button
+                onClick={() => setShowConfigSync(true)}
+                className="p-2 rounded-lg hover:bg-green-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-green-400"
+                title="Server Config Sync"
+              >
+                <ArrowLeftRight className="w-4 h-4" />
+              </button>
+            )}
+            {currentInstance && (
+              <button
+                onClick={() => setShowLocalRemoteDiff(true)}
+                className="p-2 rounded-lg hover:bg-blue-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-blue-400"
+                title="Local ↔ Remote Diff"
+              >
+                <FileDiff className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={handleExportModpack}
               disabled={isExporting}
@@ -495,6 +602,15 @@ export function Header({
       {showInstanceDiff && <InstanceDiff onClose={() => setShowInstanceDiff(false)} />}
       {showDependencyGraph && <DependencyGraph onClose={() => setShowDependencyGraph(false)} />}
       {showConfigTemplates && <ConfigTemplates onClose={() => setShowConfigTemplates(false)} />}
+      {showBulkReplace && <BulkConfigReplace onClose={() => setShowBulkReplace(false)} />}
+      {showConfigReset && <ConfigReset onClose={() => setShowConfigReset(false)} />}
+      {showJvmOptimizer && <JvmOptimizer onClose={() => setShowJvmOptimizer(false)} />}
+      {showConfigSync && <ConfigSync onClose={() => setShowConfigSync(false)} />}
+      {showModNotes && <ModNotes onClose={() => setShowModNotes(false)} />}
+      {showChangelogFeed && <ChangelogFeed onClose={() => setShowChangelogFeed(false)} />}
+      {showModInstaller && <ModInstaller onClose={() => setShowModInstaller(false)} />}
+      {showPerfQuickApply && <PerformanceQuickApply onClose={() => setShowPerfQuickApply(false)} />}
+      {showLocalRemoteDiff && <LocalRemoteDiff onClose={() => setShowLocalRemoteDiff(false)} />}
     </header>
   );
 }
