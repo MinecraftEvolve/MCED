@@ -2255,4 +2255,5 @@ ipcMain.handle("mcp:stop", () => {
 ipcMain.handle("mcp:getStatus", () => ({
   running: mcpServer?.isRunning() ?? false,
   port: mcpServer?.getPort() ?? null,
+  token: mcpServer?.token ?? null,
 }));

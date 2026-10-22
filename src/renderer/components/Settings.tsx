@@ -28,6 +28,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
   const [appVersion, setAppVersion] = useState("...");
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
   const [changelog, setChangelog] = useState<string>("");
+  const [mcpToken, setMcpToken] = useState<string | null>(null);
 
   // Apply settings only when explicitly changed
   const applySettings = useCallback(
@@ -74,6 +75,14 @@ export function Settings({ onClose }: { onClose: () => void }) {
     // Fetch latest changelog
     fetchChangelog();
   }, []);
+
+  // Refresh MCP token whenever the server section is visible
+  useEffect(() => {
+    if (!localSettings.mcpServerEnabled) return;
+    window.api.mcpGetStatus?.().then((s: any) => {
+      if (s?.token) setMcpToken(s.token);
+    }).catch(() => {});
+  }, [localSettings.mcpServerEnabled]);
 
   const handleClearCache = useCallback(async () => {
     if (confirm("Are you sure you want to clear the API cache?")) {
@@ -640,9 +649,14 @@ export function Settings({ onClose }: { onClose: () => void }) {
                 </div>
                 <div className="setting-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
                   <span className="setting-label" style={{ fontSize: 12 }}>Add to Claude Code config:</span>
-                  <code style={{ fontSize: 11, background: "var(--bg-secondary, #1a1a1a)", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", display: "block", width: "100%", userSelect: "all" }}>
-                    {`{ "type": "sse", "url": "http://localhost:${localSettings.mcpServerPort ?? 25582}/sse" }`}
+                  <code style={{ fontSize: 11, background: "var(--bg-secondary, #1a1a1a)", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", display: "block", width: "100%", userSelect: "all", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+                    {`{\n  "type": "sse",\n  "url": "http://localhost:${localSettings.mcpServerPort ?? 25582}/sse",\n  "headers": { "Authorization": "Bearer ${mcpToken ?? "<start MCED to get token>"}" }\n}`}
                   </code>
+                  {mcpToken && (
+                    <span style={{ fontSize: 10, color: "var(--color-muted)", opacity: 0.6 }}>
+                      Token regenerates each app launch. Update your config after restarting MCED.
+                    </span>
+                  )}
                 </div>
               </>
             )}

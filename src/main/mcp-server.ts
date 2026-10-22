@@ -1,5 +1,5 @@
 import { createServer, IncomingMessage, ServerResponse } from "http";
-import { randomUUID } from "crypto";
+import { randomUUID, randomBytes } from "crypto";
 
 type JsonRpc = {
   jsonrpc: "2.0";
@@ -17,6 +17,8 @@ interface McpTool {
 export class MCEDMcpServer {
   private httpServer: ReturnType<typeof createServer> | null = null;
   private sseSessions = new Map<string, ServerResponse>();
+  /** Random per-launch bearer token. Clients must send `Authorization: Bearer <token>`. */
+  readonly token: string = randomBytes(32).toString("hex");
 
   // Callbacks wired up from index.ts
   getInstanceData: (() => any) | null = null;
@@ -224,17 +226,49 @@ export class MCEDMcpServer {
     if (this.httpServer?.listening) return;
 
     this.httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-      res.setHeader(
-        "Access-Control-Allow-Headers",
-        "Content-Type, Accept, Mcp-Session-Id"
-      );
+      // ── DNS-rebinding protection ───────────────────────────────────────────
+      // Only accept requests where Host is 127.0.0.1 or localhost (+ port).
+      const host = (req.headers["host"] ?? "").split(":")[0].toLowerCase();
+      if (host !== "127.0.0.1" && host !== "localhost") {
+        res.writeHead(421, { "Content-Type": "text/plain" });
+        res.end("Misdirected request");
+        return;
+      }
+
+      // ── CORS: reject any cross-origin request ─────────────────────────────
+      const origin = req.headers["origin"];
+      if (origin !== undefined) {
+        // Electron renderer sends no Origin; only allow null/omitted or file://
+        res.writeHead(403, { "Content-Type": "text/plain" });
+        res.end("Cross-origin requests not allowed");
+        return;
+      }
 
       if (req.method === "OPTIONS") {
         res.writeHead(204);
         res.end();
         return;
+      }
+
+      // ── Bearer token auth (skip for health check) ─────────────────────────
+      const isHealthCheck = (req.url === "/" || req.url === "/health") && req.method === "GET";
+      if (!isHealthCheck) {
+        const auth = req.headers["authorization"] ?? "";
+        if (auth !== `Bearer ${this.token}`) {
+          res.writeHead(401, { "Content-Type": "text/plain" });
+          res.end("Unauthorized — include Authorization: Bearer <token>");
+          return;
+        }
+      }
+
+      // ── Content-Type check on POST bodies ─────────────────────────────────
+      if (req.method === "POST") {
+        const ct = (req.headers["content-type"] ?? "").toLowerCase();
+        if (!ct.includes("application/json")) {
+          res.writeHead(415, { "Content-Type": "text/plain" });
+          res.end("Content-Type must be application/json");
+          return;
+        }
       }
 
       // SSE transport: GET /sse
