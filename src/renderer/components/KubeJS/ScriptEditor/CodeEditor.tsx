@@ -37,6 +37,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   >([]);
   const [isValid, setIsValid] = useState(true);
   const editorRef = useRef<any>(null);
+  const monacoRef = useRef<any>(null);
 
   useEffect(() => {
     loadScript();
@@ -101,6 +102,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
+    monacoRef.current = monaco;
 
     // Save monaco reference globally
     if (typeof window !== "undefined") {
@@ -134,6 +136,24 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     setIsValid(valid);
     setValidationErrors(errors);
   };
+
+  useEffect(() => {
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    if (!monaco || !editor) return;
+    const model = editor.getModel();
+    if (!model) return;
+    const markers = validationErrors.map((e) => ({
+      severity: e.severity === "error" ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
+      startLineNumber: e.line,
+      startColumn: e.column || 1,
+      endLineNumber: e.line,
+      endColumn: model.getLineLength(e.line) + 1,
+      message: e.message,
+      source: "kubejs",
+    }));
+    monaco.editor.setModelMarkers(model, "kubejs", markers);
+  }, [validationErrors]);
 
   const handleClose = () => {
     if (isDirty) {

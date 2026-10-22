@@ -42,21 +42,13 @@ export const CreateDeployingEditor: React.FC<CreateDeployingEditorProps> = ({
   const parseAndLoadItems = async () => {
     if (!initialRecipe?.raw) return;
 
-    console.log("Parsing deploying recipe:", initialRecipe.raw);
-
-    // Parse: event.recipes.create.deploying("output", ["ingredient", "tool"])
     const match = initialRecipe.raw.match(
       /event\.recipes\.create\.deploying\s*\(\s*["']([^"']+)["']\s*,\s*\[(.*?)\]/s
     );
 
-    console.log("Match result:", match);
-
     if (match) {
       const outputId = match[1];
       const ingredientsStr = match[2];
-
-      console.log("Output ID:", outputId);
-      console.log("Ingredients string:", ingredientsStr);
 
       // Parse output count
       let count = 1;
@@ -70,14 +62,10 @@ export const CreateDeployingEditor: React.FC<CreateDeployingEditorProps> = ({
 
       // Parse ingredients array
       const ingredientMatches = ingredientsStr.match(/["']([^"']+)["']/g);
-      console.log("Ingredient matches:", ingredientMatches);
 
       if (ingredientMatches && ingredientMatches.length >= 2) {
         const baseItemId = ingredientMatches[0].replace(/["']/g, "");
         const deployedItemId = ingredientMatches[1].replace(/["']/g, "");
-
-        console.log("Parsed base item ID:", baseItemId);
-        console.log("Parsed deployed item ID:", deployedItemId);
 
         // Load items
         try {

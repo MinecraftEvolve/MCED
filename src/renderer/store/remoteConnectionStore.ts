@@ -32,16 +32,25 @@ function stopPolling() {
 function startPolling(activeId: string) {
   stopPolling();
   pollingInterval = setInterval(async () => {
+    const state = useRemoteConnectionStore.getState();
+    const id = state.activeConnectionId;
+    if (!id) {
+      stopPolling();
+      return;
+    }
     try {
-      const id = useRemoteConnectionStore.getState().activeConnectionId;
-      if (!id) {
-        stopPolling();
-        return;
-      }
       await window.api.remoteGetInfo();
     } catch {
-      useRemoteConnectionStore.getState().setConnectionStatus("error", "Lost connection to server");
-      stopPolling();
+      // Attempt one reconnect before marking as error
+      try {
+        await window.api.remoteConnect(id);
+        const info = await window.api.remoteGetInfo();
+        state.setConnectionStatus("connected");
+        useRemoteConnectionStore.setState({ serverInfo: info });
+      } catch {
+        state.setConnectionStatus("error", "Lost connection to server");
+        stopPolling();
+      }
     }
   }, 30_000);
 }

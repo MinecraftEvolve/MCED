@@ -106,8 +106,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ instancePath }) => {
       });
 
       if (result.success) {
-        console.log("Tag saved successfully to:", result.data);
-        // Optionally show a success notification
+        // success
       } else {
         console.error("Failed to save tag:", result.error);
       }

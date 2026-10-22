@@ -159,14 +159,10 @@ export const useAppStore = create<AppState>((set, get) => ({
             }
           : { ...instance, lastOpened: Date.now() };
 
-      console.log("[Store] Adding recent instance:", instanceObj);
-
       const updated = [
         instanceObj,
         ...state.recentInstances.filter((inst) => inst.path !== instanceObj.path),
       ].slice(0, 5);
-
-      console.log("[Store] Updated recent instances:", updated);
       localStorage.setItem("recentInstances", JSON.stringify(updated));
       return { recentInstances: updated };
     }),

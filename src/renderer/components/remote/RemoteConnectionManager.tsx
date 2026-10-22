@@ -11,6 +11,7 @@ import {
   Loader2,
   XCircle,
   Clock,
+  Download,
 } from "lucide-react";
 
 function formatLastConnected(ts?: number): string {
@@ -174,10 +175,23 @@ export function RemoteConnectionManager() {
       </div>
 
       {/* Footer hint */}
-      <div className="px-4 py-2 border-t border-primary/20">
+      <div className="px-4 py-3 border-t border-primary/20 space-y-2">
         <p className="text-[10px] text-muted-foreground opacity-60 font-mono">
           java -jar mced-remote.jar
         </p>
+        <a
+          href="https://github.com/MinecraftEvolve/MCED/releases/latest/download/mced-remote.jar"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1.5 text-[10px] text-primary/70 hover:text-primary transition-colors"
+          onClick={(e) => {
+            e.preventDefault();
+            window.api.openExternal("https://github.com/MinecraftEvolve/MCED/releases/latest/download/mced-remote.jar");
+          }}
+        >
+          <Download className="w-3 h-3" />
+          Download mced-remote.jar
+        </a>
       </div>
 
       {/* Dialogs */}

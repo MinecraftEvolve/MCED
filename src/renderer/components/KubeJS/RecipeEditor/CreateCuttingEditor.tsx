@@ -23,8 +23,6 @@ export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
   onSave,
   initialRecipe,
 }) => {
-  console.log("CreateCuttingEditor - initialRecipe:", initialRecipe);
-
   const [input, setInput] = useState<Item | null>(null);
   const [outputs, setOutputs] = useState<(Item | null)[]>([null, null, null]);
   const [showItemPicker, setShowItemPicker] = useState(false);
@@ -32,25 +30,16 @@ export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
 
   useEffect(() => {
     if (initialRecipe) {
-      console.log("Loading initial recipe data:", initialRecipe);
-
-      // Parse input
       if (initialRecipe.ingredients && initialRecipe.ingredients.length > 0) {
         const inputData = initialRecipe.ingredients[0];
         const inputId = inputData.item || inputData.tag || inputData;
-        console.log("Input ID:", inputId);
 
         if (typeof inputId === "string") {
-          loadItem(inputId).then((item) => {
-            console.log("Loaded input item:", item);
-            setInput(item);
-          });
+          loadItem(inputId).then((item) => setInput(item));
         }
       }
 
-      // Parse outputs
       if (initialRecipe.results && initialRecipe.results.length > 0) {
-        console.log("Results:", initialRecipe.results);
         Promise.all(
           initialRecipe.results.slice(0, 3).map(async (result: any) => {
             const itemId = result.item || result.tag || result;
@@ -65,7 +54,6 @@ export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
             return null;
           })
         ).then((loadedOutputs) => {
-          console.log("Loaded outputs:", loadedOutputs);
           const newOutputs = [...loadedOutputs];
           while (newOutputs.length < 3) newOutputs.push(null);
           setOutputs(newOutputs);

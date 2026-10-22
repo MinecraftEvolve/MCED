@@ -13,8 +13,6 @@ interface LandingPageProps {
 export function LandingPage({ onSelectInstance, onLaunchInstance, recentInstances = [] }: LandingPageProps) {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
-  console.log("LandingPage recentInstances:", recentInstances);
-
   const handleRecentInstance = (instance: RecentInstance) => {
     // Pass path via event or some other method if needed
     // For now, just call without argument

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Editor from "@monaco-editor/react";
 import { useRemoteConnectionStore } from "../../store/remoteConnectionStore";
 import { useSettingsStore } from "../../store/settingsStore";
@@ -117,6 +117,9 @@ export function RemoteFileBrowser() {
 
   const isDirty = fileContent !== savedContent;
 
+  // Keep a ref to handleSave so the Monaco onMount closure always calls the latest version
+  const handleSaveRef = useRef<() => Promise<void>>(() => Promise.resolve());
+
   const loadRoot = useCallback(async () => {
     if (!activeConnectionId || connectionStatus !== "connected") return;
     setLoadingTree(true);
@@ -203,6 +206,7 @@ export function RemoteFileBrowser() {
       setSaving(false);
     }
   }
+  handleSaveRef.current = handleSave;
 
   async function handleDelete() {
     if (!selectedPath) return;
@@ -335,13 +339,10 @@ export function RemoteFileBrowser() {
                 scrollBeyondLastLine: false,
                 automaticLayout: true,
               }}
-              onMount={(editor) => {
+              onMount={(editor, monaco) => {
                 editor.addCommand(
-                  // Ctrl+S
-                  2097,
-                  () => {
-                    if (isDirty) handleSave();
-                  }
+                  monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+                  () => { handleSaveRef.current(); }
                 );
               }}
             />
