@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Loader2,
   Server,
+  RotateCcw,
 } from "lucide-react";
 
 interface FileNode extends RemoteFile {
@@ -117,6 +118,7 @@ export function RemoteFileBrowser() {
 
   const isDirty = fileContent !== savedContent;
   const [dragOver, setDragOver] = useState(false);
+  const [originalContent, setOriginalContent] = useState<string>("");
 
   // Keep a ref to handleSave so the Monaco onMount closure always calls the latest version
   const handleSaveRef = useRef<() => Promise<void>>(() => Promise.resolve());
@@ -188,6 +190,7 @@ export function RemoteFileBrowser() {
       setSelectedPath(node.path);
       setFileContent(content);
       setSavedContent(content);
+      setOriginalContent(content);
     } catch (e: any) {
       setError(e?.message ?? "Failed to read file");
     } finally {
@@ -320,6 +323,20 @@ export function RemoteFileBrowser() {
 
           {selectedPath && (
             <>
+              {fileContent !== originalContent && (
+                <button
+                  onClick={() => {
+                    if (!confirm("Revert to the version loaded from the server? Unsaved edits will be lost.")) return;
+                    setFileContent(originalContent);
+                    setSavedContent(originalContent);
+                  }}
+                  className="flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded border border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                  title="Revert to server version"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Revert
+                </button>
+              )}
               <button
                 onClick={handleDelete}
                 className="p-1.5 rounded hover:bg-red-500/20 text-muted-foreground hover:text-red-400"

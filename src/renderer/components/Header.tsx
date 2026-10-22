@@ -23,9 +23,17 @@ import {
   AlertTriangle,
   Download,
   Server,
+  Activity,
+  GitCompare,
+  GitBranch,
+  Wand2,
 } from "lucide-react";
 import { useRemoteConnectionStore } from "@/store/remoteConnectionStore";
 import { CrashAnalyzer } from "./CrashAnalyzer";
+import { StartupLog } from "./StartupLog";
+import { InstanceDiff } from "./InstanceDiff";
+import { DependencyGraph } from "./DependencyGraph";
+import { ConfigTemplates } from "./ConfigTemplates";
 import { LauncherIcon } from "./LauncherIcon";
 
 interface HeaderProps {
@@ -55,6 +63,10 @@ export function Header({
   const [showConsole, setShowConsole] = useState(false);
   const [hasLogs, setHasLogs] = useState(false);
   const [showCrashAnalyzer, setShowCrashAnalyzer] = useState(false);
+  const [showStartupLog, setShowStartupLog] = useState(false);
+  const [showInstanceDiff, setShowInstanceDiff] = useState(false);
+  const [showDependencyGraph, setShowDependencyGraph] = useState(false);
+  const [showConfigTemplates, setShowConfigTemplates] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   // Poll running state every 3s while an instance is open
@@ -400,6 +412,40 @@ export function Header({
             >
               <AlertTriangle className="w-4 h-4" />
             </button>
+            {currentInstance && (
+              <button
+                onClick={() => setShowStartupLog(true)}
+                className="p-2 rounded-lg hover:bg-green-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-green-400"
+                title="Startup Log Analyzer"
+              >
+                <Activity className="w-4 h-4" />
+              </button>
+            )}
+            {currentInstance && (
+              <button
+                onClick={() => setShowInstanceDiff(true)}
+                className="p-2 rounded-lg hover:bg-blue-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-blue-400"
+                title="Instance Diff"
+              >
+                <GitCompare className="w-4 h-4" />
+              </button>
+            )}
+            {currentInstance && (
+              <button
+                onClick={() => setShowDependencyGraph(true)}
+                className="p-2 rounded-lg hover:bg-purple-500/15 transition-all hover:scale-105 text-muted-foreground hover:text-purple-400"
+                title="Mod Dependency Graph"
+              >
+                <GitBranch className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              onClick={() => setShowConfigTemplates(true)}
+              className="p-2 rounded-lg hover:bg-primary/15 transition-all hover:scale-105 text-muted-foreground hover:text-primary"
+              title="Config Templates"
+            >
+              <Wand2 className="w-4 h-4" />
+            </button>
             <button
               onClick={handleExportModpack}
               disabled={isExporting}
@@ -445,6 +491,10 @@ export function Header({
         <GameConsole instancePath={currentInstance.path} onClose={() => setShowConsole(false)} />
       )}
       {showCrashAnalyzer && <CrashAnalyzer onClose={() => setShowCrashAnalyzer(false)} />}
+      {showStartupLog && <StartupLog onClose={() => setShowStartupLog(false)} />}
+      {showInstanceDiff && <InstanceDiff onClose={() => setShowInstanceDiff(false)} />}
+      {showDependencyGraph && <DependencyGraph onClose={() => setShowDependencyGraph(false)} />}
+      {showConfigTemplates && <ConfigTemplates onClose={() => setShowConfigTemplates(false)} />}
     </header>
   );
 }

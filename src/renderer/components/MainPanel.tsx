@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAppStore } from "@/store";
 import { ModCard } from "./ModCard";
 import { ConfigEditor } from "./ConfigEditor/ConfigEditor";
 import { KubeJSEditor } from "./KubeJS/KubeJSEditor";
 import { RemoteConnectionManager } from "./remote/RemoteConnectionManager";
 import { RemoteFileBrowser } from "./remote/RemoteFileBrowser";
-import { FolderOpen } from "lucide-react";
+import { RemoteConfigSearch } from "./remote/RemoteConfigSearch";
+import { FolderOpen, Search } from "lucide-react";
 
 export function MainPanel() {
   const { selectedMod, currentInstance, viewMode } = useAppStore();
+  const [showRemoteSearch, setShowRemoteSearch] = useState(false);
 
   // Remote mode works without an instance
   if (viewMode === "remote") {
@@ -17,9 +19,25 @@ export function MainPanel() {
         <div className="w-80 flex-shrink-0 border-r border-primary/20 flex flex-col overflow-hidden">
           <RemoteConnectionManager />
         </div>
-        <div className="flex-1 overflow-hidden">
-          <RemoteFileBrowser />
+        <div className="flex-1 overflow-hidden flex flex-col">
+          {/* Remote toolbar */}
+          <div className="flex items-center gap-2 px-3 py-1.5 border-b border-primary/10 bg-card/30">
+            <button
+              onClick={() => setShowRemoteSearch(true)}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-colors"
+              title="Search across all remote config files"
+            >
+              <Search className="w-3.5 h-3.5" />
+              Search configs
+            </button>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <RemoteFileBrowser />
+          </div>
         </div>
+        {showRemoteSearch && (
+          <RemoteConfigSearch onClose={() => setShowRemoteSearch(false)} />
+        )}
       </main>
     );
   }
