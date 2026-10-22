@@ -1135,10 +1135,8 @@ ipcMain.handle("kubejs:detect", async (_event, instancePath: string) => {
 
     // Preload all tags when KubeJS is detected
     if (info.isInstalled) {
-      console.log("KubeJS detected, preloading all tags...");
       const itemRegistry = new ItemRegistryService(instancePath);
       await itemRegistry.preloadAllTags(instancePath);
-      console.log("All tags preloaded successfully");
     }
 
     return { success: true, data: info };
@@ -1918,7 +1916,7 @@ ipcMain.handle(
 // This script adds dimension-specific events and modifications
 
 ServerEvents.loaded(event => {
-  console.log('Dimension ${dimension.id} configuration loaded');
+  console.log(\`Dimension ${dimension.id} configuration loaded\`);
   // Add dimension-specific logic here
 });
 `;

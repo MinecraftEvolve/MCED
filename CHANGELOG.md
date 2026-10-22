@@ -5,6 +5,33 @@ All notable changes to MCED will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-10-22
+
+### Added
+
+- **MCED-Remote** — standalone Java 17 HTTP agent (`mced-remote.jar`) that runs on Minecraft servers and exposes config files via a REST API, plus a full remote config editor UI built into the app
+  - Browse, edit, and save server config files directly from the desktop app
+  - Secure API-key authentication; API key stored with Electron `safeStorage` encryption
+  - Server info panel shows mod loader, server type, and Java version
+  - Auto-reconnect: when the 30-second health poll fails the client attempts one reconnect before marking the connection as error
+  - Download link for `mced-remote.jar` in the connection manager footer
+  - GitHub Actions workflow to build and attach the JAR to every release
+- **Mod update banner** — when Modrinth reports an available update, a banner now appears in the ModCard detail panel showing the current and latest version with a download link
+- **KubeJS inline diagnostics** — validation errors from `ScriptValidator` are now pushed to Monaco's `setModelMarkers`, so errors appear as inline squiggles and gutter icons alongside the existing issues panel
+
+### Fixed
+
+- **Monaco Ctrl+S** in RemoteFileBrowser: replaced the magic key-code literal `2097` with `monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS`; fixed stale closure so the save handler always sees current file state
+- **Dimension script codegen**: the `console.log` inside generated KubeJS dimension scripts now correctly interpolates the dimension ID at generation time instead of emitting the literal `${dimension.id}` string
+- **Deprecated `e.returnValue`**: removed the deprecated `BeforeUnloadEvent.returnValue` assignment in `CodeEditor.tsx` (calling `e.preventDefault()` alone is sufficient in modern browsers)
+- **Landing page Quick Actions**: "View Documentation" and "Report Issue" buttons now open the correct GitHub URLs via `openExternal` instead of doing nothing
+- **LandingPage version footer**: updated hardcoded version string from `1.0.6` to `1.3.0`
+
+### Improved
+
+- Removed scattered debug `console.log` calls from `store.ts`, `LandingPage.tsx`, `CreateCuttingEditor.tsx`, `CreateDeployingEditor.tsx`, `TagEditor.tsx`, and `index.ts`
+- Cleaned up unused imports and variables across several components (`CreateCuttingEditor`, `LandingPage`, `ModCard`)
+
 ## [1.2.2] - 2026-01-21
 
 ### Fixed
@@ -199,5 +226,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[1.0.9]: https://github.com/Luke1505/MCED/releases/tag/v1.0.9
-[1.0.8]: https://github.com/Luke1505/MCED/releases/tag/v1.0.8
+[1.3.0]: https://github.com/MinecraftEvolve/MCED/releases/tag/v1.3.0
+[1.2.2]: https://github.com/MinecraftEvolve/MCED/releases/tag/v1.2.2
+[1.2.1]: https://github.com/MinecraftEvolve/MCED/releases/tag/v1.2.1
+[1.2.0]: https://github.com/MinecraftEvolve/MCED/releases/tag/v1.2.0
+[1.1.1]: https://github.com/MinecraftEvolve/MCED/releases/tag/v1.1.1
+[1.0.9]: https://github.com/MinecraftEvolve/MCED/releases/tag/v1.0.9
+[1.0.8]: https://github.com/MinecraftEvolve/MCED/releases/tag/v1.0.8

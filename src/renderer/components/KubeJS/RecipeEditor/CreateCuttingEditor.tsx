@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight, Plus, X } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
 import { ItemSlot } from "./ItemSlot";
 

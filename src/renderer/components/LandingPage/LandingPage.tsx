@@ -13,33 +13,8 @@ interface LandingPageProps {
 export function LandingPage({ onSelectInstance, onLaunchInstance, recentInstances = [] }: LandingPageProps) {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
-  const handleRecentInstance = (instance: RecentInstance) => {
-    // Pass path via event or some other method if needed
-    // For now, just call without argument
+  const handleRecentInstance = (_instance: RecentInstance) => {
     onSelectInstance();
-  };
-
-  const getLauncherIcon = (launcher?: string) => {
-    return <LauncherIcon launcher={launcher || "generic"} className="w-4 h-4" />;
-  };
-
-  const getLauncherName = (launcher?: string) => {
-    switch (launcher) {
-      case "modrinth":
-        return "Modrinth App";
-      case "curseforge":
-        return "CurseForge";
-      case "prism":
-        return "Prism Launcher";
-      case "multimc":
-        return "MultiMC";
-      case "atlauncher":
-        return "ATLauncher";
-      case "packwiz":
-        return "Packwiz";
-      default:
-        return "Generic Launcher";
-    }
   };
 
   return (
@@ -165,11 +140,17 @@ export function LandingPage({ onSelectInstance, onLaunchInstance, recentInstance
       <div className="landing-quick-actions">
         <h3>Quick Actions</h3>
         <div className="quick-actions-grid">
-          <button className="quick-action-btn">
+          <button
+            className="quick-action-btn"
+            onClick={() => window.api.openExternal("https://github.com/MinecraftEvolve/MCED/wiki")}
+          >
             <Book size={18} />
             View Documentation
           </button>
-          <button className="quick-action-btn">
+          <button
+            className="quick-action-btn"
+            onClick={() => window.api.openExternal("https://github.com/MinecraftEvolve/MCED/issues/new")}
+          >
             <Github size={18} />
             Report Issue
           </button>
@@ -182,7 +163,7 @@ export function LandingPage({ onSelectInstance, onLaunchInstance, recentInstance
           Made with <Heart className="heart-icon" size={16} fill="currentColor" /> for the Minecraft
           community
         </p>
-        <p className="version">Version 1.0.6</p>
+        <p className="version">Version 1.3.0</p>
       </div>
     </div>
   );

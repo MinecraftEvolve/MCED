@@ -1,6 +1,6 @@
-import React from "react";
 import { ModInfo } from "@shared/types/mod.types";
 import { useAppStore } from "@/store";
+import { useUpdateStore } from "@/store/updateStore";
 
 interface ModCardProps {
   mod: ModInfo;
@@ -9,6 +9,8 @@ interface ModCardProps {
 export function ModCard({ mod }: ModCardProps) {
   const compactView = useAppStore((state) => state.settings.compactView);
   const showTooltips = useAppStore((state) => state.settings.showTooltips);
+  const getUpdate = useUpdateStore((s) => s.getUpdate);
+  const updateInfo = getUpdate(mod.modId);
 
   // Generate platform URLs
   const curseforgeUrl =
@@ -75,6 +77,27 @@ export function ModCard({ mod }: ModCardProps) {
             </p>
           </div>
         </div>
+
+        {updateInfo && (
+          <div className="mt-3 flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-500/30">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-orange-400">Update available</p>
+              <p className="text-xs text-muted-foreground">
+                {updateInfo.currentVersion} → <span className="font-semibold text-orange-400">{updateInfo.latestVersion}</span>
+              </p>
+            </div>
+            {updateInfo.downloadUrl && (
+              <a
+                href={updateInfo.downloadUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border border-orange-500/40 transition-colors whitespace-nowrap"
+              >
+                Download
+              </a>
+            )}
+          </div>
+        )}
 
         {mod.description && (
           <p className="mt-4 text-muted-foreground leading-relaxed border-l-4 border-primary/40 pl-4 py-2 bg-primary/5 rounded-r-lg">

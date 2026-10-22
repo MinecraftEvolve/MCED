@@ -17,7 +17,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   filePath,
   fileName,
   scriptType,
-  instancePath,
+  instancePath: _instancePath,
   hasProbeJS,
   onClose,
   onSave,
@@ -47,7 +47,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();
-        e.returnValue = "";
       }
     };
 
