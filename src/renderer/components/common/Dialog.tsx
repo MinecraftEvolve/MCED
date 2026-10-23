@@ -20,7 +20,6 @@ export const Dialog: React.FC<DialogProps> = ({
   showCloseButton = true,
   closeOnBackdrop = true,
 }) => {
-  // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
@@ -44,31 +43,27 @@ export const Dialog: React.FC<DialogProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={closeOnBackdrop ? onClose : undefined}
       />
 
-      {/* Dialog */}
       <div
-        className={`relative bg-card border border-primary/20 rounded-lg shadow-lg w-full ${sizeClasses[size]} flex flex-col max-h-[90vh]`}
+        className={`relative flex w-full max-h-[90vh] flex-col overflow-hidden rounded-2xl border border-primary/20 bg-card shadow-2xl shadow-black/30 ${sizeClasses[size]}`}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-primary/20 flex-shrink-0">
-          <h2 className="text-lg font-semibold text-primary">{title}</h2>
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-primary/20 bg-card/80 px-6 py-4">
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
           {showCloseButton && (
             <button
               onClick={onClose}
-              className="p-1 hover:bg-accent rounded-lg btn-transition text-muted-foreground hover:text-foreground"
+              className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 hover:bg-primary/10 hover:text-foreground"
               title="Close"
             >
-              <X className="w-5 h-5" />
+              <X className="h-5 w-5" />
             </button>
           )}
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-hidden">{children}</div>
       </div>
     </div>
@@ -99,20 +94,20 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   if (!isOpen) return null;
 
   const variantClasses = {
-    danger: "bg-destructive hover:bg-destructive-hover text-white",
-    warning: "bg-warning hover:bg-warning-hover text-white",
-    info: "bg-btn-primary-bg hover:bg-btn-primary-hover text-btn-primary-text",
+    danger: "bg-red-600 hover:bg-red-500 text-white",
+    warning: "bg-amber-500 hover:bg-amber-400 text-white",
+    info: "bg-primary hover:bg-primary/90 text-primary-foreground",
   };
 
   return (
     <Dialog isOpen={isOpen} onClose={onClose} title={title} size="sm" closeOnBackdrop={false}>
       <div className="p-6">
-        <p className="text-foreground mb-6">{message}</p>
+        <p className="mb-6 text-foreground">{message}</p>
 
-        <div className="flex gap-3 justify-end">
+        <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-secondary border border-primary/20 rounded-lg text-foreground hover:bg-secondary/80 btn-transition"
+            className="rounded-xl border border-primary/20 bg-secondary px-4 py-2 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-secondary/80"
           >
             {cancelText}
           </button>
@@ -121,7 +116,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
               onConfirm();
               onClose();
             }}
-            className={`px-4 py-2 rounded-lg btn-transition ${variantClasses[variant]}`}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold shadow-lg shadow-black/10 transition-colors duration-200 ${variantClasses[variant]}`}
           >
             {confirmText}
           </button>
