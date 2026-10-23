@@ -22,7 +22,6 @@ export function ModList() {
   const { settings } = useSettingsStore();
   const [isMigrating, setIsMigrating] = useState(false);
 
-  // Detect KubeJS on instance load
   useEffect(() => {
     const detectKubeJS = async () => {
       if (!currentInstance) return;
@@ -41,10 +40,9 @@ export function ModList() {
   }, [currentInstance, setKubeJSDetected]);
 
   const handleModSelect = (mod: ModInfo) => {
-    setViewMode("mods"); // Switch to mods view when selecting a mod
+    setViewMode("mods");
     setSelectedMod(mod);
 
-    // Update Discord RPC with selected mod
     if (settings.discordRpcEnabled) {
       window.api.discordSetMod(mod.name, mods.length);
     }
@@ -62,7 +60,6 @@ export function ModList() {
     try {
       const result = await window.api.migrateAllServerConfigs(currentInstance.path);
       if (result.success) {
-        // Reload mods to reflect changes without leaving the page
         await reloadMods();
       } else {
         console.error("Migration failed:", result.error);
@@ -110,7 +107,7 @@ export function ModList() {
 
       <div className="flex-1 overflow-y-auto outline-none">
         {filteredMods.length === 0 ? (
-          <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
+          <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
             {searchQuery ? "No mods found" : "No mods loaded"}
           </div>
         ) : (
@@ -125,14 +122,14 @@ export function ModList() {
         )}
       </div>
 
-      <div className="p-4 border-t border-primary/20 bg-card/30 backdrop-blur-sm space-y-3">
+      <div className="space-y-3 border-t border-primary/20 bg-card/30 p-4 backdrop-blur-sm">
         {kubeJSDetected && (
           <button
             onClick={handleKubeJSClick}
-            className={`w-full px-4 py-3 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-md ${
+            className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-md transition-all duration-200 ${
               viewMode === "kubejs"
-                ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-purple-500/30 scale-105"
-                : "bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border-2 border-purple-500/20 hover:border-purple-500/40 hover:scale-105"
+                ? "scale-[1.01] bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-purple-500/30"
+                : "border-2 border-purple-500/20 bg-purple-600/10 text-purple-400 hover:border-purple-500/40 hover:bg-purple-600/20 hover:scale-[1.01]"
             }`}
             title="Open KubeJS Editor"
           >
@@ -140,16 +137,18 @@ export function ModList() {
             KubeJS Editor
           </button>
         )}
+
         <button
           onClick={handleMigrateAll}
           disabled={isMigrating || !currentInstance}
-          className="w-full px-4 py-3 text-sm font-semibold rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-2 border-primary/20 hover:border-primary/40 hover:scale-105 shadow-md hover:shadow-primary/20"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary/10 px-4 py-3 text-sm font-semibold text-primary transition-all duration-200 hover:bg-primary/20 hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
           title="Move all server configs to defaultconfigs folder"
         >
           <FolderSync size={16} />
           {isMigrating ? "Migrating..." : "Migrate All Configs"}
         </button>
-        <div className="text-xs text-muted-foreground text-center font-medium pt-1">
+
+        <div className="pt-1 text-center text-xs font-medium text-muted-foreground">
           {filteredMods.length} of {mods.length} mods
         </div>
       </div>
