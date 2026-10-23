@@ -12,32 +12,44 @@
     outline: none;
     box-sizing: border-box;
   }
-  
+
   button,
   input,
   select,
   textarea,
-  div,
-  aside,
-  section,
-  nav,
-  main,
-  header,
-  footer {
-    outline: none !important;
-    border: none !important;
+  a,
+  summary,
+  [role="button"] {
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      color 200ms ease,
+      box-shadow 200ms ease,
+      transform 200ms ease,
+      opacity 200ms ease;
   }
-  
+
   button:focus,
   input:focus,
   select:focus,
   textarea:focus,
-  div:focus,
-  aside:focus {
-    outline: none !important;
-    border: none !important;
+  a:focus,
+  summary:focus,
+  [role="button"]:focus {
+    outline: none;
   }
-  
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  a:focus-visible,
+  summary:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
   :root {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
@@ -158,6 +170,26 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Standardize hover affordances across UI controls */
+button:hover,
+[role="button"]:hover,
+summary:hover,
+a:hover {
+  cursor: pointer;
+}
+
+button:not(:disabled):hover,
+[role="button"]:not(:disabled):hover,
+summary:not(:disabled):hover {
+  border-color: hsl(var(--border) / 0.9);
+}
+
+button:not(:disabled):active,
+[role="button"]:not(:disabled):active,
+summary:not(:disabled):active {
+  transform: translateY(0);
 }
 
 /* Custom scrollbar */
