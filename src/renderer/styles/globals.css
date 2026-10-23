@@ -13,6 +13,17 @@
     box-sizing: border-box;
   }
 
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+
   button,
   input,
   select,
@@ -72,7 +83,6 @@
     --ring: 271 81% 56%;
     --radius: 0.75rem;
 
-    /* Custom Properties for Settings - Light Mode by default */
     --bg-primary: #ffffff;
     --bg-secondary: #f8fafc;
     --bg-hover: #f1f5f9;
@@ -108,7 +118,6 @@
     --input: 240 5.9% 90%;
     --ring: 271 81% 56%;
 
-    /* Custom Properties for Settings - Light Mode */
     --bg-primary: #ffffff;
     --bg-secondary: #f8fafc;
     --bg-hover: #f1f5f9;
@@ -117,6 +126,7 @@
     --border-color: #e2e8f0;
     --color-primary: #9333ea;
   }
+
   .dark {
     --background: 240 10% 5%;
     --foreground: 0 0% 98%;
@@ -142,7 +152,6 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    /* Dark theme specific variables */
     --bg-primary: #0d0d0d;
     --bg-secondary: #1a1a1a;
     --bg-hover: #242424;
@@ -150,15 +159,6 @@
     --text-secondary: #9ca3af;
     --border-color: #2d2d2d;
     --color-primary: #9333ea;
-  }
-}
-
-@layer base {
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings:
-      "rlig" 1,
-      "calt" 1;
   }
 }
 
@@ -172,7 +172,40 @@
   }
 }
 
-/* Standardize hover affordances across UI controls */
+@layer components {
+  .mc-panel {
+    @apply rounded-xl border border-primary/20 bg-card/60 backdrop-blur-sm shadow-sm;
+  }
+
+  .mc-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-secondary/70 px-3 py-2 text-sm font-medium text-foreground transition-all duration-200 hover:border-purple-500/30 hover:bg-purple-500/10 hover:text-foreground;
+  }
+
+  .mc-button:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .mc-button-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-sm font-semibold text-purple-300 transition-all duration-200 hover:border-purple-500/40 hover:bg-purple-500/20 hover:text-purple-200;
+  }
+
+  .mc-button-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-transparent px-2.5 py-1.5 text-sm text-muted-foreground transition-all duration-200 hover:border-primary/20 hover:bg-primary/10 hover:text-foreground;
+  }
+
+  .mc-button-icon {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-transparent text-muted-foreground transition-all duration-200 hover:border-primary/20 hover:bg-primary/10 hover:text-foreground;
+  }
+
+  .mc-toolbar {
+    @apply inline-flex items-center gap-1 rounded-xl border border-border/60 bg-secondary/60 p-1 shadow-sm;
+  }
+
+  .mc-chip {
+    @apply inline-flex items-center rounded-md border border-purple-500/20 bg-purple-500/10 px-2 py-0.5 text-[11px] font-semibold text-purple-300;
+  }
+}
+
 button:hover,
 [role="button"]:hover,
 summary:hover,
@@ -192,7 +225,6 @@ summary:not(:disabled):active {
   transform: translateY(0);
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -211,7 +243,6 @@ summary:not(:disabled):active {
   background: hsl(var(--muted-foreground));
 }
 
-/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -262,14 +293,12 @@ summary:not(:disabled):active {
   background-size: 1000px 100%;
 }
 
-/* Glassmorphism effect */
 .glass {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Modern card effect */
 .card-modern {
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
@@ -283,12 +312,10 @@ summary:not(:disabled):active {
   box-shadow: 0 8px 16px -4px hsl(var(--primary) / 0.2);
 }
 
-/* Selection */
 ::selection {
   background: hsl(var(--primary) / 0.3);
 }
 
-/* Compact Mode */
 body.compact-mode {
   font-size: 0.9rem;
 }
@@ -322,7 +349,6 @@ body.compact-mode h3 {
   font-size: 1.1rem;
 }
 
-/* Pixelated image rendering for Minecraft textures */
 .pixelated {
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;

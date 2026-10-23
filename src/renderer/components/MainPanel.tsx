@@ -12,22 +12,20 @@ export function MainPanel() {
   const { selectedMod, currentInstance, viewMode } = useAppStore();
   const [showRemoteSearch, setShowRemoteSearch] = useState(false);
 
-  // Remote mode works without an instance
   if (viewMode === "remote") {
     return (
-      <main className="flex-1 overflow-hidden bg-background flex">
-        <div className="w-80 flex-shrink-0 border-r border-primary/20 flex flex-col overflow-hidden">
+      <main className="flex flex-1 overflow-hidden bg-background">
+        <div className="w-80 flex-shrink-0 border-r border-primary/20 bg-card/20">
           <RemoteConnectionManager />
         </div>
-        <div className="flex-1 overflow-hidden flex flex-col">
-          {/* Remote toolbar */}
-          <div className="flex items-center gap-2 px-3 py-1.5 border-b border-primary/10 bg-card/30">
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-primary/10 bg-card/30 px-3 py-1.5">
             <button
               onClick={() => setShowRemoteSearch(true)}
-              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-colors"
+              className="mc-button-ghost"
               title="Search across all remote config files"
             >
-              <Search className="w-3.5 h-3.5" />
+              <Search className="h-3.5 w-3.5" />
               Search configs
             </button>
           </div>
@@ -35,16 +33,13 @@ export function MainPanel() {
             <RemoteFileBrowser />
           </div>
         </div>
-        {showRemoteSearch && (
-          <RemoteConfigSearch onClose={() => setShowRemoteSearch(false)} />
-        )}
+        {showRemoteSearch && <RemoteConfigSearch onClose={() => setShowRemoteSearch(false)} />}
       </main>
     );
   }
 
   if (!currentInstance) return null;
 
-  // Show KubeJS Editor when in KubeJS mode
   if (viewMode === "kubejs") {
     return (
       <main className="flex-1 overflow-auto bg-background">
@@ -55,20 +50,22 @@ export function MainPanel() {
 
   return (
     <main className="flex-1 overflow-auto bg-gradient-to-br from-background to-primary/5">
-      <div className="container max-w-5xl mx-auto p-8 space-y-8">
+      <div className="container mx-auto max-w-5xl space-y-8 p-8">
         {selectedMod ? (
           <>
             <ModCard mod={selectedMod} />
             <div className="border-t border-primary/20 pt-8">
-              <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">Configuration</h2>
+              <h2 className="mb-6 bg-gradient-to-r from-foreground to-primary bg-clip-text text-3xl font-bold text-transparent">
+                Configuration
+              </h2>
               <ConfigEditor modId={selectedMod.modId} instancePath={currentInstance.path} />
             </div>
           </>
         ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            <div className="text-center space-y-4 animate-fadeIn">
-              <div className="w-24 h-24 mx-auto bg-primary/10 rounded-3xl flex items-center justify-center mb-4">
-                <FolderOpen className="w-12 h-12 text-primary" />
+          <div className="flex h-full items-center justify-center text-muted-foreground">
+            <div className="space-y-4 text-center animate-fadeIn">
+              <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-3xl bg-primary/10">
+                <FolderOpen className="h-12 w-12 text-primary" />
               </div>
               <p className="text-2xl font-semibold text-foreground">Select a mod to view details</p>
               <p className="text-base">Choose from the list on the left to get started</p>
