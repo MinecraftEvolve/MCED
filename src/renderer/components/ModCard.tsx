@@ -12,7 +12,6 @@ export function ModCard({ mod }: ModCardProps) {
   const getUpdate = useUpdateStore((s) => s.getUpdate);
   const updateInfo = getUpdate(mod.modId);
 
-  // Generate platform URLs
   const curseforgeUrl =
     mod.platformData?.platform === "curseforge"
       ? `https://www.curseforge.com/minecraft/mc-mods/${mod.platformData.slug || mod.platformData.projectId}`
@@ -23,46 +22,44 @@ export function ModCard({ mod }: ModCardProps) {
       ? `https://modrinth.com/mod/${mod.platformData.slug || mod.platformData.projectId}`
       : `https://modrinth.com/mods?q=${encodeURIComponent(mod.name)}`;
 
-  const iconSize = compactView ? "w-16 h-16" : "w-20 h-20";
+  const iconSize = compactView ? "h-16 w-16" : "h-20 w-20";
   const padding = compactView ? "p-4" : "p-6";
 
   return (
     <div className={`space-y-${compactView ? "4" : "6"} animate-fadeIn`}>
-      {/* Mod Header */}
       <div
-        className={`border-2 border-primary/20 rounded-2xl ${padding} bg-gradient-to-br from-card via-card/95 to-card/80 shadow-xl backdrop-blur-sm hover:border-primary/40 transition-all duration-300`}
+        className={`rounded-2xl border border-primary/20 bg-gradient-to-br from-card via-card/95 to-card/80 shadow-xl backdrop-blur-sm transition-all duration-200 hover:border-primary/40 hover:shadow-2xl ${padding}`}
       >
         <div className="flex items-start gap-4">
           {mod.icon ? (
             <img
               src={mod.icon}
               alt={mod.name}
-              className={`${iconSize} rounded-2xl object-cover shadow-lg ring-2 ring-primary/30 hover:ring-primary/50 transition-all hover:scale-105`}
+              className={`${iconSize} rounded-2xl object-cover shadow-lg ring-2 ring-primary/30 transition-all duration-200 hover:scale-105 hover:ring-primary/50`}
               title={showTooltips ? mod.name : undefined}
               onError={(e) => {
-                // Fallback if icon fails to load
                 e.currentTarget.style.display = "none";
               }}
             />
           ) : (
-            <div className={`${iconSize} rounded-2xl bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center text-primary text-3xl font-bold shadow-lg ring-2 ring-primary/30`}>
+            <div
+              className={`${iconSize} flex items-center justify-center rounded-2xl bg-gradient-to-br from-primary/30 to-purple-500/30 text-3xl font-bold text-primary shadow-lg ring-2 ring-primary/30`}
+            >
               {mod.name.substring(0, 2).toUpperCase()}
             </div>
           )}
 
           <div className="flex-1">
-            <h2 className="text-2xl font-bold mb-2 text-foreground">
-              {mod.name}
-            </h2>
-            <p className="text-muted-foreground flex items-center gap-2 flex-wrap">
-              <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg font-semibold text-sm border border-primary/20">
+            <h2 className="mb-2 text-2xl font-bold text-foreground">{mod.name}</h2>
+            <p className="flex flex-wrap items-center gap-2 text-muted-foreground">
+              <span className="rounded-lg border border-primary/20 bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
                 v{mod.version}
               </span>
               {mod.authors && mod.authors.length > 0 && (
                 <>
                   <span className="text-muted-foreground/50">•</span>
                   <span className="flex items-center gap-1.5">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -79,8 +76,8 @@ export function ModCard({ mod }: ModCardProps) {
         </div>
 
         {updateInfo && (
-          <div className="mt-3 flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-500/30">
-            <div className="flex-1 min-w-0">
+          <div className="mt-3 flex items-center gap-3 rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-3">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-orange-400">Update available</p>
               <p className="text-xs text-muted-foreground">
                 {updateInfo.currentVersion} → <span className="font-semibold text-orange-400">{updateInfo.latestVersion}</span>
@@ -91,7 +88,7 @@ export function ModCard({ mod }: ModCardProps) {
                 href={updateInfo.downloadUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border border-orange-500/40 transition-colors whitespace-nowrap"
+                className="whitespace-nowrap rounded-lg border border-orange-500/40 bg-orange-500/20 px-3 py-1.5 text-xs font-semibold text-orange-400 transition-colors duration-200 hover:bg-orange-500/30"
               >
                 Download
               </a>
@@ -100,21 +97,20 @@ export function ModCard({ mod }: ModCardProps) {
         )}
 
         {mod.description && (
-          <p className="mt-4 text-muted-foreground leading-relaxed border-l-4 border-primary/40 pl-4 py-2 bg-primary/5 rounded-r-lg">
+          <p className="mt-4 rounded-r-lg border-l-4 border-primary/40 bg-primary/5 py-2 pl-4 text-muted-foreground leading-relaxed">
             {mod.description}
           </p>
         )}
 
-        {/* Links */}
-        <div className="flex flex-wrap gap-2 mt-4">
+        <div className="mt-4 flex flex-wrap gap-2">
           {mod.homepage && (
             <a
               href={mod.homepage}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 text-sm bg-secondary hover:bg-secondary/80 rounded-xl transition-all hover:scale-105 flex items-center gap-2 shadow-md font-semibold border-2 border-border hover:border-primary/30"
+              className="flex items-center gap-2 rounded-xl border-2 border-border bg-secondary px-4 py-2 text-sm font-semibold shadow-md transition-all duration-200 hover:scale-[1.01] hover:bg-secondary/80"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -130,10 +126,10 @@ export function ModCard({ mod }: ModCardProps) {
             href={curseforgeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 text-sm bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 shadow-md font-semibold border-2 border-orange-500/20 hover:border-orange-500/40"
+            className="flex items-center gap-2 rounded-xl bg-orange-500/10 px-4 py-2 text-sm font-semibold text-orange-600 shadow-md transition-all duration-200 hover:scale-[1.01] hover:bg-orange-500/20 dark:text-orange-400"
           >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18.326 9.2c-.288 0-.564.058-.817.164v-.001a2.213 2.213 0 00-.717.478 2.23 2.23 0 00-.48.718 2.206 2.206 0 00-.163.817v2.84c0 .287.058.563.163.817.105.253.265.48.48.718.215.237.464.423.717.478.253.106.529.164.817.164h1.99v-.879h-1.99a1.33 1.33 0 01-.49-.098 1.324 1.324 0 01-.43-.286 1.323 1.323 0 01-.287-.43 1.33 1.33 0 01-.098-.49v-2.84c0-.175.033-.343.098-.49.065-.147.159-.279.287-.43.128-.15.278-.27.43-.286.147-.065.315-.098.49-.098h1.99V9.2zm-4.645.879a1.33 1.33 0 00-.49-.098h-3.11v.879h3.11c.174 0 .342.033.49.098.147.065.278.159.43.286.15.128.27.278.286.43.065.147.098.315.098.49v2.84c0 .175-.033.343-.098.49a1.324 1.324 0 01-.287.43c-.128.15-.278.27-.43.286-.147.065-.315.098-.49.098h-3.11v.879h3.11c.288 0 .564-.058.817-.164.253-.105.48-.265.718-.478.237-.215.423-.464.478-.718.106-.253.164-.529.164-.817v-2.84a2.206 2.206 0 00-.164-.817 2.23 2.23 0 00-.478-.718 2.213 2.213 0 00-.718-.478 2.206 2.206 0 00-.817-.164zm-5.27 5.876h.888V9.2h-.888z" />
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.326 9.2c-.288 0-.564.058-.817.164v-.001a2.213 2.213 0 00-.717.478 2.23 2.23 0 00-.48.718 2.206 2.206 0 00-.163.817v2.84c0 .287.058.563.163.817.105.253.265.48.48.718.215.238.465.43.717.478.253.106.529.164.817.164h.328c.286 0 .561-.058.815-.164a2.2 2.2 0 00.717-.478 2.234 2.234 0 00.479-.718 2.198 2.198 0 00.163-.817v-2.84a2.2 2.2 0 00-.163-.817 2.235 2.235 0 00-.479-.718 2.214 2.214 0 00-.717-.478 2.231 2.231 0 00-.815-.164zm-10.544 0c-.288 0-.564.058-.817.164v-.001a2.213 2.213 0 00-.717.478 2.23 2.23 0 00-.48.718 2.205 2.205 0 00-.163.817v2.84c0 .287.058.563.163.817.105.253.265.48.48.718.215.238.465.43.717.478.253.106.529.164.817.164h.328c.286 0 .561-.058.815-.164a2.2 2.2 0 00.717-.478 2.234 2.234 0 00.479-.718 2.198 2.198 0 00.163-.817v-2.84a2.2 2.2 0 00-.163-.817 2.235 2.235 0 00-.479-.718 2.214 2.214 0 00-.717-.478 2.231 2.231 0 00-.815-.164h-.328z" />
             </svg>
             CurseForge
           </a>
@@ -142,10 +138,10 @@ export function ModCard({ mod }: ModCardProps) {
             href={modrinthUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 text-sm bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 rounded-xl transition-all hover:scale-105 flex items-center gap-2 shadow-md font-semibold border-2 border-green-500/20 hover:border-green-500/40"
+            className="flex items-center gap-2 rounded-xl bg-green-500/10 px-4 py-2 text-sm font-semibold text-green-600 shadow-md transition-all duration-200 hover:scale-[1.01] hover:bg-green-500/20 dark:text-green-400"
           >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 512 512">
-              <path d="M331 201a49 49 0 1098 0 49 49 0 10-98 0zm-158 0a49 49 0 1098 0 49 49 0 10-98 0zm265 0C438 90 348 0 238 0S38 90 38 201c0 82 50 153 122 184l-24 85c-3 9 8 17 16 11l84-59c95 38 206 0 262-102 11-19 17-41 17-64zm-60 0c0 85-77 154-173 154-96 0-173-69-173-154S142 47 238 47s173 69 173 154z" />
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 512 512">
+              <path d="M331 201a49 49 0 1098 0 49 49 0 10-98 0zm-158 0a49 49 0 1098 0 49 49 0 10-98 0zm265 0C438 90 348 0 238 0S38 90 38 201c0 82 50 153 122 184l-24 85c-3 9 8 17 16 11l84-59c95 38 200-7 252-98 19-33 28-69 28-106 0-22-4-43-11-63z" />
             </svg>
             Modrinth
           </a>
@@ -155,9 +151,9 @@ export function ModCard({ mod }: ModCardProps) {
               href={mod.sources}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 text-sm bg-secondary hover:bg-secondary/80 rounded-xl transition-all hover:scale-105 flex items-center gap-2 shadow-md font-semibold border-2 border-border hover:border-primary/30"
+              className="flex items-center gap-2 rounded-xl border-2 border-border bg-secondary px-4 py-2 text-sm font-semibold shadow-md transition-all duration-200 hover:scale-[1.01] hover:bg-secondary/80"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -174,9 +170,9 @@ export function ModCard({ mod }: ModCardProps) {
               href={mod.issueTracker}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 text-sm bg-secondary hover:bg-secondary/80 rounded-xl transition-all hover:scale-105 flex items-center gap-2 shadow-md font-semibold border-2 border-border hover:border-primary/30"
+              className="flex items-center gap-2 rounded-xl border-2 border-border bg-secondary px-4 py-2 text-sm font-semibold shadow-md transition-all duration-200 hover:scale-[1.01] hover:bg-secondary/80"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -190,15 +186,9 @@ export function ModCard({ mod }: ModCardProps) {
         </div>
       </div>
 
-      {/* Additional Info */}
-      <div className="border-2 border-primary/20 rounded-2xl p-6 bg-card shadow-lg hover:shadow-xl hover:border-primary/30 transition-all duration-300">
-        <h3 className="font-bold mb-4 flex items-center gap-2 text-lg text-foreground">
-          <svg
-            className="w-5 h-5 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+      <div className="rounded-2xl border border-primary/20 bg-card p-6 shadow-lg transition-all duration-200 hover:border-primary/30 hover:shadow-xl">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
+          <svg className="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -208,22 +198,23 @@ export function ModCard({ mod }: ModCardProps) {
           </svg>
           Details
         </h3>
+
         <dl className="space-y-2 text-sm">
-          <div className="flex justify-between items-center p-3 rounded-xl hover:bg-primary/5 transition-colors border-2 border-transparent hover:border-primary/20">
-            <dt className="text-muted-foreground font-semibold">Mod ID:</dt>
-            <dd className="font-mono text-xs bg-secondary/50 px-3 py-1.5 rounded-lg border border-border">{mod.modId}</dd>
+          <div className="flex items-center justify-between rounded-xl border-2 border-transparent p-3 transition-colors duration-200 hover:border-primary/20 hover:bg-primary/5">
+            <dt className="font-semibold text-muted-foreground">Mod ID:</dt>
+            <dd className="rounded-lg border border-border bg-secondary/50 px-3 py-1.5 font-mono text-xs">{mod.modId}</dd>
           </div>
-          <div className="flex justify-between items-center p-3 rounded-xl hover:bg-primary/5 transition-colors border-2 border-transparent hover:border-primary/20">
-            <dt className="text-muted-foreground font-semibold">Version:</dt>
+          <div className="flex items-center justify-between rounded-xl border-2 border-transparent p-3 transition-colors duration-200 hover:border-primary/20 hover:bg-primary/5">
+            <dt className="font-semibold text-muted-foreground">Version:</dt>
             <dd className="font-bold">{mod.version}</dd>
           </div>
-          <div className="flex justify-between items-center p-3 rounded-xl hover:bg-primary/5 transition-colors border-2 border-transparent hover:border-primary/20">
-            <dt className="text-muted-foreground font-semibold">Loader:</dt>
-            <dd className="capitalize font-bold">{mod.loader || "Unknown"}</dd>
+          <div className="flex items-center justify-between rounded-xl border-2 border-transparent p-3 transition-colors duration-200 hover:border-primary/20 hover:bg-primary/5">
+            <dt className="font-semibold text-muted-foreground">Loader:</dt>
+            <dd className="font-bold capitalize">{mod.loader || "Unknown"}</dd>
           </div>
           {mod.license && (
-            <div className="flex justify-between items-center p-3 rounded-xl hover:bg-primary/5 transition-colors border-2 border-transparent hover:border-primary/20">
-              <dt className="text-muted-foreground font-semibold">License:</dt>
+            <div className="flex items-center justify-between rounded-xl border-2 border-transparent p-3 transition-colors duration-200 hover:border-primary/20 hover:bg-primary/5">
+              <dt className="font-semibold text-muted-foreground">License:</dt>
               <dd className="font-bold">{mod.license}</dd>
             </div>
           )}

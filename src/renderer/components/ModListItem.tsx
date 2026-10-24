@@ -23,13 +23,12 @@ export const ModListItem = React.memo(function ModListItem({
     <div
       onClick={onClick}
       className={`
-        cursor-pointer transition-all duration-200 group
-        ${isCompact ? "p-2 mx-2 my-1" : "p-3 mx-2 my-1.5"}
-        rounded-xl
+        group cursor-pointer rounded-xl border transition-all duration-200
+        ${isCompact ? "mx-2 my-1 p-2" : "mx-2 my-1.5 p-3"}
         ${
           isSelected
-            ? "bg-gradient-to-r from-primary/20 to-primary/10 border-2 border-primary shadow-lg shadow-primary/20 scale-[1.02]"
-            : "bg-card/30 hover:bg-card/60 border-2 border-transparent hover:border-primary/30 hover:scale-[1.02] hover:shadow-md"
+            ? "border-primary/50 bg-primary/10 shadow-lg shadow-primary/20 scale-[1.01]"
+            : "border-transparent bg-card/30 hover:border-primary/30 hover:bg-card/60 hover:shadow-md hover:scale-[1.01]"
         }
       `}
     >
@@ -38,43 +37,48 @@ export const ModListItem = React.memo(function ModListItem({
           <img
             src={mod.icon}
             alt={mod.name}
-            className={`rounded-xl shadow-md group-hover:scale-110 transition-transform flex-shrink-0 ${isCompact ? "w-8 h-8" : "w-10 h-10"}`}
+            className={`flex-shrink-0 rounded-xl shadow-md transition-transform duration-200 group-hover:scale-110 ${isCompact ? "h-8 w-8" : "h-10 w-10"}`}
             onError={(e) => {
               e.currentTarget.style.display = "none";
               e.currentTarget.nextElementSibling?.classList.remove("hidden");
             }}
           />
         ) : null}
+
         <div
-          className={`rounded-xl bg-gradient-to-br from-primary/30 to-purple-500/30 flex items-center justify-center text-primary font-bold shadow-md group-hover:scale-110 transition-transform flex-shrink-0 ${isCompact ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm"} ${mod.icon ? "hidden" : ""}`}
+          className={`hidden rounded-xl bg-gradient-to-br from-primary/30 to-purple-500/30 text-center font-bold text-primary shadow-md transition-transform duration-200 group-hover:scale-110 ${
+            isCompact ? "flex h-8 w-8 items-center justify-center text-xs" : "flex h-10 w-10 items-center justify-center text-sm"
+          }`}
         >
           {mod.name.substring(0, 2).toUpperCase()}
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <h3
-              className={`font-semibold truncate group-hover:text-primary transition-colors ${isCompact ? "text-xs" : "text-sm"}`}
+              className={`truncate font-semibold transition-colors duration-200 ${
+                isCompact ? "text-xs" : "text-sm"
+              } ${isSelected ? "text-primary" : "text-foreground group-hover:text-primary"}`}
             >
               {mod.name}
             </h3>
             {hasUpdate && (
               <span
-                className="flex-shrink-0 inline-flex items-center rounded-full bg-orange-500/20 border border-orange-500/40 text-orange-400 font-semibold leading-none"
-                style={{ fontSize: "9px", padding: "2px 5px" }}
+                className="inline-flex flex-shrink-0 items-center rounded-full border border-orange-500/40 bg-orange-500/20 px-1.5 py-0.5 font-semibold leading-none text-orange-400"
+                style={{ fontSize: "9px" }}
                 title={`Update available: ${getUpdate(mod.modId)?.latestVersion}`}
               >
                 Update
               </span>
             )}
           </div>
-          {!isCompact && <p className="text-xs text-muted-foreground truncate">v{mod.version}</p>}
+          {!isCompact && <p className="truncate text-xs text-muted-foreground">v{mod.version}</p>}
         </div>
 
         {isSelected && (
           <div
-            className={`rounded-full bg-primary animate-pulse shadow-lg shadow-primary/50 ${isCompact ? "w-2 h-2" : "w-2.5 h-2.5"}`}
-          ></div>
+            className={`rounded-full bg-primary shadow-lg shadow-primary/50 ${isCompact ? "h-2.5 w-2.5" : "h-3 w-3"}`}
+          />
         )}
       </div>
     </div>

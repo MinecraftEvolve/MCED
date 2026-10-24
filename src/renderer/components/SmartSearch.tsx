@@ -1,153 +1,83 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useAppStore } from "@/store";
-import { useChangeTrackingStore } from "@/store/changeTrackingStore";
-import { smartSearchService } from "@/services/SmartSearchService";
+import React, { useEffect, useRef, useState } from "react";
+import { Search, X, ArrowUpDown } from "lucide-react";
 
-interface SearchableItem {
-  modId: string;
-  modName: string;
-  setting: {
-    key: string;
-    value: unknown;
-    type: string;
-    description?: string;
-  };
-  configFile: string;
-}
+const TYPE_FILTERS = ["all", "mod", "config", "profile", "setting"] as const;
 
-interface SearchResult {
-  item: SearchableItem;
-  score?: number;
-  matches?: unknown[];
-}
-
-interface SearchFilters {
+type FilterState = {
   types: string[];
   searchInValues: boolean;
   modifiedOnly: boolean;
-}
+};
 
 interface SmartSearchProps {
+  isOpen: boolean;
   onClose: () => void;
+  onSelect?: (result: any) => void;
+  initialQuery?: string;
 }
 
-export function SmartSearch({ onClose }: SmartSearchProps) {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+export function SmartSearch({ isOpen, onClose, onSelect, initialQuery = "" }: SmartSearchProps) {
+  const [query, setQuery] = useState(initialQuery);
   const [isSearching, setIsSearching] = useState(false);
-  const [filters, setFilters] = useState<SearchFilters>({
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [filters, setFilters] = useState<FilterState>({
     types: [],
     searchInValues: false,
     modifiedOnly: false,
   });
   const inputRef = useRef<HTMLInputElement>(null);
-  const { mods } = useAppStore();
-  const { changes } = useChangeTrackingStore();
-
-  // Filter results by active filters
-  const filteredResults = useMemo(() => {
-    let res = results;
-    if (filters.types.length > 0) {
-      res = res.filter((r) => filters.types.includes(r.item.setting.type));
-    }
-    if (filters.modifiedOnly) {
-      const modifiedKeys = new Set(
-        (Array.from(changes.entries()) as [string, { isModified: boolean }][])
-          .filter(([, c]) => c.isModified)
-          .map(([k]) => k)
-      );
-      res = res.filter((r) => {
-        const key = `${r.item.modId}:${r.item.setting.key}`;
-        return modifiedKeys.has(key);
-      });
-    }
-    return res;
-  }, [results, filters, changes]);
-
-  const TYPE_FILTERS = ["boolean", "integer", "float", "string", "enum", "array"] as const;
-
-  // Load recent searches from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("mced-recent-searches");
-    if (saved) {
-      try {
-        setRecentSearches(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to load recent searches:", e);
-      }
-    }
-  }, []);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (!isOpen) return;
+    const timer = setTimeout(() => inputRef.current?.focus(), 50);
+    return () => clearTimeout(timer);
+  }, [isOpen]);
 
   useEffect(() => {
-    // Global ESC key handler
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleGlobalKeyDown);
-    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [onClose]);
+    if (!isOpen) return;
+    setQuery(initialQuery);
+  }, [initialQuery, isOpen]);
 
   useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      setSuggestions([]);
+    if (!isOpen || !query.trim()) {
+      setSearchResults([]);
       return;
     }
 
-    setIsSearching(true);
-
-    const timer = setTimeout(() => {
-      const searchResults = smartSearchService.search(query);
-      setResults(searchResults.slice(0, 20));
-
-      if (query.length >= 2) {
-        const sugg = smartSearchService.getSuggestions(query);
-        setSuggestions(sugg.slice(0, 5));
+    const runSearch = async () => {
+      setIsSearching(true);
+      try {
+        const results = await window.api.smartSearch?.(query, filters);
+        setSearchResults(Array.isArray(results) ? results : []);
+      } catch (error) {
+        console.error("Smart search failed:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
       }
+    };
 
-      setIsSearching(false);
-    }, 300);
-
+    const timer = setTimeout(runSearch, 200);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [isOpen, query, filters]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") onClose();
+    if (e.key === "Enter" && searchResults[0]) {
+      onSelect?.(searchResults[0]);
       onClose();
     }
   };
 
-  const handleResultClick = (result: SearchResult) => {
-    // Find and select the mod
-    const mod = mods.find((m) => m.modId === result.item.modId);
-    if (mod) {
-      useAppStore.getState().setSelectedMod(mod);
-      onClose();
-    }
-  };
-
-  const exampleQueries = ["settings about performance", "mod:create", "type:boolean", "value:true"];
+  if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center pt-20"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-20 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="w-full max-w-2xl bg-card border-2 border-primary/30 rounded-2xl shadow-2xl shadow-black/50"
+        className="w-full max-w-2xl rounded-2xl border-2 border-primary/30 bg-card shadow-2xl shadow-black/50"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Search Input */}
-        <div className="p-4 border-b-2 border-primary/20">
+        <div className="border-b-2 border-primary/20 p-4">
           <div className="relative">
             <input
               ref={inputRef}
@@ -156,30 +86,13 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search all configs... (try 'settings about performance')"
-              className="w-full px-4 py-3 pl-12 bg-secondary/60 border-2 border-primary/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-lg transition-colors"
+              className="w-full rounded-xl border-2 border-primary/20 bg-secondary/60 px-4 py-3 pl-12 text-lg text-foreground outline-none transition-colors duration-200 focus:border-primary/50 focus:ring-2 focus:ring-primary/30"
             />
-            <svg
-              className="absolute left-4 top-3.5 h-6 w-6 text-muted-foreground"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            {isSearching && (
-              <div className="absolute right-4 top-4">
-                <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
-              </div>
-            )}
+            <Search className="absolute left-4 top-3.5 h-6 w-6 text-muted-foreground" />
+            {isSearching && <div className="absolute right-4 top-4 h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />}
           </div>
 
-          {/* Filter Pills */}
-          <div className="mt-3 flex flex-wrap gap-2 items-center">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground">Filter:</span>
             {TYPE_FILTERS.map((t) => (
               <button
@@ -187,13 +100,15 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
                 onClick={() =>
                   setFilters((f) => ({
                     ...f,
-                    types: f.types.includes(t) ? f.types.filter((x) => x !== t) : [...f.types, t],
+                    types: f.types.includes(t)
+                      ? f.types.filter((x) => x !== t)
+                      : [...f.types, t],
                   }))
                 }
-                className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                className={`rounded-full border px-2 py-0.5 text-xs transition-colors duration-200 ${
                   filters.types.includes(t)
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-secondary border-primary/20 hover:border-primary/50 text-muted-foreground"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-primary/20 bg-secondary text-muted-foreground hover:border-primary/50"
                 }`}
               >
                 {t}
@@ -201,10 +116,10 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
             ))}
             <button
               onClick={() => setFilters((f) => ({ ...f, modifiedOnly: !f.modifiedOnly }))}
-              className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+              className={`rounded-full border px-2 py-0.5 text-xs transition-colors duration-200 ${
                 filters.modifiedOnly
-                  ? "bg-orange-500/20 text-orange-400 border-orange-500/40"
-                  : "bg-secondary border-primary/20 hover:border-primary/50 text-muted-foreground"
+                  ? "border-orange-500/40 bg-orange-500/20 text-orange-400"
+                  : "border-primary/20 bg-secondary text-muted-foreground hover:border-primary/50"
               }`}
             >
               Changed only
@@ -212,105 +127,49 @@ export function SmartSearch({ onClose }: SmartSearchProps) {
             {(filters.types.length > 0 || filters.modifiedOnly) && (
               <button
                 onClick={() => setFilters({ types: [], searchInValues: false, modifiedOnly: false })}
-                className="px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground"
               >
                 Clear filters
               </button>
             )}
           </div>
-
-          {/* Examples */}
-          {!query && (
-            <div className="mt-4">
-              <p className="text-sm text-muted-foreground mb-2">Try:</p>
-              <div className="flex flex-wrap gap-2">
-                {exampleQueries.map((example) => (
-                  <button
-                    key={example}
-                    onClick={() => setQuery(example)}
-                    className="px-3 py-1 text-sm bg-secondary hover:bg-secondary/80 rounded-full transition-colors"
-                  >
-                    {example}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Suggestions */}
-          {suggestions.length > 0 && query.length >= 2 && (
-            <div className="mt-2">
-              <p className="text-xs text-muted-foreground mb-1">Suggestions:</p>
-              <div className="flex flex-wrap gap-1">
-                {suggestions.map((suggestion, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setQuery(suggestion)}
-                    className="px-2 py-1 text-xs bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Results */}
-        <div className="max-h-96 overflow-y-auto">
-          {filteredResults.length > 0 ? (
-            <div className="divide-y divide-border">
-              {filteredResults.map((result, i) => (
+        <div className="max-h-[60vh] overflow-y-auto p-4">
+          {searchResults.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              {query.trim() ? "No matches found" : "Search for settings, mods, or config values"}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {searchResults.map((result, index) => (
                 <button
-                  key={i}
-                  onClick={() => handleResultClick(result)}
-                  className="w-full p-4 text-left hover:bg-primary/5 transition-colors"
+                  key={`${result.path ?? result.id ?? index}-${index}`}
+                  onClick={() => {
+                    onSelect?.(result);
+                    onClose();
+                  }}
+                  className="flex w-full items-start gap-3 rounded-xl border border-primary/15 bg-card/60 p-3 text-left transition-colors duration-200 hover:border-primary/30 hover:bg-primary/5"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium truncate">{result.item.setting.key}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {result.item.modName} • {result.item.configFile}
-                      </p>
-                      {result.item.setting.description && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {result.item.setting.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-xs px-2 py-1 bg-secondary rounded-lg">
-                        {result.item.setting.type}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {String(result.item.setting.value).substring(0, 20)}
-                      </span>
-                    </div>
+                  <div className="mt-0.5 rounded-lg bg-primary/10 p-1.5 text-primary">
+                    <ArrowUpDown className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-foreground">{result.title ?? result.name ?? result.path ?? "Result"}</div>
+                    <div className="mt-1 truncate text-xs text-muted-foreground">{result.path ?? result.description ?? result.context ?? "No summary"}</div>
                   </div>
                 </button>
               ))}
             </div>
-          ) : query && !isSearching ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <p>No results found for "{query}"</p>
-              <p className="text-sm mt-2">
-                {filters.types.length > 0 || filters.modifiedOnly
-                  ? "Try clearing the filters or different keywords"
-                  : "Try different keywords or check the examples above"}
-              </p>
-            </div>
-          ) : null}
+          )}
         </div>
 
-        {/* Footer */}
-        <div className="p-3 border-t-2 border-primary/20 flex items-center justify-between text-xs text-muted-foreground">
-          <span>
-            {filteredResults.length > 0 && `${filteredResults.length} results`}
-            {filteredResults.length !== results.length && results.length > 0 && ` (${results.length} total)`}
-            {smartSearchService.getIndexedCount() > 0 &&
-              ` • ${smartSearchService.getIndexedCount()} settings indexed`}
-          </span>
-          <span>Press ESC to close</span>
+        <div className="flex items-center justify-between border-t border-primary/10 px-4 py-3 text-xs text-muted-foreground">
+          <span>Press Enter to open first result</span>
+          <button onClick={onClose} className="inline-flex items-center gap-1 rounded-lg border border-primary/20 px-2 py-1 hover:bg-primary/10">
+            <X className="h-3.5 w-3.5" />
+            Close
+          </button>
         </div>
       </div>
     </div>
