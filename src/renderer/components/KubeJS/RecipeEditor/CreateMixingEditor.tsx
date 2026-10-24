@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Package, Plus, X, Flame } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
 import { TagCycler } from "./TagCycler";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface Item {
   type: string;
@@ -168,7 +169,7 @@ export const CreateMixingEditor: React.FC<CreateMixingEditorProps> = ({
 
   const handleSave = () => {
     if (!output || inputs.length === 0) {
-      alert("Please provide at least one input and an output");
+      notifyWarning("Required Fields", "Please provide at least one input and an output");
       return;
     }
 

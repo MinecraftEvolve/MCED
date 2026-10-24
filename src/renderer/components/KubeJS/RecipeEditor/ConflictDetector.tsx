@@ -6,6 +6,7 @@ import {
   RecipeConflict,
   ConflictReport,
 } from "../../../utils/recipeConflicts";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface ConflictDetectorProps {
   instancePath: string;
@@ -55,11 +56,11 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ instancePath
         }
       }
 
-      alert("Auto-fix completed! Please rescan to verify.");
+      notifySuccess("Success", "Auto-fix completed! Please rescan to verify.");
       await scanForConflicts();
     } catch (error) {
       console.error("Failed to auto-fix:", error);
-      alert("Auto-fix failed. Please check console for details.");
+      notifyError("Error", "Auto-fix failed. Please check console for details.");
     }
   };
 

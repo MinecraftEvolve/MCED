@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Package, Target, Trash2, Plus } from "lucide-react";
 import { UnifiedSelector } from "../RecipeEditor/UnifiedSelector";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface LootPool {
   id: string;
@@ -138,10 +139,10 @@ export const LootTableEditor: React.FC<LootTableEditorProps> = ({ instancePath }
       };
 
       await window.api.kubeJSSaveLootTable(instancePath, lootTable);
-      alert("Loot table saved successfully!");
+      notifyInfo("Info", "Loot table saved successfully!");
     } catch (error) {
       console.error("Failed to save loot table:", error);
-      alert("Failed to save loot table");
+      notifyError("Error", "Failed to save loot table");
     }
   };
 

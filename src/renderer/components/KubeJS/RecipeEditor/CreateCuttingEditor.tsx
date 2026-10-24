@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
 import { ItemSlot } from "./ItemSlot";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface Item {
   id: string;
@@ -114,13 +115,13 @@ export const CreateCuttingEditor: React.FC<CreateCuttingEditorProps> = ({
 
   const handleSave = () => {
     if (!input) {
-      alert("Please provide input item");
+      notifyWarning("Required Fields", "Please provide input item");
       return;
     }
 
     const validOutputs = outputs.filter((o) => o !== null) as Item[];
     if (validOutputs.length === 0) {
-      alert("Please add at least one output");
+      notifyWarning("Required Fields", "Please add at least one output");
       return;
     }
 

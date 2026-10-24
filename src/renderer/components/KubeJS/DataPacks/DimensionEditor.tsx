@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Save, Layers } from "lucide-react";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface DimensionEditorProps {
   instancePath: string;
@@ -35,10 +36,10 @@ StartupEvents.registry('dimension', event => {
     try {
       const scriptPath = `startup/dimension_${dimConfig.id}.js`;
       await window.api.kubeJSWriteScript(scriptPath, code);
-      alert("Dimension saved successfully!");
+      notifyInfo("Info", "Dimension saved successfully!");
     } catch (error) {
       console.error("Failed to save dimension:", error);
-      alert("Failed to save dimension");
+      notifyError("Error", "Failed to save dimension");
     }
   };
 

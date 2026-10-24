@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Package, Plus, X } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
 import { TagCycler } from "./TagCycler";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface Item {
   id: string;
@@ -39,24 +40,16 @@ export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
 
   const handleItemSelected = async (itemId: string) => {
     try {
-      const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-
       let item: Item;
-      if (result.success && result.data) {
-        item = {
-          id: result.data.id,
-          name: result.data.name,
-          modId: result.data.modId,
-          texture: result.data.texture,
-          count: 1,
-        };
+      if (itemId.startsWith("#")) {
+        item = { id: itemId, name: `Tag: ${itemId.slice(1)}`, modId: "tag reference", count: 1 };
       } else {
-        item = {
-          id: itemId,
-          name: itemId.split(":")[1] || itemId,
-          modId: itemId.split(":")[0] || "minecraft",
-          count: 1,
-        };
+        const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
+        if (result.success && result.data) {
+          item = { id: result.data.id, name: result.data.name, modId: result.data.modId, texture: result.data.texture, count: 1 };
+        } else {
+          item = { id: itemId, name: itemId.split(":")[1] || itemId, modId: itemId.split(":")[0] || "minecraft", count: 1 };
+        }
       }
 
       if (pickingType === "output") {
@@ -73,7 +66,7 @@ export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
 
   const handleSave = () => {
     if (!input || !output) {
-      alert("Please provide input item, and output item");
+      notifyWarning("Required Fields", "Please provide input item, and output item");
       return;
     }
 

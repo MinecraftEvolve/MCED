@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Package, Plus, X, Flame } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
 import { TagCycler } from "./TagCycler";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface Item {
   id: string;
@@ -63,22 +64,16 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
 
   const handleItemSelected = async (itemId: string) => {
     try {
-      const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-
       let item: Item;
-      if (result.success && result.data) {
-        item = {
-          id: result.data.id,
-          name: result.data.name,
-          modId: result.data.modId,
-          texture: result.data.texture,
-        };
+      if (itemId.startsWith("#")) {
+        item = { id: itemId, name: `Tag: ${itemId.slice(1)}`, modId: "tag reference" };
       } else {
-        item = {
-          id: itemId,
-          name: itemId.split(":")[1] || itemId,
-          modId: itemId.split(":")[0] || "minecraft",
-        };
+        const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
+        if (result.success && result.data) {
+          item = { id: result.data.id, name: result.data.name, modId: result.data.modId, texture: result.data.texture };
+        } else {
+          item = { id: itemId, name: itemId.split(":")[1] || itemId, modId: itemId.split(":")[0] || "minecraft" };
+        }
       }
 
       if (pickingType === "output") {
@@ -108,7 +103,7 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
 
   const handleSave = () => {
     if (!input || !output) {
-      alert("Please provide input and output items");
+      notifyWarning("Required Fields", "Please provide input and output items");
       return;
     }
 

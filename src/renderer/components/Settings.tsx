@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { notifySuccess, notifyError, notifyInfo } from "../utils/notify";
 import { useSettingsStore } from "@/store/settingsStore";
 import {
   Settings as SettingsIcon,
@@ -88,9 +89,9 @@ export function Settings({ onClose }: { onClose: () => void }) {
     if (confirm("Are you sure you want to clear the API cache?")) {
       try {
         await window.api.clearApiCache();
-        alert("Cache cleared successfully!");
+        notifyInfo("Info", "Cache cleared successfully!");
       } catch (error) {
-        alert("Failed to clear cache: " + error);
+        notifyError("Error", "Failed to clear cache: " + error);
       }
     }
   }, []);
@@ -122,10 +123,10 @@ export function Settings({ onClose }: { onClose: () => void }) {
           await window.api.openExternal(data.html_url);
         }
       } else {
-        alert("You are already using the latest version!");
+        notifyInfo("Info", "You are already using the latest version!");
       }
     } catch (error) {
-      alert("Failed to check for updates: " + error);
+      notifyError("Error", "Failed to check for updates: " + error);
     }
   }, [appVersion]);
 
@@ -176,7 +177,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
           await window.api.openExternal(`file:///${changelogPath.replace(/\\/g, "/")}`);
         }
       } catch (error) {
-        alert("Failed to open changelog: " + error);
+        notifyError("Error", "Failed to open changelog: " + error);
       }
     }
   }, [changelog]);
@@ -203,7 +204,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
       // Get the current instance path
       const currentInstancePath = (window as any).currentInstancePath;
       if (!currentInstancePath) {
-        alert("No instance is currently loaded.");
+        notifyInfo("Info", "No instance is currently loaded.");
         return;
       }
 
@@ -213,14 +214,14 @@ export function Settings({ onClose }: { onClose: () => void }) {
       // Check if folders exist
       const serverExists = await window.api.fileExists(serverConfigFolder);
       if (!serverExists) {
-        alert("No server configs folder found.");
+        notifyInfo("Info", "No server configs folder found.");
         return;
       }
 
       // Get all world folders
       const worldFolders = await window.api.listDirectory(serverConfigFolder);
       if (!worldFolders || worldFolders.length === 0) {
-        alert("No world folders found in saves directory.");
+        notifyInfo("Info", "No world folders found in saves directory.");
         return;
       }
 
@@ -267,14 +268,12 @@ export function Settings({ onClose }: { onClose: () => void }) {
       }
 
       if (errors.length > 0) {
-        alert(
-          `Migration completed with errors:\n- ${migratedCount} files migrated\n- ${errors.length} errors\n\nErrors:\n${errors.join("\n")}`
-        );
+        notifyError("Migration Errors", `${migratedCount} files migrated, ${errors.length} errors`);
       } else {
-        alert(`Successfully migrated ${migratedCount} server config files to defaultconfigs!`);
+        notifySuccess("Migration Complete", `Successfully migrated ${migratedCount} server config files to defaultconfigs!`);
       }
     } catch (error) {
-      alert(`Failed to migrate configs: ${error}`);
+      notifyError("Error", `Failed to migrate configs: ${error}`);
     }
   }, []);
 

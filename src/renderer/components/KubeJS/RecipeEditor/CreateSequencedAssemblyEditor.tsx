@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Plus, Trash2, Copy } from "lucide-react";
 import { ItemSlot } from "./ItemSlot";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { notifyWarning } from "../../../utils/notify";
 
 interface SequenceStep {
   type: "deploying" | "pressing" | "cutting" | "filling";
@@ -143,7 +144,7 @@ const CreateSequencedAssemblyEditor: React.FC<Props> = ({
       recipe.outputs.length === 0 ||
       recipe.sequence.length === 0
     ) {
-      alert(
+      notifyWarning("Required Fields",
         "Please provide input, transitional item, at least one output, and at least one sequence step"
       );
       return;

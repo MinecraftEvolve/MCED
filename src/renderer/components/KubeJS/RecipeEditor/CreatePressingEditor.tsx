@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
 import { ItemSlot } from "./ItemSlot";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface Item {
   id: string;
@@ -104,7 +105,7 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
 
   const handleSave = () => {
     if (!input || !output) {
-      alert("Please provide input and output items");
+      notifyWarning("Required Fields", "Please provide input and output items");
       return;
     }
 

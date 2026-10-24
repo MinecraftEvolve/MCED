@@ -1,44 +1,15 @@
-/**
- * Notification utility to replace all alert() calls
- * Provides consistent, themed notifications instead of browser alerts
- */
-import { useNotify } from "../components/common/Notifications";
+type NotifyFn = (type: "success" | "error" | "warning" | "info", title: string, message: string, duration?: number) => void;
 
-/**
- * Show success notification
- */
-export const notifySuccess = (title: string, message: string, duration?: number) => {
-  const { success } = useNotify();
-  success(title, message, duration);
-};
+let _notify: NotifyFn | null = null;
 
-/**
- * Show error notification
- */
-export const notifyError = (title: string, message: string, duration?: number) => {
-  const { error } = useNotify();
-  error(title, message, duration);
-};
+export function registerNotifyFn(fn: NotifyFn) {
+  _notify = fn;
+}
 
-/**
- * Show warning notification
- */
-export const notifyWarning = (title: string, message: string, duration?: number) => {
-  const { warning } = useNotify();
-  warning(title, message, duration);
-};
+const fire = (type: Parameters<NotifyFn>[0], title: string, message: string, duration = 4000) =>
+  _notify?.(type, title, message, duration);
 
-/**
- * Show info notification
- */
-export const notifyInfo = (title: string, message: string, duration?: number) => {
-  const { info } = useNotify();
-  info(title, message, duration);
-};
-
-/**
- * Simple alert replacement for quick messages
- */
-export const notify = (title: string, message: string, duration = 3000) => {
-  notifyInfo(title, message, duration);
-};
+export const notifySuccess = (title: string, message: string, duration?: number) => fire("success", title, message, duration);
+export const notifyError   = (title: string, message: string, duration?: number) => fire("error",   title, message, duration);
+export const notifyWarning = (title: string, message: string, duration?: number) => fire("warning", title, message, duration);
+export const notifyInfo    = (title: string, message: string, duration?: number) => fire("info",    title, message, duration);

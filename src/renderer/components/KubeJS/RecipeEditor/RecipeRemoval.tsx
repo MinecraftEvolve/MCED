@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Search, Trash2, AlertTriangle, X, Plus, Minus } from "lucide-react";
+import { notifySuccess, notifyError, notifyWarning } from "../../../utils/notify";
 
 interface RecipeRemovalProps {
   instancePath: string;
@@ -87,7 +88,7 @@ export const RecipeRemoval: React.FC<RecipeRemovalProps> = ({ instancePath, onCl
   const handleApplyRemoval = async () => {
     const validFilters = filters.filter((f) => f.value.trim() !== "");
     if (validFilters.length === 0) {
-      alert("Please specify at least one filter");
+      notifyWarning("Required Fields", "Please specify at least one filter");
       return;
     }
 
@@ -97,11 +98,11 @@ export const RecipeRemoval: React.FC<RecipeRemovalProps> = ({ instancePath, onCl
       const filename = `recipe_removals_${timestamp}.js`;
 
       await window.api.kubeJSSaveRecipe(instancePath, { filename, script });
-      alert(`Recipe removal script saved: ${filename}`);
+      notifySuccess("Saved", `Recipe removal script saved: ${filename}`);
       onClose();
     } catch (error) {
       console.error("Failed to save removal script:", error);
-      alert("Failed to save removal script");
+      notifyError("Error", "Failed to save removal script");
     }
   };
 

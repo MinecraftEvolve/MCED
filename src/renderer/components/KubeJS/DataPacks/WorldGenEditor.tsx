@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Save, Globe } from "lucide-react";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface WorldGenEditorProps {
   instancePath: string;
@@ -23,10 +24,10 @@ export const WorldGenEditor: React.FC<WorldGenEditorProps> = ({ instancePath }) 
 
     try {
       await window.api.kubeJSSaveWorldgen(instancePath, worldgen);
-      alert("World generation saved successfully!");
+      notifyInfo("Info", "World generation saved successfully!");
     } catch (error) {
       console.error("Failed to save worldgen:", error);
-      alert("Failed to save world generation");
+      notifyError("Error", "Failed to save world generation");
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ItemSlot } from "./ItemSlot";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface CreateItemApplicationEditorProps {
   instancePath: string;
@@ -22,7 +23,7 @@ const CreateItemApplicationEditor: React.FC<CreateItemApplicationEditorProps> = 
 
   const handleSave = () => {
     if (!base || !applied || !output) {
-      alert("Please provide base block, applied item, and output");
+      notifyWarning("Required Fields", "Please provide base block, applied item, and output");
       return;
     }
 

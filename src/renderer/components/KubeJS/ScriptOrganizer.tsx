@@ -48,13 +48,11 @@ export const ScriptOrganizer: React.FC<ScriptOrganizerProps> = ({
     try {
       const result = await window.api.kubeJSOrganizeScripts(instancePath, orgOptions);
       if (result.success) {
-        alert(
-          `Scripts organized successfully!\nBackup saved to: ${result.data?.backupPath || "unknown"}\n\nStrategy: ${orgOptions.strategy}\nKubeJS Version: ${orgOptions.kubejsVersion}`
-        );
+        notifySuccess("Scripts Organized", `Backup saved to: ${result.data?.backupPath || "unknown"}`);
         onRefresh();
         setShowOrgOptions(false);
       } else {
-        alert(`Failed to organize scripts: ${result.error}`);
+        notifyError("Organization Failed", `Failed to organize scripts: ${result.error}`);
       }
     } catch (error) {
       console.error("Failed to organize scripts:", error);

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { registerNotifyFn } from "../../utils/notify";
 
 interface Notification {
   id: string;
@@ -62,6 +63,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     },
     [removeNotification]
   );
+
+  useEffect(() => {
+    registerNotifyFn((type, title, message, duration) =>
+      addNotification({ type, title, message, duration })
+    );
+  }, [addNotification]);
 
   return (
     <NotificationContext.Provider value={{ notifications, addNotification, removeNotification }}>

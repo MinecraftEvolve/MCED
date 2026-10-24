@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { notifySuccess, notifyError } from "../utils/notify";
 import { useAppStore } from "@/store";
 import { useSettingsStore } from "@/store/settingsStore";
 import { BackupModal } from "./Backup/BackupModal";
@@ -156,9 +157,9 @@ export function Header({
         currentInstance.loader?.version || ""
       );
       if (result.success) {
-        alert(`Exported to: ${result.outputPath}`);
+        notifySuccess("Exported", `Exported to: ${result.outputPath}`);
       } else {
-        alert(`Export failed: ${result.error}`);
+        notifyError("Export Failed", result.error || "Unknown error");
       }
     } finally {
       setIsExporting(false);

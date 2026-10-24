@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { notifySuccess, notifyError, notifyInfo } from "../../../utils/notify";
 import { UnifiedSelector } from "../RecipeEditor/UnifiedSelector";
 
 interface EventHandlerBuilderProps {
@@ -103,16 +104,16 @@ export const EventHandlerBuilder: React.FC<EventHandlerBuilderProps> = ({
     try {
       const result = await window.api.kubeJSSaveEventHandler(instancePath, eventHandler);
       if (result.success) {
-        alert("Event handler saved successfully!");
+        notifyInfo("Info", "Event handler saved successfully!");
         if (onSave) {
           onSave(eventHandler);
         }
       } else {
-        alert(`Failed to save event handler: ${result.error}`);
+        notifyError("Error", `Failed to save event handler: ${result.error}`);
       }
     } catch (error) {
       console.error("Error saving event handler:", error);
-      alert("Failed to save event handler");
+      notifyError("Error", "Failed to save event handler");
     }
   };
 

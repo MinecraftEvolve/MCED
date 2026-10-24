@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
 import { ItemSlot } from "./ItemSlot";
 import { TagDisplay } from "./TagDisplay";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface Item {
   id: string;
@@ -157,7 +158,7 @@ export const CreateDeployingEditor: React.FC<CreateDeployingEditorProps> = ({
 
   const handleSave = () => {
     if (!baseItem || !deployedItem || !output) {
-      alert("Please provide select all items");
+      notifyWarning("Required Fields", "Please provide select all items");
       return;
     }
 

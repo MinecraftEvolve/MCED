@@ -34,7 +34,6 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
       if (!initialRecipe?.raw) return;
 
       const raw = initialRecipe.raw;
-      console.log("Parsing raw recipe:", raw);
 
       // Extract parameters by finding the content between cutting( and matching )
       const cuttingStart = raw.indexOf("cutting(");
@@ -93,9 +92,6 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
       }
       if (current.trim()) params.push(current.trim());
 
-      console.log("All parsed params:", params);
-      console.log("Third param (results):", params[2]);
-
       if (params.length < 3) return;
 
       const ingredientId = params[0].replace(/['"]/g, "");
@@ -107,11 +103,8 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
       // Load ingredient with texture
       let loadedIngredient: Item | null = null;
       try {
-        console.log("Looking up ingredient:", ingredientId);
         const ingResult = await window.api.itemRegistryGetItemById(instancePath, ingredientId);
-        console.log("Ingredient lookup result:", ingResult);
         if (ingResult.success && ingResult.data) {
-          console.log("Setting ingredient with texture:", ingResult.data);
           loadedIngredient = {
             id: ingResult.data.id,
             name: ingResult.data.name,
@@ -121,7 +114,6 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
           };
           setIngredient(loadedIngredient);
         } else {
-          console.log("Item not found in registry, using fallback for:", ingredientId);
           loadedIngredient = {
             id: ingredientId,
             name: ingredientId.split(":")[1] || ingredientId,
@@ -140,25 +132,19 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
       // Try to match Item.of with count (handle multiline)
       const itemOfMatch = resultsStr.match(/Item\.of\(\s*['"]([^'"]+)['"]\s*,\s*(\d+)\s*\)/);
 
-      console.log("Results string:", resultsStr);
-      console.log("Item.of match:", itemOfMatch);
 
       const resultIds: Array<{ id: string; count: number }> = [];
 
       if (itemOfMatch) {
         const parsed = { id: itemOfMatch[1], count: parseInt(itemOfMatch[2]) };
-        console.log("Parsed result with count:", parsed);
         resultIds.push(parsed);
       } else {
         // Try simple string match
         const simpleMatch = resultsStr.match(/['"]([^'"]+)['"]/);
         if (simpleMatch) {
-          console.log("Simple match found:", simpleMatch[1]);
           resultIds.push({ id: simpleMatch[1], count: 1 });
         }
       }
-
-      console.log("Final result IDs to load:", resultIds);
 
       for (const { id, count } of resultIds) {
         try {
@@ -187,12 +173,6 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
       setIngredient(loadedIngredient);
       setResults(loadedResults);
       // Tool and sound are already set above
-      console.log("Loaded items with textures:", {
-        loadedIngredient,
-        loadedResults,
-        tool: toolTag,
-        sound: "minecraft:block.wood.break",
-      });
     };
 
     parseAndLoadItems();
@@ -200,24 +180,16 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
 
   const handleItemSelected = async (itemId: string) => {
     try {
-      const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-
       let item: Item;
-      if (result.success && result.data) {
-        item = {
-          id: result.data.id,
-          name: result.data.name,
-          modId: result.data.modId,
-          texture: result.data.texture,
-          count: 1,
-        };
+      if (itemId.startsWith("#")) {
+        item = { id: itemId, name: `Tag: ${itemId.slice(1)}`, modId: "tag reference", count: 1 };
       } else {
-        item = {
-          id: itemId,
-          name: itemId.split(":")[1] || itemId,
-          modId: itemId.split(":")[0] || "minecraft",
-          count: 1,
-        };
+        const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
+        if (result.success && result.data) {
+          item = { id: result.data.id, name: result.data.name, modId: result.data.modId, texture: result.data.texture, count: 1 };
+        } else {
+          item = { id: itemId, name: itemId.split(":")[1] || itemId, modId: itemId.split(":")[0] || "minecraft", count: 1 };
+        }
       }
 
       if (pickingType === "ingredient") {

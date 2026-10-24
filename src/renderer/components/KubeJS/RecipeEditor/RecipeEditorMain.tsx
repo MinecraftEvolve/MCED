@@ -13,7 +13,7 @@ import {
   CheckSquare,
   AlertTriangle,
 } from "lucide-react";
-import { notifySuccess, notifyError } from "../../../utils/notify";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 import { ItemSelector } from "./ItemSelector";
 import { RecipeList } from "./RecipeList";
 
@@ -180,7 +180,7 @@ export const RecipeEditorMain: React.FC<RecipeEditorMainProps> = ({ instancePath
       const recipesToEdit = result.data.filter((recipe) => selectedIdsArray.includes(recipe.id));
 
       if (recipesToEdit.length === 0) {
-        alert("No recipes found for bulk editing");
+        notifyError("Error", "No recipes found for bulk editing");
         return;
       }
 
@@ -188,7 +188,7 @@ export const RecipeEditorMain: React.FC<RecipeEditorMainProps> = ({ instancePath
       setShowBulkEditor(true);
     } catch (error) {
       console.error("Error fetching recipes for bulk edit:", error);
-      alert("Failed to fetch recipes for bulk editing");
+      notifyError("Error", "Failed to fetch recipes for bulk editing");
     }
   };
 
@@ -233,11 +233,11 @@ export const RecipeEditorMain: React.FC<RecipeEditorMainProps> = ({ instancePath
 
       // Show results
       if (successCount > 0 && errorCount === 0) {
-        alert(`Successfully updated ${successCount} recipes!`);
+        notifySuccess("Success", `Successfully updated ${successCount} recipes!`);
       } else if (successCount > 0 && errorCount > 0) {
-        alert(`Updated ${successCount} recipes, but ${errorCount} failed.`);
+        notifyWarning("Partial Success", `Updated ${successCount} recipes, but ${errorCount} failed.`);
       } else {
-        alert(`Failed to update any recipes (${errorCount} errors).`);
+        notifyError("Error", `Failed to update any recipes (${errorCount} errors).`);
       }
 
       setShowBulkEditor(false);
@@ -245,7 +245,7 @@ export const RecipeEditorMain: React.FC<RecipeEditorMainProps> = ({ instancePath
       setSelectionMode(false);
     } catch (error) {
       console.error("Error applying bulk changes:", error);
-      alert("Failed to apply bulk changes");
+      notifyError("Error", "Failed to apply bulk changes");
     }
   };
 
@@ -405,7 +405,7 @@ export const RecipeEditorMain: React.FC<RecipeEditorMainProps> = ({ instancePath
                   <button
                     onClick={() => {
                       // Bulk disable (comment out)
-                      alert(`Would disable ${selectedRecipes.size} recipes`);
+                      notifyInfo("Coming Soon", `Bulk disable for ${selectedRecipes.size} recipes is not yet implemented`);
                     }}
                     className="px-2 py-1 bg-secondary hover:bg-secondary/80 border border-primary/20 rounded text-xs transition-colors"
                   >
@@ -414,7 +414,7 @@ export const RecipeEditorMain: React.FC<RecipeEditorMainProps> = ({ instancePath
                   <button
                     onClick={() => {
                       if (confirm(`Delete ${selectedRecipes.size} recipes?`)) {
-                        alert(`Would delete ${selectedRecipes.size} recipes`);
+                        notifyInfo("Coming Soon", `Bulk delete for ${selectedRecipes.size} recipes is not yet implemented`);
                         setSelectedRecipes(new Set());
                       }
                     }}

@@ -4,6 +4,7 @@ import { ItemSlot } from "./ItemSlot";
 import { FluidSlot } from "./FluidSlot";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
 import { FluidSelector } from "../ItemPicker/FluidSelector";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface Item {
   id: string;
@@ -151,7 +152,7 @@ export const CreateEmptyingEditor: React.FC<CreateEmptyingEditorProps> = ({
 
   const handleSave = () => {
     if (!inputItem || !fluid) {
-      alert("Please fill in all required fields (input and fluid are required)");
+      notifyWarning("Required Fields", "Please fill in all required fields (input and fluid are required)");
       return;
     }
 

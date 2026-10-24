@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ItemSlot } from "./ItemSlot";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface FarmersDelightCookingEditorProps {
   instancePath: string;
@@ -33,7 +34,7 @@ const FarmersDelightCookingEditor: React.FC<FarmersDelightCookingEditorProps> = 
   const handleSave = () => {
     const validIngredients = ingredients.filter((i) => i);
     if (validIngredients.length === 0 || !output) {
-      alert("Please provide at least one ingredient and an output");
+      notifyWarning("Required Fields", "Please provide at least one ingredient and an output");
       return;
     }
 

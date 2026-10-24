@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Hammer, Plus } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
 import { ItemSlot } from "./ItemSlot";
+import { notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface Item {
   id: string;
@@ -79,13 +80,13 @@ export const SmithingEditor: React.FC<SmithingEditorProps> = ({
 
   const handleSave = () => {
     if (!base || !addition || !result) {
-      alert("Please select base, addition, and result items");
+      notifyWarning("Required Fields", "Please select base, addition, and result items");
       return;
     }
 
     // Smithing recipes in 1.20+ require a template
     if (!template) {
-      alert(
+      notifyInfo("Template Required",
         "Smithing recipes in Minecraft 1.20+ require a template (e.g., netherite_upgrade_smithing_template)"
       );
       return;

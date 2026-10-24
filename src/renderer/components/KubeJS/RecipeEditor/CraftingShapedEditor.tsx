@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Package, Plus, X } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
 import { TagCycler } from "./TagCycler";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface Item {
   id: string;
@@ -70,24 +71,16 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({
 
   const handleItemSelected = async (itemId: string) => {
     try {
-      // Fetch the full item data from the registry
-      const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-
       let item: Item;
-      if (result.success && result.data) {
-        item = {
-          id: result.data.id,
-          name: result.data.name,
-          modId: result.data.modId,
-          texture: result.data.texture,
-        };
+      if (itemId.startsWith("#")) {
+        item = { id: itemId, name: `Tag: ${itemId.slice(1)}`, modId: "tag reference" };
       } else {
-        // Fallback: create a basic Item with just the ID
-        item = {
-          id: itemId,
-          name: itemId.split(":")[1] || itemId,
-          modId: itemId.split(":")[0] || "minecraft",
-        };
+        const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
+        if (result.success && result.data) {
+          item = { id: result.data.id, name: result.data.name, modId: result.data.modId, texture: result.data.texture };
+        } else {
+          item = { id: itemId, name: itemId.split(":")[1] || itemId, modId: itemId.split(":")[0] || "minecraft" };
+        }
       }
 
       if (pickingSlot === "output") {
@@ -132,7 +125,7 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({
 
   const handleSave = () => {
     if (!output) {
-      alert("Please provide an output item");
+      notifyWarning("Required Fields", "Please provide an output item");
       return;
     }
 

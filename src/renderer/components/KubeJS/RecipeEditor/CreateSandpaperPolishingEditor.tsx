@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ItemSlot } from "./ItemSlot";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface CreateSandpaperPolishingEditorProps {
   instancePath: string;
@@ -21,7 +22,7 @@ const CreateSandpaperPolishingEditor: React.FC<CreateSandpaperPolishingEditorPro
 
   const handleSave = () => {
     if (!input || !output) {
-      alert("Please provide both input and output items");
+      notifyWarning("Required Fields", "Please provide both input and output items");
       return;
     }
 

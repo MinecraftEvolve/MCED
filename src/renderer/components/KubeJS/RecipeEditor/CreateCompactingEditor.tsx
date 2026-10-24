@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ItemSlot } from "./ItemSlot";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "../../../utils/notify";
 
 interface CreateCompactingEditorProps {
   instancePath: string;
@@ -50,7 +51,7 @@ const CreateCompactingEditor: React.FC<CreateCompactingEditorProps> = ({
   const handleSave = () => {
     const validInputs = inputs.filter((i) => i);
     if (validInputs.length === 0 || !output) {
-      alert("Please provide at least one input and an output");
+      notifyWarning("Required Fields", "Please provide at least one input and an output");
       return;
     }
 
