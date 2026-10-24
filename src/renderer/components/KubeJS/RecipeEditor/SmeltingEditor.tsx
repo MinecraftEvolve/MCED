@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Package, Plus, X, Flame } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { TagCycler } from "./TagCycler";
 
 interface Item {
   id: string;
@@ -149,7 +150,9 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
               {input ? (
                 <>
                   <div className="absolute inset-0 flex items-center justify-center p-2">
-                    {input.texture ? (
+                    {input.id.startsWith("#") ? (
+                      <TagCycler tagId={input.id} instancePath={instancePath} />
+                    ) : input.texture ? (
                       <img
                         src={
                           input.texture.startsWith("data:")
@@ -209,7 +212,9 @@ export const SmeltingEditor: React.FC<SmeltingEditorProps> = ({
               {output ? (
                 <>
                   <div className="absolute inset-0 flex items-center justify-center p-2">
-                    {output.texture ? (
+                    {output.id.startsWith("#") ? (
+                      <TagCycler tagId={output.id} instancePath={instancePath} />
+                    ) : output.texture ? (
                       <img
                         src={
                           output.texture.startsWith("data:")

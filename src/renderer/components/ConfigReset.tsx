@@ -93,7 +93,7 @@ export function ConfigReset({ onClose }: Props) {
           )}
           {phase === "idle" && entries.length > 0 && (
             <>
-              <div className="flex items-center gap-3 px-5 py-2.5 border-b border-primary/10 text-xs text-muted-foreground sticky top-0 bg-card/90">
+              <div className="flex items-center gap-3 px-5 py-2.5 border-b border-primary/10 text-xs text-muted-foreground sticky top-0 bg-card/90 backdrop-blur-sm">
                 <input type="checkbox" checked={selected.size === entries.length} onChange={toggleAll} className="rounded" />
                 <span>{entries.length} file{entries.length !== 1 ? "s" : ""} with defaults</span>
               </div>

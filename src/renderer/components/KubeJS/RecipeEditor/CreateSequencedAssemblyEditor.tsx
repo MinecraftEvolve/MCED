@@ -166,6 +166,7 @@ const CreateSequencedAssemblyEditor: React.FC<Props> = ({
             <h3 className="text-sm font-medium text-foreground mb-2">Starting Item</h3>
             <div className="inline-block bg-muted/50 border border-primary/20 rounded-lg p-4">
               <ItemSlot
+                instancePath={instancePath}
                 item={recipe.input}
                 onClick={() => {
                   setPickingFor("input");
@@ -181,6 +182,7 @@ const CreateSequencedAssemblyEditor: React.FC<Props> = ({
             <h3 className="text-sm font-medium text-foreground mb-2">Transitional Item</h3>
             <div className="inline-block bg-muted/50 border border-primary/20 rounded-lg p-4">
               <ItemSlot
+                instancePath={instancePath}
                 item={recipe.transitionalItem}
                 onClick={() => {
                   setPickingFor("transitional");
@@ -221,6 +223,7 @@ const CreateSequencedAssemblyEditor: React.FC<Props> = ({
             {recipe.outputs.map((output, index) => (
               <div key={index} className="flex items-center gap-2">
                 <ItemSlot
+                  instancePath={instancePath}
                   item={output.item}
                   onClick={() => {
                     setPickingFor({ type: "output", index });
@@ -307,6 +310,7 @@ const CreateSequencedAssemblyEditor: React.FC<Props> = ({
                     <div>
                       <label className="block text-xs text-muted-foreground mb-1">Tool/Item</label>
                       <ItemSlot
+                        instancePath={instancePath}
                         item={step.tool || ""}
                         onClick={() => {
                           setPickingFor({ type: "step", index, field: "tool" });
@@ -379,6 +383,7 @@ const CreateSequencedAssemblyEditor: React.FC<Props> = ({
               className="flex items-center gap-3 bg-muted/50 p-3 rounded-lg border border-primary/20"
             >
               <ItemSlot
+                instancePath={instancePath}
                 item={output.item}
                 onClick={() => {
                   setPickingFor({ type: "output", index });

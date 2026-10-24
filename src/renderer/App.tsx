@@ -687,7 +687,7 @@ function App() {
             onStatsClick={() => setShowStats(true)}
             onChangelogClick={() => setShowChangelog(true)}
           />
-          {showSearch && <SmartSearch onClose={() => setShowSearch(false)} />}
+          {showSearch && <SmartSearch isOpen={showSearch} onClose={() => setShowSearch(false)} />}
           <div className="flex flex-1 overflow-hidden">
             <Sidebar />
             <MainPanel />

@@ -69,6 +69,7 @@ const FarmersDelightCookingEditor: React.FC<FarmersDelightCookingEditorProps> = 
             <div className="grid grid-cols-3 gap-3">
               {ingredients.map((ingredient, index) => (
                 <ItemSlot
+                  instancePath={instancePath}
                   key={index}
                   item={ingredient}
                   onClick={() => {
@@ -89,6 +90,7 @@ const FarmersDelightCookingEditor: React.FC<FarmersDelightCookingEditorProps> = 
           <h3 className="text-sm font-medium text-foreground mb-3">Output Item</h3>
           <div className="inline-block bg-muted/50 border border-primary/20 rounded-lg p-4">
             <ItemSlot
+              instancePath={instancePath}
               item={output}
               count={outputCount}
               onClick={() => {

@@ -65,22 +65,18 @@ export function ModInstaller({ onClose }: Props) {
           return;
         }
         curseForgeAPI.setApiKey(settings.curseForgeApiKey);
-        const mod = await curseForgeAPI.searchMod(query);
-        if (mod) {
-          setResults([{
-            id: String(mod.id),
-            name: mod.name,
-            description: mod.summary,
-            author: mod.authors?.[0]?.name ?? "Unknown",
-            downloads: mod.downloadCount,
-            url: mod.links?.websiteUrl ?? `https://www.curseforge.com/minecraft/mc-mods/${mod.slug}`,
-            iconUrl: mod.logo?.thumbnailUrl,
-            source: "curseforge" as Source,
-            slug: mod.slug,
-          }]);
-        } else {
-          setResults([]);
-        }
+        const mods = await curseForgeAPI.searchMods(query, 20);
+        setResults(mods.map(mod => ({
+          id: String(mod.id),
+          name: mod.name,
+          description: mod.summary,
+          author: mod.authors?.[0]?.name ?? "Unknown",
+          downloads: mod.downloadCount,
+          url: mod.links?.websiteUrl ?? `https://www.curseforge.com/minecraft/mc-mods/${mod.slug}`,
+          iconUrl: mod.logo?.thumbnailUrl,
+          source: "curseforge" as Source,
+          slug: mod.slug,
+        })));
       } else if (source === "github") {
         const res = await fetch(
           `https://api.github.com/search/repositories?q=${encodeURIComponent(query + " minecraft mod")}&sort=stars&per_page=20`,
@@ -121,16 +117,17 @@ export function ModInstaller({ onClose }: Props) {
   }
 
   async function handleInstall(mod: ModResult) {
-    if (!currentInstance) return;
-    if (!mod.downloadUrl && mod.source !== "modrinth") {
-      window.open(mod.url, "_blank");
+    // For GitHub/CurseForge, or Modrinth without an open instance: open page/download directly
+    if (mod.source !== "modrinth" || !currentInstance) {
+      window.open(mod.downloadUrl ?? mod.url, "_blank");
+      setInstalled(prev => new Set([...prev, mod.id]));
       return;
     }
 
+    // Modrinth with instance: fetch version filtered by MC version + loader for a targeted download URL
     setInstalling(mod.id);
     try {
-      if (mod.source === "modrinth" && mod.slug) {
-        // Get latest version download URL
+      if (mod.slug) {
         const res = await fetch(
           `https://api.modrinth.com/v2/project/${mod.slug}/version?game_versions=["${currentInstance.minecraftVersion}"]&loaders=["${currentInstance.loader.type}"]&limit=1`,
           { headers: { "User-Agent": "MCED/1.0" } }
@@ -138,30 +135,17 @@ export function ModInstaller({ onClose }: Props) {
         if (res.ok) {
           const versions: any[] = await res.json();
           const file = versions[0]?.files?.find((f: any) => f.primary) ?? versions[0]?.files?.[0];
-          if (file?.url) {
-            const dlRes = await fetch(file.url);
-            const buf = await dlRes.arrayBuffer();
-            const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
-            await window.api.writeFile(
-              currentInstance.path.replace(/[\\/]$/, "") + "/mods/" + file.filename,
-              atob(base64) // write raw bytes as string — works for Electron utf-8 bypass... no.
-            );
-            // Actually open download URL in browser as fallback
-            window.open(file.url, "_blank");
-          } else {
-            window.open(mod.url, "_blank");
-          }
+          window.open(file?.url ?? mod.url, "_blank");
         } else {
           window.open(mod.url, "_blank");
         }
-      } else if (mod.downloadUrl) {
-        window.open(mod.downloadUrl, "_blank");
       } else {
         window.open(mod.url, "_blank");
       }
       setInstalled(prev => new Set([...prev, mod.id]));
     } catch {
       window.open(mod.url, "_blank");
+      setInstalled(prev => new Set([...prev, mod.id]));
     }
     setInstalling(null);
   }
@@ -256,16 +240,15 @@ export function ModInstaller({ onClose }: Props) {
                 </a>
                 <button
                   onClick={() => handleInstall(mod)}
-                  disabled={installing === mod.id || installed.has(mod.id) || !currentInstance}
+                  disabled={installing === mod.id || installed.has(mod.id)}
                   className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium disabled:opacity-40 ${
                     installed.has(mod.id)
                       ? "border-green-500/30 text-green-400 bg-green-500/10"
                       : "border-primary/30 hover:bg-primary/10"
                   }`}
-                  title={!currentInstance ? "Open an instance first" : undefined}
                 >
                   {installing === mod.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                  {installed.has(mod.id) ? "Done" : "Install"}
+                  {installed.has(mod.id) ? "Opened" : "Install"}
                 </button>
               </div>
             </div>

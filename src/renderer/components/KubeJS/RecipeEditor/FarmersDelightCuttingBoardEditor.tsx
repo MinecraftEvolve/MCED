@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { TagCycler } from "./TagCycler";
 
 interface Item {
   id: string;
@@ -270,7 +271,9 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
               {ingredient ? (
                 <>
                   <div className="absolute inset-0 flex items-center justify-center p-2">
-                    {ingredient.texture ? (
+                    {ingredient.id.startsWith("#") ? (
+                      <TagCycler tagId={ingredient.id} instancePath={instancePath} />
+                    ) : ingredient.texture ? (
                       <img
                         src={`data:image/png;base64,${ingredient.texture}`}
                         alt={ingredient.name}
@@ -345,7 +348,9 @@ export const FarmersDelightCuttingBoardEditor: React.FC<FarmersDelightCuttingBoa
                 <div key={index} className="relative">
                   <div className="relative w-16 h-16 bg-secondary border-2 border-primary/30 rounded group mx-auto">
                     <div className="absolute inset-0 flex items-center justify-center p-2">
-                      {result.texture ? (
+                      {result.id.startsWith("#") ? (
+                        <TagCycler tagId={result.id} instancePath={instancePath} />
+                      ) : result.texture ? (
                         <img
                           src={`data:image/png;base64,${result.texture}`}
                           alt={result.name}

@@ -49,6 +49,7 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({
         <div className="flex flex-col gap-2">
           <div className="text-sm text-muted-foreground mb-2">Input</div>
           <ItemSlot
+            instancePath={instancePath}
             item={input}
             onClick={() => setShowInputSelector(true)}
             onClear={() => {
@@ -67,6 +68,7 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({
           <div className="flex items-center gap-3">
             <div className="text-sm text-muted-foreground">Primary Output</div>
             <ItemSlot
+              instancePath={instancePath}
               item={primaryOutput}
               count={primaryCount}
               onClick={() => setShowPrimarySelector(true)}
@@ -86,6 +88,7 @@ const ThermalPulverizerEditor: React.FC<ThermalPulverizerEditorProps> = ({
           <div className="flex items-center gap-3">
             <div className="text-sm text-muted-foreground">Secondary Output</div>
             <ItemSlot
+              instancePath={instancePath}
               item={secondaryOutput}
               count={secondaryCount}
               onClick={() => setShowSecondarySelector(true)}

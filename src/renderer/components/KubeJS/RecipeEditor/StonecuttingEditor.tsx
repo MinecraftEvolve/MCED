@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Package, Plus, X } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { TagCycler } from "./TagCycler";
 
 interface Item {
   id: string;
@@ -110,7 +111,9 @@ export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
               {input ? (
                 <>
                   <div className="absolute inset-0 flex items-center justify-center p-2">
-                    {input.texture ? (
+                    {input.id.startsWith("#") ? (
+                      <TagCycler tagId={input.id} instancePath={instancePath} />
+                    ) : input.texture ? (
                       <img
                         src={
                           input.texture.startsWith("data:")
@@ -165,7 +168,9 @@ export const StonecuttingEditor: React.FC<StonecuttingEditorProps> = ({
               {output ? (
                 <>
                   <div className="absolute inset-0 flex items-center justify-center p-2">
-                    {output.texture ? (
+                    {output.id.startsWith("#") ? (
+                      <TagCycler tagId={output.id} instancePath={instancePath} />
+                    ) : output.texture ? (
                       <img
                         src={
                           output.texture.startsWith("data:")

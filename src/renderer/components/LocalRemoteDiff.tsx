@@ -120,7 +120,7 @@ export function LocalRemoteDiff({ onClose }: Props) {
 
   return createPortal(
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-5xl mx-4 bg-card rounded-2xl border border-primary/30 shadow-2xl flex max-h-[90vh]" style={{ height: "85vh" }} onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-5xl mx-4 bg-card rounded-2xl border border-primary/30 shadow-2xl flex h-[85vh] max-h-[90vh]" onClick={e => e.stopPropagation()}>
         {/* File list */}
         <div className="w-60 shrink-0 flex flex-col border-r border-primary/15">
           <div className="flex items-center gap-2 px-3 py-3.5 border-b border-primary/15">

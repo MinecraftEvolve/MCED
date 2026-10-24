@@ -167,6 +167,8 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("itemRegistry:getItemById", instancePath, itemId),
   itemRegistryRebuildCache: (instancePath: string, modsFolder: string) =>
     ipcRenderer.invoke("itemRegistry:rebuildCache", instancePath, modsFolder),
+  itemRegistryGetItemsByTag: (instancePath: string, tag: string) =>
+    ipcRenderer.invoke("itemRegistry:getItemsByTag", instancePath, tag),
 
   // Fluid Registry
   fluidRegistryInitialize: (instancePath: string, modsFolder: string) =>
@@ -465,6 +467,10 @@ declare global {
         instancePath: string,
         modsFolder: string
       ) => Promise<{ success: boolean; error?: string }>;
+      itemRegistryGetItemsByTag: (
+        instancePath: string,
+        tag: string
+      ) => Promise<{ success: boolean; data: any[]; error?: string }>;
 
       // Fluid Registry
       fluidRegistryInitialize: (

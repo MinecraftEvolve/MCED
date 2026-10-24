@@ -156,7 +156,7 @@ export function ChangelogFeed({ onClose }: Props) {
                     <p className={`text-[11px] text-muted-foreground leading-relaxed ${isExpanded ? "" : "line-clamp-3"}`}>
                       {entry.body}
                     </p>
-                    {entry.body.length > 200 && (
+                    {entry.body.length > 400 && (
                       <button onClick={() => setExpanded(isExpanded ? null : key)} className="text-[10px] text-primary mt-1 hover:underline">
                         {isExpanded ? "Show less" : "Show more"}
                       </button>

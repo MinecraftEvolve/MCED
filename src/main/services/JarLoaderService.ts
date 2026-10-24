@@ -103,6 +103,39 @@ export class JarLoaderService {
     // Extract mod ID
     const modId = forceModId || (await this.extractModId(entries, zip));
 
+    // Extract display names from lang file (en_us.json or en_us.lang)
+    const langNames = new Map<string, string>();
+    const langEntry =
+      entries.find((e) => e.entryName === `assets/${modId}/lang/en_us.json`) ||
+      entries.find((e) => e.entryName.endsWith("/lang/en_us.json")) ||
+      entries.find((e) => e.entryName === `assets/${modId}/lang/en_us.lang`) ||
+      entries.find((e) => e.entryName.endsWith("/lang/en_us.lang"));
+    if (langEntry) {
+      try {
+        const content = langEntry.getData().toString("utf8");
+        if (langEntry.entryName.endsWith(".json")) {
+          const lang = JSON.parse(content) as Record<string, string>;
+          for (const [k, v] of Object.entries(lang)) langNames.set(k, v);
+        } else {
+          for (const line of content.split(/\r?\n/)) {
+            const eq = line.indexOf("=");
+            if (eq > 0) langNames.set(line.substring(0, eq).trim(), line.substring(eq + 1).trim());
+          }
+        }
+      } catch { /* skip bad lang */ }
+    }
+
+    const getLangName = (type: "item" | "block", fileName: string): string => {
+      // Try standard key formats: item.modid.name or item.modid.name_with_underscores
+      return (
+        langNames.get(`${type}.${modId}.${fileName}`) ||
+        langNames.get(`${type}.${modId}.${fileName.replace(/_/g, ".")}`) ||
+        // Some mods use the full id as key
+        langNames.get(`${modId}.${type}.${fileName}`) ||
+        fileName
+      );
+    };
+
     // Extract all data in a single pass
     const items: JarData["items"] = [];
     const blocks: JarData["blocks"] = [];
@@ -120,7 +153,7 @@ export class JarLoaderService {
         const texture = entry.getData().toString("base64");
         items.push({
           id: `${modId}:${fileName}`,
-          name: fileName,
+          name: getLangName("item", fileName),
           texture,
         });
       }
@@ -131,7 +164,7 @@ export class JarLoaderService {
         const texture = entry.getData().toString("base64");
         blocks.push({
           id: `${modId}:${fileName}`,
-          name: fileName,
+          name: getLangName("block", fileName),
           texture,
         });
       }
@@ -166,57 +199,47 @@ export class JarLoaderService {
     return { modId, items, blocks, fluids, tags };
   }
 
-  private async extractModId(entries: AdmZip.IZipEntry[], zip: AdmZip): Promise<string> {
-    // Try mods.toml first
-    const modsToml = entries.find((e) => e.entryName === "META-INF/mods.toml");
-    if (modsToml) {
-      try {
-        const content = modsToml.getData().toString("utf8");
-        const modIdMatch = content.match(/modId\s*=\s*["']([^"']+)["']/);
-        if (modIdMatch) {
-          return modIdMatch[1];
-        }
-      } catch (error) {
-        // Continue to next method
+  private async extractModId(entries: AdmZip.IZipEntry[], _zip: AdmZip): Promise<string> {
+    // Try mods.toml and neoforge.mods.toml (NeoForge 1.20+)
+    for (const tomlName of ["META-INF/mods.toml", "META-INF/neoforge.mods.toml"]) {
+      const tomlEntry = entries.find((e) => e.entryName === tomlName);
+      if (tomlEntry) {
+        try {
+          const content = tomlEntry.getData().toString("utf8");
+          const modIdMatch = content.match(/modId\s*=\s*["']([^"']+)["']/);
+          if (modIdMatch) return modIdMatch[1];
+        } catch { /* continue */ }
       }
     }
 
-    // Try mcmod.info
+    // Try mcmod.info (legacy Forge)
     const mcmodInfo = entries.find((e) => e.entryName === "mcmod.info");
     if (mcmodInfo) {
       try {
         const content = mcmodInfo.getData().toString("utf8");
         const info = JSON.parse(content);
-        if (Array.isArray(info) && info[0]?.modid) {
-          return info[0].modid;
-        }
-        if (info.modid) {
-          return info.modid;
-        }
-      } catch (error) {
-        // Continue to next method
+        const mod = Array.isArray(info) ? info[0] : info;
+        if (mod?.modid) return mod.modid;
+      } catch { /* continue */ }
+    }
+
+    // Try fabric.mod.json / quilt.mod.json
+    for (const fabricName of ["fabric.mod.json", "quilt.mod.json"]) {
+      const fabricMod = entries.find((e) => e.entryName === fabricName);
+      if (fabricMod) {
+        try {
+          const content = fabricMod.getData().toString("utf8");
+          const info = JSON.parse(content);
+          if (info.id) return info.id;
+        } catch { /* continue */ }
       }
     }
 
-    // Try fabric.mod.json
-    const fabricMod = entries.find((e) => e.entryName === "fabric.mod.json");
-    if (fabricMod) {
-      try {
-        const content = fabricMod.getData().toString("utf8");
-        const info = JSON.parse(content);
-        if (info.id) {
-          return info.id;
-        }
-      } catch (error) {
-        // Continue to next method
-      }
-    }
-
-    // Fallback to first namespace found in assets
+    // Fallback to first non-empty namespace found in assets
     for (const entry of entries) {
       if (entry.entryName.startsWith("assets/")) {
         const parts = entry.entryName.split("/");
-        if (parts.length > 1) {
+        if (parts.length > 1 && parts[1] && parts[1] !== "minecraft") {
           return parts[1];
         }
       }

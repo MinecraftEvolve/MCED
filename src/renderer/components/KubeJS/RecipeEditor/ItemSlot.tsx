@@ -1,5 +1,6 @@
 import React from "react";
 import { Package, Plus, X } from "lucide-react";
+import { TagCycler } from "./TagCycler";
 
 interface Item {
   id: string;
@@ -12,6 +13,7 @@ interface Item {
 
 interface ItemSlotProps {
   item: Item | string | null;
+  instancePath?: string;
   size?: "small" | "normal" | "large" | "md" | "lg";
   onClick?: () => void;
   onClear?: () => void;
@@ -24,6 +26,7 @@ interface ItemSlotProps {
 
 export const ItemSlot: React.FC<ItemSlotProps> = ({
   item,
+  instancePath = "",
   size = "normal",
   onClick,
   onClear,
@@ -89,7 +92,9 @@ export const ItemSlot: React.FC<ItemSlotProps> = ({
       {normalizedItem ? (
         <>
           <div className={`absolute inset-0 flex items-center justify-center ${padding}`}>
-            {normalizedItem.texture ? (
+            {normalizedItem.id.startsWith("#") ? (
+              <TagCycler tagId={normalizedItem.id} instancePath={instancePath} />
+            ) : normalizedItem.texture ? (
               <img
                 src={
                   normalizedItem.texture.startsWith("data:")

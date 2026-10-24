@@ -173,6 +173,7 @@ export const CreateEmptyingEditor: React.FC<CreateEmptyingEditorProps> = ({
         <div className="text-center">
           <p className="text-xs font-medium text-foreground mb-2">Filled Container</p>
           <ItemSlot
+            instancePath={instancePath}
             item={inputItem}
             size="normal"
             onClick={() => handleSlotClick("input")}
@@ -186,6 +187,7 @@ export const CreateEmptyingEditor: React.FC<CreateEmptyingEditorProps> = ({
         <div className="text-center">
           <p className="text-xs font-medium text-foreground mb-2">Container (optional)</p>
           <ItemSlot
+            instancePath={instancePath}
             item={containerItem}
             size="normal"
             onClick={() => handleSlotClick("container")}

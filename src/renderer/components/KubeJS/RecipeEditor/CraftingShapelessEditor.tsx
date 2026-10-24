@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Package, Plus, X } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { TagCycler } from "./TagCycler";
 
 interface Item {
   count: number;
@@ -123,7 +124,9 @@ export const CraftingShapelessEditor: React.FC<CraftingShapelessEditorProps> = (
                   className="relative w-16 h-16 bg-secondary border-2 border-primary/30 rounded group"
                 >
                   <div className="absolute inset-0 flex items-center justify-center p-2">
-                    {item.texture ? (
+                    {item.id.startsWith("#") ? (
+                      <TagCycler tagId={item.id} instancePath={instancePath} />
+                    ) : item.texture ? (
                       <img
                         src={
                           item.texture.startsWith("data:")

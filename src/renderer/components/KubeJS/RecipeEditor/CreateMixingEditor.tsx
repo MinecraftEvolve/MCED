@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Package, Plus, X, Flame } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { TagCycler } from "./TagCycler";
 
 interface Item {
   type: string;
@@ -26,18 +27,33 @@ export const CreateMixingEditor: React.FC<CreateMixingEditorProps> = ({
   const getInitialInputs = (): Item[] => {
     if (!initialRecipe) return [];
     if (initialRecipe.inputs) {
-      return initialRecipe.inputs.map((id: string) => ({
-        id,
-        name: id.split(":")[1] || id,
-        modId: id.split(":")[0] || "minecraft",
-      }));
+      return initialRecipe.inputs.map((id: string) => {
+        const isTag = id.startsWith("#");
+        const cleanId = isTag ? id.substring(1) : id;
+        const colonIdx = cleanId.indexOf(":");
+        return {
+          id,
+          name: colonIdx >= 0 ? cleanId.substring(colonIdx + 1) : cleanId,
+          modId: colonIdx >= 0 ? cleanId.substring(0, colonIdx) : "minecraft",
+          type: "",
+          amount: 0,
+        };
+      });
     }
     if (initialRecipe.ingredients) {
-      return initialRecipe.ingredients.map((ing: any) => ({
-        id: ing.item || ing.tag || "",
-        name: (ing.item || ing.tag || "").split(":")[1],
-        modId: (ing.item || ing.tag || "").split(":")[0],
-      }));
+      return initialRecipe.ingredients.map((ing: any) => {
+        // Reconstruct full KubeJS ID: tags get # prefix back
+        const rawId = ing.tag ? '#' + ing.tag : (ing.item || "");
+        const cleanId = ing.tag ? ing.tag : rawId;
+        const colonIdx = cleanId.indexOf(":");
+        return {
+          id: rawId,
+          name: colonIdx >= 0 ? cleanId.substring(colonIdx + 1) : cleanId,
+          modId: colonIdx >= 0 ? cleanId.substring(0, colonIdx) : "minecraft",
+          type: "",
+          amount: 0,
+        };
+      });
     }
     return [];
   };
@@ -59,6 +75,36 @@ export const CreateMixingEditor: React.FC<CreateMixingEditorProps> = ({
 
   const [inputs, setInputs] = useState<Item[]>(getInitialInputs());
   const [output, setOutput] = useState<Item | null>(getInitialOutput());
+
+  // Enrich initial items with registry data (texture, display name)
+  useEffect(() => {
+    const enrich = async () => {
+      const initialOutput = getInitialOutput();
+      if (initialOutput && !initialOutput.id.startsWith("#")) {
+        const res = await window.api.itemRegistryGetItemById(instancePath, initialOutput.id);
+        if (res.success && res.data) {
+          setOutput((prev) =>
+            prev ? { ...prev, name: res.data.name, modId: res.data.modId, texture: res.data.texture } : prev
+          );
+        }
+      }
+
+      const initialInputs = getInitialInputs();
+      const enriched = await Promise.all(
+        initialInputs.map(async (item) => {
+          if (item.id.startsWith("#")) return item;
+          const res = await window.api.itemRegistryGetItemById(instancePath, item.id);
+          if (res.success && res.data) {
+            return { ...item, name: res.data.name, modId: res.data.modId, texture: res.data.texture };
+          }
+          return item;
+        })
+      );
+      setInputs(enriched);
+    };
+    if (initialRecipe) enrich();
+  }, []);
+
   const [heated, setHeated] = useState(
     initialRecipe?.properties?.heated || initialRecipe?.heated || false
   );
@@ -70,28 +116,38 @@ export const CreateMixingEditor: React.FC<CreateMixingEditorProps> = ({
 
   const handleItemSelected = async (itemId: string) => {
     try {
-      const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
-
       let item: Item;
-      if (result.success && result.data) {
+      if (itemId.startsWith("#")) {
         item = {
-          id: result.data.id,
-          name: result.data.name,
-          modId: result.data.modId,
-          texture: result.data.texture,
+          id: itemId,
+          name: `Tag: ${itemId.slice(1)}`,
+          modId: "tag reference",
           count: 1,
           type: "",
           amount: 0,
         };
       } else {
-        item = {
-          id: itemId,
-          name: itemId.split(":")[1] || itemId,
-          modId: itemId.split(":")[0] || "minecraft",
-          count: 1,
-          type: "",
-          amount: 0,
-        };
+        const result = await window.api.itemRegistryGetItemById(instancePath, itemId);
+        if (result.success && result.data) {
+          item = {
+            id: result.data.id,
+            name: result.data.name,
+            modId: result.data.modId,
+            texture: result.data.texture,
+            count: 1,
+            type: "",
+            amount: 0,
+          };
+        } else {
+          item = {
+            id: itemId,
+            name: itemId.split(":")[1] || itemId,
+            modId: itemId.split(":")[0] || "minecraft",
+            count: 1,
+            type: "",
+            amount: 0,
+          };
+        }
       }
 
       if (pickingType === "output") {
@@ -118,9 +174,11 @@ export const CreateMixingEditor: React.FC<CreateMixingEditorProps> = ({
 
     const recipe = {
       type: "create:mixing",
-      ingredients: inputs.map((item) => ({ item: item.id })),
-      results: [{ item: output.id, count: output.count || 1 }],
-      heatRequirement: superheated ? "superheated" : heated ? "heated" : "none",
+      inputs: inputs.map((item) => item.id),
+      output: output.id,
+      outputCount: output.count && output.count > 1 ? output.count : undefined,
+      heated: heated && !superheated,
+      superheated,
     };
 
     onSave(recipe);
@@ -141,7 +199,9 @@ export const CreateMixingEditor: React.FC<CreateMixingEditorProps> = ({
                   className="relative w-16 h-16 bg-secondary border-2 border-primary/30 rounded group"
                 >
                   <div className="absolute inset-0 flex items-center justify-center p-2">
-                    {item.texture ? (
+                    {item.id.startsWith("#") ? (
+                      <TagCycler tagId={item.id} instancePath={instancePath} />
+                    ) : item.texture ? (
                       <img
                         src={
                           item.texture.startsWith("data:")
@@ -205,7 +265,9 @@ export const CreateMixingEditor: React.FC<CreateMixingEditorProps> = ({
               {output ? (
                 <>
                   <div className="absolute inset-0 flex items-center justify-center p-2">
-                    {output.texture ? (
+                    {output.id.startsWith("#") ? (
+                      <TagCycler tagId={output.id} instancePath={instancePath} />
+                    ) : output.texture ? (
                       <img
                         src={
                           output.texture.startsWith("data:")

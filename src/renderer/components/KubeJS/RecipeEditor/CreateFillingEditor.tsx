@@ -173,6 +173,7 @@ export const CreateFillingEditor: React.FC<CreateFillingEditorProps> = ({
         <div className="text-center">
           <p className="text-xs font-medium text-foreground mb-2">Container</p>
           <ItemSlot
+            instancePath={instancePath}
             item={containerItem}
             size="normal"
             onClick={() => handleSlotClick("container")}
@@ -210,6 +211,7 @@ export const CreateFillingEditor: React.FC<CreateFillingEditorProps> = ({
         <div className="text-center">
           <p className="text-xs font-medium text-foreground mb-2">Result</p>
           <ItemSlot
+            instancePath={instancePath}
             item={resultItem}
             size="large"
             onClick={() => handleSlotClick("result")}

@@ -49,6 +49,7 @@ const CreateSandpaperPolishingEditor: React.FC<CreateSandpaperPolishingEditorPro
           <h3 className="text-sm font-medium text-foreground mb-3">Input Item</h3>
           <div className="inline-block bg-muted/50 border border-primary/20 rounded-lg p-4">
             <ItemSlot
+              instancePath={instancePath}
               item={input}
               onClick={() => {
                 setPickingSlot("input");
@@ -66,6 +67,7 @@ const CreateSandpaperPolishingEditor: React.FC<CreateSandpaperPolishingEditorPro
           <h3 className="text-sm font-medium text-foreground mb-3">Output Item</h3>
           <div className="inline-block bg-muted/50 border border-primary/20 rounded-lg p-4">
             <ItemSlot
+              instancePath={instancePath}
               item={output}
               count={outputCount}
               onClick={() => {

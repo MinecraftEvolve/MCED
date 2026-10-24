@@ -177,6 +177,7 @@ export const CreateDeployingEditor: React.FC<CreateDeployingEditorProps> = ({
         <div className="text-center">
           <p className="text-xs font-medium text-foreground mb-2">Base Item (on belt/depot)</p>
           <ItemSlot
+            instancePath={instancePath}
             item={baseItem}
             size="normal"
             onClick={() => handleSlotClick("base")}
@@ -198,6 +199,7 @@ export const CreateDeployingEditor: React.FC<CreateDeployingEditorProps> = ({
             />
           ) : (
             <ItemSlot
+              instancePath={instancePath}
               item={deployedItem}
               size="normal"
               onClick={() => handleSlotClick("deployed")}
@@ -212,6 +214,7 @@ export const CreateDeployingEditor: React.FC<CreateDeployingEditorProps> = ({
         <div className="text-center">
           <p className="text-xs font-medium text-foreground mb-2">Output</p>
           <ItemSlot
+            instancePath={instancePath}
             item={output ? { ...output, count: outputCount } : null}
             size="large"
             onClick={() => handleSlotClick("output")}

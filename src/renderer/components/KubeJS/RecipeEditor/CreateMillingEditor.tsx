@@ -160,6 +160,7 @@ export const CreateMillingEditor: React.FC<CreateMillingEditorProps> = ({
         <div className="text-center pt-10">
           <p className="text-xs font-medium text-foreground mb-2">Input</p>
           <ItemSlot
+            instancePath={instancePath}
             item={input}
             size="large"
             onClick={() => {
@@ -181,6 +182,7 @@ export const CreateMillingEditor: React.FC<CreateMillingEditorProps> = ({
             {outputs.map((output, index) => (
               <div key={index} className="flex items-center gap-3">
                 <ItemSlot
+                  instancePath={instancePath}
                   item={output}
                   size="normal"
                   onClick={() => {

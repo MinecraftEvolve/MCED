@@ -119,6 +119,7 @@ export const SmithingEditor: React.FC<SmithingEditorProps> = ({
           <div className="flex flex-col items-center">
             <label className="text-xs text-muted-foreground mb-2">Template</label>
             <ItemSlot
+              instancePath={instancePath}
               item={
                 template
                   ? {
@@ -144,6 +145,7 @@ export const SmithingEditor: React.FC<SmithingEditorProps> = ({
           <div className="flex flex-col items-center">
             <label className="text-xs text-muted-foreground mb-2">Base Item</label>
             <ItemSlot
+              instancePath={instancePath}
               item={
                 base
                   ? {
@@ -169,6 +171,7 @@ export const SmithingEditor: React.FC<SmithingEditorProps> = ({
           <div className="flex flex-col items-center">
             <label className="text-xs text-muted-foreground mb-2">Addition</label>
             <ItemSlot
+              instancePath={instancePath}
               item={
                 addition
                   ? {
@@ -194,6 +197,7 @@ export const SmithingEditor: React.FC<SmithingEditorProps> = ({
           <div className="flex flex-col items-center">
             <label className="text-xs text-muted-foreground mb-2">Result</label>
             <ItemSlot
+              instancePath={instancePath}
               item={
                 result
                   ? {

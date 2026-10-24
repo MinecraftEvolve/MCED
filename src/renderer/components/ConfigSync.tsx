@@ -79,7 +79,7 @@ export function ConfigSync({ onClose }: Props) {
       const lc = localFiles.get(rel) ?? null;
       const rc = remoteFiles.get(rel) ?? null;
       let status: SyncEntry["status"] = "unknown";
-      if (lc != null && rc != null) status = lc === rc ? "same" : "local-newer";
+      if (lc != null && rc != null) status = lc === rc ? "same" : "unknown";
       else if (lc != null) status = "local-only";
       else status = "remote-only";
 
@@ -146,11 +146,11 @@ export function ConfigSync({ onClose }: Props) {
 
   const STATUS_LABELS: Record<SyncEntry["status"], string> = {
     "same": "Same",
-    "local-newer": "Local differs",
-    "remote-newer": "Remote differs",
+    "local-newer": "Local newer",
+    "remote-newer": "Remote newer",
     "local-only": "Local only",
     "remote-only": "Remote only",
-    "unknown": "Unknown",
+    "unknown": "Differs",
   };
 
   return createPortal(

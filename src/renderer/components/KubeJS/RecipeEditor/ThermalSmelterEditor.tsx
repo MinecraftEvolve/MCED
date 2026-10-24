@@ -43,6 +43,7 @@ export const ThermalSmelterEditor: React.FC<ThermalSmelterEditorProps> = ({
         <div className="flex gap-4">
           {ingredients.map((ingredient, index) => (
             <ItemSlot
+              instancePath={instancePath}
               key={index}
               item={ingredient}
               onClick={() => setShowIngredientSelector(index)}
@@ -63,6 +64,7 @@ export const ThermalSmelterEditor: React.FC<ThermalSmelterEditorProps> = ({
           {result.map((r, index) => (
             <div key={index} className="flex gap-4 items-center">
               <ItemSlot
+                instancePath={instancePath}
                 item={r.item}
                 count={r.count}
                 onClick={() => setShowResultSelector(index)}

@@ -33,6 +33,7 @@ const MekanismCrushingEditor: React.FC<Props> = ({ instancePath, onSave, initial
           <div className="text-center">
             <label className="block text-sm font-medium text-muted-foreground mb-3">Input</label>
             <ItemSlot
+              instancePath={instancePath}
               item={recipe.input}
               onClick={() => setShowInputSelector(true)}
               onClear={() => handleChange({ ...recipe, input: "" })}
@@ -47,6 +48,7 @@ const MekanismCrushingEditor: React.FC<Props> = ({ instancePath, onSave, initial
           <div className="text-center">
             <label className="block text-sm font-medium text-muted-foreground mb-3">Output</label>
             <ItemSlot
+              instancePath={instancePath}
               item={recipe.output}
               onClick={() => setShowOutputSelector(true)}
               onClear={() => handleChange({ ...recipe, output: "" })}

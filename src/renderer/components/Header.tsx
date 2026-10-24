@@ -9,7 +9,6 @@ import {
   Search as SearchIcon,
   FolderOpen,
   X,
-  Database,
   BarChart3,
   History,
   ChevronDown,
@@ -20,22 +19,7 @@ import {
   Loader2,
   Info,
   Terminal,
-  AlertTriangle,
-  Download,
   Server,
-  Activity,
-  GitCompare,
-  GitBranch,
-  Wand2,
-  Replace,
-  RotateCcw,
-  Cpu,
-  ArrowLeftRight,
-  StickyNote,
-  Rss,
-  PackagePlus,
-  Zap,
-  FileDiff,
 } from "lucide-react";
 import { useRemoteConnectionStore } from "@/store/remoteConnectionStore";
 import { CrashAnalyzer } from "./CrashAnalyzer";
@@ -53,6 +37,9 @@ import { ModInstaller } from "./ModInstaller";
 import { PerformanceQuickApply } from "./PerformanceQuickApply";
 import { LocalRemoteDiff } from "./LocalRemoteDiff";
 import { LauncherIcon } from "./LauncherIcon";
+import { ToolsMenu } from "./ToolsMenu";
+import { ModUpdateChecker } from "./ModUpdateChecker";
+import { ConfigValidator } from "./ConfigValidator";
 
 interface HeaderProps {
   onSearchClick: () => void;
@@ -94,6 +81,8 @@ export function Header({
   const [showModInstaller, setShowModInstaller] = useState(false);
   const [showPerfQuickApply, setShowPerfQuickApply] = useState(false);
   const [showLocalRemoteDiff, setShowLocalRemoteDiff] = useState(false);
+  const [showModUpdateChecker, setShowModUpdateChecker] = useState(false);
+  const [showConfigValidator, setShowConfigValidator] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
@@ -154,7 +143,7 @@ export function Header({
   };
 
   const handleExportModpack = async () => {
-    if (!currentInstance) return;
+    if (!currentInstance || isExporting) return;
     const packName = prompt("Modpack name:", currentInstance.name || "My Modpack");
     if (!packName) return;
     setIsExporting(true);
@@ -375,96 +364,18 @@ export function Header({
 
           <div className="h-6 w-px bg-primary/20 self-center mx-1" />
 
-          <div className="mc-toolbar">
-            <button onClick={() => setShowBackups(true)} className="mc-button-ghost h-8 w-8 p-0" title="Backup Manager">
-              <Database className="h-4 w-4" />
-            </button>
-
+          {/* Permanent utility buttons */}
+          <div className="flex items-center gap-0.5 bg-secondary/60 rounded-xl p-1 border border-border/50">
             {onStatsClick && (
               <button onClick={() => onStatsClick()} className="mc-button-ghost h-8 w-8 p-0" title="Statistics">
                 <BarChart3 className="h-4 w-4" />
               </button>
             )}
-
             {onChangelogClick && (
               <button onClick={() => onChangelogClick()} className="mc-button-ghost h-8 w-8 p-0" title="Change History">
                 <History className="h-4 w-4" />
               </button>
             )}
-
-            <div className="mx-0.5 h-4 w-px bg-border/80" />
-
-            <button onClick={() => setShowCrashAnalyzer(true)} className="mc-button-ghost h-8 w-8 p-0 text-orange-400/70 hover:text-orange-400" title="Crash Log Analyzer">
-              <AlertTriangle className="h-4 w-4" />
-            </button>
-            {currentInstance && (
-              <button onClick={() => setShowStartupLog(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-green-400" title="Startup Log Analyzer">
-                <Activity className="h-4 w-4" />
-              </button>
-            )}
-            {currentInstance && (
-              <button onClick={() => setShowInstanceDiff(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-blue-400" title="Instance Diff">
-                <GitCompare className="h-4 w-4" />
-              </button>
-            )}
-            {currentInstance && (
-              <button onClick={() => setShowDependencyGraph(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-purple-400" title="Mod Dependency Graph">
-                <GitBranch className="h-4 w-4" />
-              </button>
-            )}
-            <button onClick={() => setShowConfigTemplates(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-purple-300" title="Config Templates">
-              <Wand2 className="h-4 w-4" />
-            </button>
-            {currentInstance && (
-              <button onClick={() => setShowBulkReplace(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-primary" title="Bulk Find & Replace">
-                <Replace className="h-4 w-4" />
-              </button>
-            )}
-            {currentInstance && (
-              <button onClick={() => setShowConfigReset(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-orange-400" title="Reset Configs to Defaults">
-                <RotateCcw className="h-4 w-4" />
-              </button>
-            )}
-            {currentInstance && (
-              <button onClick={() => setShowJvmOptimizer(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-primary" title="JVM Optimizer">
-                <Cpu className="h-4 w-4" />
-              </button>
-            )}
-            {currentInstance && (
-              <button onClick={() => setShowModNotes(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-yellow-400" title="Mod Notes">
-                <StickyNote className="h-4 w-4" />
-              </button>
-            )}
-            {currentInstance && (
-              <button onClick={() => setShowPerfQuickApply(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-yellow-400" title="Performance Quick-Apply">
-                <Zap className="h-4 w-4" />
-              </button>
-            )}
-
-            <div className="mx-0.5 h-4 w-px bg-border/80" />
-
-            <button onClick={() => setShowChangelogFeed(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-primary" title="Changelog Feed">
-              <Rss className="h-4 w-4" />
-            </button>
-            <button onClick={() => setShowModInstaller(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-primary" title="Mod Installer (Modrinth / CurseForge / GitHub)">
-              <PackagePlus className="h-4 w-4" />
-            </button>
-            {currentInstance && (
-              <button onClick={() => setShowConfigSync(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-green-400" title="Server Config Sync">
-                <ArrowLeftRight className="h-4 w-4" />
-              </button>
-            )}
-            {currentInstance && (
-              <button onClick={() => setShowLocalRemoteDiff(true)} className="mc-button-ghost h-8 w-8 p-0 hover:text-blue-400" title="Local ↔ Remote Diff">
-                <FileDiff className="h-4 w-4" />
-              </button>
-            )}
-            <button onClick={handleExportModpack} disabled={isExporting} className="mc-button-ghost h-8 w-8 p-0 disabled:opacity-40" title="Export as .mrpack">
-              <Download className="h-4 w-4" />
-            </button>
-
-            <div className="mx-0.5 h-4 w-px bg-border/80" />
-
             <button
               onClick={() => setViewMode(viewMode === "remote" ? "mods" : "remote")}
               className={`relative h-8 w-8 rounded-lg transition-all hover:scale-[1.03] ${
@@ -477,11 +388,37 @@ export function Header({
                 <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-green-400 shadow-[0_0_4px_1px_rgba(74,222,128,0.5)]" />
               )}
             </button>
-
             <button onClick={() => setShowSettings(true)} className="mc-button-ghost h-8 w-8 p-0" title="Settings">
               <SettingsIcon className="h-4 w-4" />
             </button>
           </div>
+
+          {/* Tools dropdown */}
+          <ToolsMenu
+            hasInstance={!!currentInstance}
+            onTool={(id) => {
+              switch (id) {
+                case "configTemplates": setShowConfigTemplates(true); break;
+                case "bulkReplace": setShowBulkReplace(true); break;
+                case "configReset": setShowConfigReset(true); break;
+                case "configValidator": setShowConfigValidator(true); break;
+                case "configSync": setShowConfigSync(true); break;
+                case "localRemoteDiff": setShowLocalRemoteDiff(true); break;
+                case "jvmOptimizer": setShowJvmOptimizer(true); break;
+                case "modNotes": setShowModNotes(true); break;
+                case "perfQuickApply": setShowPerfQuickApply(true); break;
+                case "crashAnalyzer": setShowCrashAnalyzer(true); break;
+                case "startupLog": setShowStartupLog(true); break;
+                case "instanceDiff": setShowInstanceDiff(true); break;
+                case "dependencyGraph": setShowDependencyGraph(true); break;
+                case "backups": setShowBackups(true); break;
+                case "modInstaller": setShowModInstaller(true); break;
+                case "changelogFeed": setShowChangelogFeed(true); break;
+                case "modUpdateChecker": setShowModUpdateChecker(true); break;
+                case "exportModpack": handleExportModpack(); break;
+              }
+            }}
+          />
         </div>
       </div>
 
@@ -504,6 +441,8 @@ export function Header({
       {showModInstaller && <ModInstaller onClose={() => setShowModInstaller(false)} />}
       {showPerfQuickApply && <PerformanceQuickApply onClose={() => setShowPerfQuickApply(false)} />}
       {showLocalRemoteDiff && <LocalRemoteDiff onClose={() => setShowLocalRemoteDiff(false)} />}
+      {showModUpdateChecker && <ModUpdateChecker onClose={() => setShowModUpdateChecker(false)} />}
+      {showConfigValidator && <ConfigValidator onClose={() => setShowConfigValidator(false)} />}
     </header>
   );
 }

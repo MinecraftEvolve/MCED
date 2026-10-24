@@ -330,20 +330,45 @@ export class RecipeService {
     // Parse create:mixing recipes
     if (type === "create:mixing") {
       // Pattern: event.recipes.create.mixing('output', [inputs...])
+      // Also handle KubeJS 5 count prefix: '2x arcforge:item' or modern 'arcforge:item' * 2
       const outputMatch = fullRecipe.match(/mixing\s*\(\s*["']([^"']+)["']/);
       if (outputMatch) {
-        results.push({ item: outputMatch[1] });
+        let outputId = outputMatch[1];
+        let outputCount = 1;
+        // Handle '2x mod:item' KubeJS 5 count syntax
+        const countPrefixMatch = outputId.match(/^(\d+)x\s+(.+)$/);
+        if (countPrefixMatch) {
+          outputCount = parseInt(countPrefixMatch[1]);
+          outputId = countPrefixMatch[2];
+        }
+        // Handle 'mod:item' * N KubeJS 6 count syntax in the full recipe string
+        const countSuffixMatch = fullRecipe.match(/mixing\s*\(\s*["'][^"']+["']\s*\*\s*(\d+)/);
+        if (countSuffixMatch) {
+          outputCount = parseInt(countSuffixMatch[1]);
+        }
+        results.push({ item: outputId, count: outputCount > 1 ? outputCount : undefined });
       }
 
       // Extract inputs
-      const inputsArrayMatch = fullRecipe.match(/mixing\s*\([^[]*\[([^\]]+)\]/);
+      const inputsArrayMatch = fullRecipe.match(/mixing\s*\([^[]*\[([^\]]+)\]/s);
       if (inputsArrayMatch) {
         const inputsContent = inputsArrayMatch[1];
         const itemMatches = inputsContent.match(/["']([^"']+)["']/g);
         if (itemMatches) {
           itemMatches.forEach((match) => {
             const itemId = match.replace(/["']/g, "");
-            ingredients.push({ item: itemId });
+            if (itemId.startsWith("#")) {
+              // Tag reference: store without # as proper tag ingredient
+              ingredients.push({ tag: itemId.substring(1) });
+            } else {
+              // Handle count prefix on inputs too: '2x mod:item'
+              const inputCountMatch = itemId.match(/^(\d+)x\s+(.+)$/);
+              if (inputCountMatch) {
+                ingredients.push({ item: inputCountMatch[2], count: parseInt(inputCountMatch[1]) });
+              } else {
+                ingredients.push({ item: itemId });
+              }
+            }
           });
         }
       }
@@ -583,7 +608,7 @@ export class RecipeService {
                   ...recipe,
                   filePath: fullPath,
                   output: recipe.results[0]?.item || "Unknown",
-                  inputs: recipe.ingredients.map((ing) => ing.item || ing.tag).filter(Boolean),
+                  inputs: recipe.ingredients.map((ing) => ing.tag ? '#' + ing.tag : ing.item).filter(Boolean),
                 });
               });
             } catch (err) {
@@ -695,7 +720,11 @@ ${keyEntries}
     // Create: Mixing
     if (type === "create:mixing") {
       const inputs = recipe.inputs.map((inp: string) => `'${inp}'`).join(",\n    ");
-      let script = `event.recipes.create.mixing('${recipe.output}', [
+      const outCount = recipe.outputCount;
+      const outputStr = outCount && outCount > 1
+        ? `'${recipe.output}' * ${outCount}`
+        : `'${recipe.output}'`;
+      let script = `event.recipes.create.mixing(${outputStr}, [
     ${inputs}
   ])`;
       if (recipe.heated) script += ".heated()";

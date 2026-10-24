@@ -124,6 +124,7 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
         <div className="text-center">
           <p className="text-xs font-medium text-foreground mb-2">Input</p>
           <ItemSlot
+            instancePath={instancePath}
             item={input}
             size="large"
             onClick={() => {
@@ -140,6 +141,7 @@ export const CreatePressingEditor: React.FC<CreatePressingEditorProps> = ({
         <div className="text-center">
           <p className="text-xs font-medium text-foreground mb-2">Output (Pressed)</p>
           <ItemSlot
+            instancePath={instancePath}
             item={output ? { ...output, count: outputCount } : null}
             size="large"
             onClick={() => {

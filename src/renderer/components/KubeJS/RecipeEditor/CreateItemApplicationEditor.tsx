@@ -53,6 +53,7 @@ const CreateItemApplicationEditor: React.FC<CreateItemApplicationEditorProps> = 
             <div>
               <label className="block text-xs text-muted-foreground mb-1">Base Block</label>
               <ItemSlot
+                instancePath={instancePath}
                 item={base}
                 onClick={() => {
                   setPickingSlot("base");
@@ -65,6 +66,7 @@ const CreateItemApplicationEditor: React.FC<CreateItemApplicationEditorProps> = 
             <div>
               <label className="block text-xs text-muted-foreground mb-1">Applied Item</label>
               <ItemSlot
+                instancePath={instancePath}
                 item={applied}
                 onClick={() => {
                   setPickingSlot("applied");
@@ -83,6 +85,7 @@ const CreateItemApplicationEditor: React.FC<CreateItemApplicationEditorProps> = 
           <h3 className="text-sm font-medium text-foreground mb-3">Output Item</h3>
           <div className="inline-block bg-muted/50 border border-primary/20 rounded-lg p-4">
             <ItemSlot
+              instancePath={instancePath}
               item={output}
               count={outputCount}
               onClick={() => {

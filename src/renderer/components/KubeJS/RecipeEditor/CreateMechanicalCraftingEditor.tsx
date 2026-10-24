@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
 import { Package, Plus, X } from "lucide-react";
+import { TagCycler } from "./TagCycler";
 
 interface CreateMechanicalCraftingEditorProps {
   instancePath: string;
@@ -125,7 +126,9 @@ export const CreateMechanicalCraftingEditor: React.FC<CreateMechanicalCraftingEd
                 {itemData ? (
                   <>
                     <div className="absolute inset-0 flex items-center justify-center p-2">
-                      {itemData.texture ? (
+                      {itemId && itemId.startsWith("#") ? (
+                        <TagCycler tagId={itemId} instancePath={instancePath} />
+                      ) : itemData.texture ? (
                         <img
                           src={`data:image/png;base64,${itemData.texture}`}
                           alt={itemData.name}
@@ -174,10 +177,12 @@ export const CreateMechanicalCraftingEditor: React.FC<CreateMechanicalCraftingEd
             }}
             className="relative w-16 h-16 bg-secondary border-2 border-primary/30 rounded cursor-pointer hover:border-primary transition-colors group"
           >
-            {result && (window as any).itemRegistry?.[result] ? (
+            {result ? (
               <>
                 <div className="absolute inset-0 flex items-center justify-center p-2">
-                  {(window as any).itemRegistry[result].texture ? (
+                  {result.startsWith("#") ? (
+                    <TagCycler tagId={result} instancePath={instancePath} />
+                  ) : (window as any).itemRegistry?.[result]?.texture ? (
                     <img
                       src={`data:image/png;base64,${(window as any).itemRegistry[result].texture}`}
                       alt={(window as any).itemRegistry[result].name}

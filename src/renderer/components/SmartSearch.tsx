@@ -47,7 +47,7 @@ export function SmartSearch({ isOpen, onClose, onSelect, initialQuery = "" }: Sm
     const runSearch = async () => {
       setIsSearching(true);
       try {
-        const results = await window.api.smartSearch?.(query, filters);
+        const results = await (window.api as any).smartSearch?.(query, filters);
         setSearchResults(Array.isArray(results) ? results : []);
       } catch (error) {
         console.error("Smart search failed:", error);

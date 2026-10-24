@@ -61,10 +61,10 @@ export function ModNotes({ onClose }: Props) {
       <div className="w-full max-w-2xl mx-4 bg-card rounded-2xl border border-primary/30 shadow-2xl flex max-h-[80vh]" onClick={e => e.stopPropagation()}>
         {/* Mod list */}
         <div className="w-56 shrink-0 flex flex-col border-r border-primary/15">
-          <div className="flex items-center gap-2 px-3 py-3 border-b border-primary/15">
+          <div className="flex items-center gap-2 px-3 py-3.5 border-b border-primary/15">
             <StickyNote className="w-4 h-4 text-primary shrink-0" />
             <span className="font-semibold text-sm">Mod Notes</span>
-            <button onClick={onClose} className="ml-auto p-1 rounded hover:bg-primary/10 text-muted-foreground"><X className="w-4 h-4" /></button>
+            <button onClick={onClose} className="ml-auto p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground"><X className="w-4 h-4" /></button>
           </div>
           <div className="px-2 py-2 border-b border-primary/10">
             <input

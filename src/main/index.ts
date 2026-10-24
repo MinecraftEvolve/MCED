@@ -1362,6 +1362,18 @@ ipcMain.handle("itemRegistry:getItemById", async (_event, instancePath: string, 
   }
 });
 
+ipcMain.handle("itemRegistry:getItemsByTag", async (_event, instancePath: string, tag: string) => {
+  try {
+    const itemRegistry = new ItemRegistryService(instancePath);
+    await itemRegistry.loadCache();
+    // Populate tagCache from already-loaded JAR singleton data (fast) then fall back to JAR scan
+    const items = await itemRegistry.getItemsByTag(tag);
+    return { success: true, data: items };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error), data: [] };
+  }
+});
+
 ipcMain.handle(
   "itemRegistry:rebuildCache",
   async (_event, instancePath: string, modsFolder: string) => {

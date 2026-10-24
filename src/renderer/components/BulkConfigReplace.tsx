@@ -62,17 +62,27 @@ export function BulkConfigReplace({ onClose }: Props) {
 
   async function handleApply() {
     setPhase("applying");
-    const byFile = new Map<string, true>();
-    matches.forEach((m, i) => { if (selected.has(String(i))) byFile.set(m.filePath, true); });
-    let count = 0;
     const flags = caseSensitive ? "g" : "gi";
     const escaped = findText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    for (const filePath of byFile.keys()) {
+    const regex = new RegExp(escaped, flags);
+    let count = 0;
+
+    // Group selected match indices by file, keyed by 0-based line index
+    const selectedByFile = new Map<string, Set<number>>();
+    matches.forEach((m, i) => {
+      if (!selected.has(String(i))) return;
+      if (!selectedByFile.has(m.filePath)) selectedByFile.set(m.filePath, new Set());
+      selectedByFile.get(m.filePath)!.add(m.lineNumber - 1);
+    });
+
+    for (const [filePath, lineIndices] of selectedByFile) {
       const res = await window.api.readFile(filePath);
       if (!res.success || !res.content) continue;
-      const updated = res.content.replace(new RegExp(escaped, flags), replaceText);
-      await window.api.writeFile(filePath, updated);
-      count += matches.filter((m, i) => m.filePath === filePath && selected.has(String(i))).length;
+      const lines = res.content.split("\n");
+      for (const idx of lineIndices) {
+        if (idx < lines.length) { lines[idx] = lines[idx].replace(regex, replaceText); count++; }
+      }
+      await window.api.writeFile(filePath, lines.join("\n"));
     }
     setAppliedCount(count);
     setPhase("done");

@@ -85,6 +85,7 @@ const CreateCompactingEditor: React.FC<CreateCompactingEditorProps> = ({
             <div className="grid grid-cols-2 gap-3">
               {inputs.map((input, index) => (
                 <ItemSlot
+                  instancePath={instancePath}
                   key={index}
                   item={input}
                   onClick={() => {
@@ -105,6 +106,7 @@ const CreateCompactingEditor: React.FC<CreateCompactingEditorProps> = ({
           <h3 className="text-sm font-medium text-foreground mb-3">Output Item</h3>
           <div className="inline-block bg-muted/50 border border-primary/20 rounded-lg p-4">
             <ItemSlot
+              instancePath={instancePath}
               item={output}
               count={outputCount}
               onClick={() => {

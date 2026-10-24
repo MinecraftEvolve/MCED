@@ -78,34 +78,37 @@ class CurseForgeAPI {
     return data;
   }
 
-  async searchMod(query: string): Promise<CurseForgeModData | null> {
+  async searchMods(query: string, pageSize = 20): Promise<CurseForgeModData[]> {
     try {
-      const response = await this.request<CurseForgeSearchResponse>("/mods/search", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const params = new URLSearchParams({
+        gameId: "432",
+        classId: "6",
+        searchFilter: query,
+        pageSize: String(pageSize),
+        sortField: "2", // popularity
+        sortOrder: "desc",
       });
-
-      if (response.data && response.data.length > 0) {
-        const normalizedQuery = query.toLowerCase().replace(/[_\s-]/g, "");
-
-        const exactMatch = response.data.find(
-          (mod) =>
-            mod.slug.toLowerCase() === query.toLowerCase() ||
-            mod.name.toLowerCase() === query.toLowerCase() ||
-            mod.slug.toLowerCase().replace(/[_\s-]/g, "") === normalizedQuery ||
-            mod.name.toLowerCase().replace(/[_\s-]/g, "") === normalizedQuery
-        );
-
-        return exactMatch || response.data[0];
-      }
-
-      return null;
+      const response = await this.request<CurseForgeSearchResponse>(`/mods/search?${params}`);
+      return response.data ?? [];
     } catch (error) {
       console.error("CurseForge API error:", error);
-      return null;
+      return [];
     }
+  }
+
+  async searchMod(query: string): Promise<CurseForgeModData | null> {
+    const results = await this.searchMods(query, 20);
+    if (results.length === 0) return null;
+    const normalizedQuery = query.toLowerCase().replace(/[_\s-]/g, "");
+    return (
+      results.find(
+        (mod) =>
+          mod.slug.toLowerCase() === query.toLowerCase() ||
+          mod.name.toLowerCase() === query.toLowerCase() ||
+          mod.slug.toLowerCase().replace(/[_\s-]/g, "") === normalizedQuery ||
+          mod.name.toLowerCase().replace(/[_\s-]/g, "") === normalizedQuery
+      ) ?? results[0]
+    );
   }
 
   async getModById(modId: number): Promise<CurseForgeModData | null> {

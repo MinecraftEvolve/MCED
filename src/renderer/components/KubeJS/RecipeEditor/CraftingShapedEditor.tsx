@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Package, Plus, X } from "lucide-react";
 import { ItemPicker } from "../ItemPicker/ItemPicker";
+import { TagCycler } from "./TagCycler";
 
 interface Item {
   id: string;
@@ -192,7 +193,9 @@ export const CraftingShapedEditor: React.FC<CraftingShapedEditorProps> = ({
                   {item ? (
                     <>
                       <div className="absolute inset-0 flex items-center justify-center p-2">
-                        {item.texture ? (
+                        {item.id.startsWith("#") ? (
+                          <TagCycler tagId={item.id} instancePath={instancePath} />
+                        ) : item.texture ? (
                           <img
                             src={`data:image/png;base64,${item.texture}`}
                             alt={item.name}

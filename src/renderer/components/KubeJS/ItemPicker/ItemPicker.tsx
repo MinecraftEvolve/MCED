@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
-import { Search, X, Package, Clock } from "lucide-react";
+import { Search, X, Package, Clock, RefreshCw } from "lucide-react";
 import { useItemRegistry } from "../../../hooks/useItemRegistry";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { VirtualGrid } from "../../common/VirtualList";
@@ -70,7 +70,7 @@ export const ItemPicker: React.FC<ItemPickerProps> = ({
   selectedItem,
   title = "Select Item",
 }) => {
-  const { items, blocks, loading, searchItems } = useItemRegistry(instancePath);
+  const { items, blocks, loading, rebuildCache } = useItemRegistry(instancePath);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 150);
   const [activeTab, setActiveTab] = useState<"recent" | "items" | "blocks">("recent");
@@ -110,21 +110,42 @@ export const ItemPicker: React.FC<ItemPickerProps> = ({
     return activeTab === "items" ? items : blocks;
   }, [activeTab, items, blocks, recentItems, allCombined]);
 
+  // When searching, search across all items regardless of active tab
+  const searchPool = useMemo(
+    () => (debouncedSearchTerm.trim() ? allCombined : allItems),
+    [debouncedSearchTerm, allCombined, allItems]
+  );
+
   // Debounced search with memoization
   const filteredItems = useMemo(() => {
     if (!debouncedSearchTerm.trim()) return allItems;
 
     const term = debouncedSearchTerm.toLowerCase();
-    const searchResults = allItems.filter(
+    const searchResults = searchPool.filter(
       (item) =>
         item.id.toLowerCase().includes(term) ||
         item.name.toLowerCase().includes(term) ||
         item.modId.toLowerCase().includes(term)
     );
 
-    // Limit results for performance
-    return searchResults.slice(0, 200);
-  }, [allItems, debouncedSearchTerm]);
+    // When input starts with # (tag) or looks like namespace:id, prepend a direct-use entry
+    const directEntry =
+      debouncedSearchTerm.startsWith("#") || /^[a-z_]+:[a-z_/]+/.test(debouncedSearchTerm)
+        ? [
+            {
+              id: debouncedSearchTerm,
+              name: debouncedSearchTerm.startsWith("#")
+                ? `Tag: ${debouncedSearchTerm.slice(1)}`
+                : debouncedSearchTerm,
+              modId: debouncedSearchTerm.startsWith("#") ? "tag reference" : debouncedSearchTerm.split(":")[0],
+              type: "direct",
+              texture: undefined,
+            } as any,
+          ]
+        : [];
+
+    return [...directEntry, ...searchResults.slice(0, 200)];
+  }, [searchPool, allItems, debouncedSearchTerm]);
 
   const handleSelect = (itemId: string) => {
     addToRecent(itemId);
@@ -155,10 +176,10 @@ export const ItemPicker: React.FC<ItemPickerProps> = ({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted" />
             <input
               type="text"
-              placeholder="Search by item ID, name, or mod..."
+              placeholder="Search items, or type #tag or mod:id directly..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-input-bg border border-primary rounded text-sm text-primary placeholder-muted focus:outline-none focus:border-focus btn-transition"
+              className="w-full pl-10 pr-4 py-2 bg-background border border-primary rounded text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-focus btn-transition"
               autoFocus
             />
           </div>
@@ -218,7 +239,7 @@ export const ItemPicker: React.FC<ItemPickerProps> = ({
               containerHeight={400}
               columns={6}
               gap={12}
-              renderItem={(item, index) => (
+              renderItem={(item) => (
                 <ItemComponent
                   key={item.id}
                   item={item}
@@ -231,10 +252,20 @@ export const ItemPicker: React.FC<ItemPickerProps> = ({
         </div>
 
         {/* Footer Info */}
-        <div className="px-6 py-3 border-t border-primary bg-surface">
+        <div className="flex items-center justify-between px-6 py-3 border-t border-primary bg-surface">
           <p className="text-xs text-muted">
-            Showing {filteredItems.length} of {allItems.length} {activeTab}
+            Showing {filteredItems.length} of {debouncedSearchTerm ? allCombined.length : allItems.length}{" "}
+            {debouncedSearchTerm ? "items" : activeTab}
           </p>
+          <button
+            onClick={rebuildCache}
+            disabled={loading}
+            className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-primary/30 hover:bg-primary/10 text-muted disabled:opacity-40"
+            title="Rescan mod JARs and rebuild item cache"
+          >
+            <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
+            Rebuild Cache
+          </button>
         </div>
       </div>
     </div>

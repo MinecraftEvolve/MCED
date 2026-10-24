@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, FolderOpen, GitCompare, Loader2, RefreshCw, X } from "lucide-react";
 import { useAppStore } from "@/store";
 
-export function InstanceDiff() {
+export function InstanceDiff({ onClose }: { onClose?: () => void }) {
   const { currentInstance, setCurrentInstance } = useAppStore();
+  const close = () => { onClose?.(); setCurrentInstance(null); };
   const [pathB, setPathB] = useState("");
   const [nameA, setNameA] = useState("");
   const [nameB, setNameB] = useState("");
@@ -14,7 +15,7 @@ export function InstanceDiff() {
   useEffect(() => {
     const loadRecent = async () => {
       if (!currentInstance) return;
-      const recents = await window.api.getRecentInstances?.();
+      const recents = await (window.api as any).getRecentInstances?.();
       if (Array.isArray(recents)) {
         setOtherRecent(
           recents
@@ -29,7 +30,7 @@ export function InstanceDiff() {
 
   async function pickDirectory() {
     try {
-      const res = await window.api.pickDirectory?.();
+      const res = await (window.api as any).pickDirectory?.();
       if (res?.path) {
         setPathB(res.path);
         setNameB(res.path.split(/[\\/]/).pop() || "Selected Instance");
@@ -50,7 +51,7 @@ export function InstanceDiff() {
     if (!currentInstance || !pathB) return;
     setLoading(true);
     try {
-      const result = await window.api.compareInstances?.(currentInstance.path, pathB);
+      const result = await (window.api as any).compareInstances?.(currentInstance.path, pathB);
       if (result?.success) {
         setDiff(result.data || { added: [], removed: [], shared: [] });
       }
@@ -62,7 +63,7 @@ export function InstanceDiff() {
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setCurrentInstance(null)}>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={close}>
       <div
         className="mx-4 flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl border border-primary/30 bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -77,7 +78,7 @@ export function InstanceDiff() {
               <p className="text-[11px] text-muted-foreground opacity-60">Compare mod lists between two instances</p>
             </div>
           </div>
-          <button onClick={() => setCurrentInstance(null)} className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 hover:bg-primary/10 hover:text-foreground">
+          <button onClick={close} className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 hover:bg-primary/10 hover:text-foreground">
             <X className="h-4 w-4" />
           </button>
         </div>
